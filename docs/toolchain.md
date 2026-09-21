@@ -17,7 +17,7 @@ The image is based on the tag `maishuji/dc-kos-image:15.2.1-dev-08feb26-gdb-kp08
 | GNU Make | `4.4.1` |
 | Extra tools | `mkdcdisc` and `dc-tool-ip` |
 
-The exact lock source is `tools/toolchain.lock`. It records the KOS snapshot tag and the corresponding full Git commit. The image omits Git metadata, so `tools/check-toolchain.sh` validates the KOS version, headers, library, compiler, linker, Newlib, and ABI flags from inside it; the immutable image digest is pinned independently in both the devcontainer and CI. `tools/with-kos.sh` clears inherited KOS settings and sources the container's `/opt/toolchains/dc/kos/environ.sh` once in the same shell process that runs the requested command. It takes an optional `KOS_ENV` override for diagnostics, but any override must still pass the exact-version checks.
+The exact lock source is `tools/toolchain.lock`. It records the KOS snapshot tag and the corresponding full Git commit. The image omits Git metadata, so `tools/check-toolchain.sh` validates the KOS version, headers, library, compiler, linker, Newlib, and ABI flags from inside it; the immutable image digest is pinned independently in both the devcontainer and CI. `tools/with-kos.sh` clears inherited KOS settings and sources the container's `/opt/toolchains/dc/kos/environ.sh` once in the same shell process that runs the requested command. KOS's script selects a floating-point ABI from its own compiler probe, so the wrapper reapplies the locked ABI to both compile and link flags afterward. It takes an optional `KOS_ENV` override for diagnostics, but any override must still pass the exact-version checks.
 
 ## First use
 
@@ -39,6 +39,6 @@ Dreamcast builds and CI use this container. A host's preinstalled KOS is not an 
 
 The installed template originally used different image tags for development and CI. This project pins the same manifest for both. The newer `16.2.0-06sep26-kp18jul26` image is available on the workstation, but its GCC 16.2.0 toolchain falls back to the `-m4-single-only` ABI. Keep the established environment fixed until a compiler and ABI upgrade has passed the same checks and a target smoke run.
 
-GCC `15.2.1` in the image does not support `-m4-single`; the image's KOS libraries use `-m4-single-only`. KOS's environment script probes the former, emits a warning, and correctly falls back to the latter. The wrapper disables core dumps while loading KOS, and the lock check verifies that effective compile and link flags use the pinned ABI. Keep target builds inside this image because the workstation's separate KOS installation uses a different ABI.
+KOS's environment script probes `-m4-single` and may choose it. This image's library ABI is locked to `-m4-single-only`, so the wrapper overrides the detected choice after the environment loads and removes any conflicting ABI option from compile and link flags. The lock check verifies both flags and rejects a conflicting `-m4-single` token. Keep target builds inside this image because the workstation's separate KOS installation uses a different ABI.
 
 The project minimum is CMake `3.13`, matching the minimum required by KOS's supplied CMake toolchain. The pinned image provides CMake `3.31.4`. Dreamcast builds use KOS's `kallistios.toolchain.cmake` file and Unix Makefiles; host builds use a separate build directory and native compiler.

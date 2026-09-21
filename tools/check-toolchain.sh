@@ -35,6 +35,8 @@ require_equal 'SH-4 floating-point ABI' "$TOOLCHAIN_SH4_PRECISION" "${KOS_SH4_PR
 [[ -f "$KOS_BASE/lib/dreamcast/libkallisti.a" ]] || fail "KOS library is missing from $KOS_BASE"
 [[ "${KOS_CFLAGS:-}" == *"$TOOLCHAIN_SH4_PRECISION"* ]] || fail "KOS compile flags do not contain $TOOLCHAIN_SH4_PRECISION"
 [[ "${KOS_LDFLAGS:-}" == *"$TOOLCHAIN_SH4_PRECISION"* ]] || fail "KOS link flags do not contain $TOOLCHAIN_SH4_PRECISION"
+[[ " ${KOS_CFLAGS:-} " != *" -m4-single "* ]] || fail 'KOS compile flags contain conflicting -m4-single ABI'
+[[ " ${KOS_LDFLAGS:-} " != *" -m4-single "* ]] || fail 'KOS link flags contain conflicting -m4-single ABI'
 
 compiler_version="$("$KOS_CCPLUS" --version | sed -n '1p')"
 [[ "$compiler_version" == *"$TOOLCHAIN_GCC_VERSION"* ]] ||

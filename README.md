@@ -43,7 +43,7 @@ flatpak run --filesystem="$PWD/build-dreamcast:ro" org.flycast.Flycast \
   "$PWD/build-dreamcast/maishuji-pvr-smoke.cdi"
 ```
 
-To check the rendered triangle automatically, first create the CDI in the pinned development container, then run the Flycast pixel test from the Linux host. It requires the Flycast Flatpak, an X11/XWayland display, `xdotool`, and ImageMagick. Close any existing Flycast instance before the test; it saves a screenshot beside the CDI and returns a failure if the expected red, green, blue, center, and background pixels are missing.
+To check the rendered triangle automatically, first create the CDI in the pinned development container, then run the Flycast pixel test from the Linux host. It requires the Flycast Flatpak, an X11/XWayland display, `xdotool`, `xwininfo` (usually provided by `x11-utils`), and ImageMagick 6 or 7. Close any existing Flycast instance before the test. The test waits up to 30 seconds for the expected frame and checks averaged color regions inside and outside the triangle. It writes a screenshot beside the CDI, leaving the passing frame or last render-timeout frame for inspection.
 
 ```sh
 make dreamcast-cdi

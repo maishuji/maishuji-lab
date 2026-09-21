@@ -18,12 +18,28 @@ die() {
 cdi_path=$(realpath "$1")
 [[ -f "$cdi_path" ]] || { echo "CDI not found: $cdi_path" >&2; exit 2; }
 
-for utility in flatpak xwininfo xdotool import identify convert awk grep tail mktemp realpath sleep; do
+for utility in flatpak xwininfo xdotool awk grep tail mktemp realpath sleep; do
     command -v "$utility" >/dev/null 2>&1 || {
         echo "Required command not found: $utility" >&2
         exit 2
     }
 done
+
+if command -v magick >/dev/null 2>&1; then
+    image_import=(magick import)
+elif command -v import >/dev/null 2>&1; then
+    image_import=(import)
+else
+    echo "ImageMagick 6 or 7 is required (import or magick)." >&2
+    exit 2
+fi
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+frame_checker="$script_dir/check-flycast-frame.sh"
+[[ -x "$frame_checker" ]] || {
+    echo "Frame checker is missing or not executable: $frame_checker" >&2
+    exit 2
+}
 
 [[ -n "${DISPLAY:-}" ]] || {
     echo "An X11 or XWayland display is required (DISPLAY is empty)." >&2
@@ -39,19 +55,45 @@ flatpak info "$app_id" >/dev/null 2>&1 || {
     echo "Install the Flycast Flatpak ($app_id) before running this test." >&2
     exit 2
 }
-running_apps=$(flatpak ps --columns=application 2>/dev/null || true)
+if ! running_apps=$(flatpak ps --columns=application 2>/dev/null); then
+    echo "Could not check for an existing Flycast instance." >&2
+    exit 2
+fi
 if grep -Fxq "$app_id" <<<"$running_apps"; then
     echo "Close the existing Flycast instance before running this test." >&2
     exit 2
 fi
 
+flatpak_run_help=$(flatpak run --help 2>&1) || {
+    echo "Could not inspect Flatpak run options." >&2
+    exit 2
+}
+grep -Fq -- '--instance-id-fd' <<<"$flatpak_run_help" || {
+    echo "The installed Flatpak is too old to track and clean up the test instance safely." >&2
+    exit 2
+}
+
 capture_path=${2:-"${cdi_path%.cdi}-flycast.png"}
 mkdir -p "$(dirname "$capture_path")"
 capture_path=$(realpath -m "$capture_path")
+[[ "$capture_path" != "$cdi_path" ]] || {
+    echo "Capture path must not overwrite the CDI: $capture_path" >&2
+    exit 2
+}
+
+start_timeout=${FLYCAST_START_TIMEOUT:-90}
+render_timeout=${FLYCAST_RENDER_TIMEOUT:-30}
+for timeout_value in "$start_timeout" "$render_timeout"; do
+    [[ "$timeout_value" =~ ^[1-9][0-9]*$ ]] || {
+        echo "Flycast timeouts must be positive whole seconds." >&2
+        exit 2
+    }
+done
 
 work_dir=$(mktemp -d "${TMPDIR:-/tmp}/maishuji-flycast.XXXXXX")
 mkdir -p "$work_dir/config" "$work_dir/data" "$work_dir/cache"
 log_file="$work_dir/flycast.log"
+instance_id_file="$work_dir/instance-id"
 window_title="MAISHUJI_PVR_SMOKE_${BASHPID}"
 window_id=
 launcher_pid=
@@ -60,16 +102,37 @@ previous_active_window=$(xdotool getactivewindow 2>/dev/null || true)
 cleanup() {
     result=$?
     trap - EXIT INT TERM
+
     if [[ -n "$window_id" ]]; then
         xdotool windowclose "$window_id" >/dev/null 2>&1 || true
     fi
+
+    # Use the ID returned by this invocation of `flatpak run`; killing by app
+    # ID could stop a different Flycast instance opened while this test ran.
+    if [[ -s "$instance_id_file" ]]; then
+        instance_id=$(<"$instance_id_file")
+        if [[ -n "$instance_id" ]]; then
+            flatpak kill "$instance_id" >/dev/null 2>&1 || true
+        fi
+    fi
     if [[ -n "$launcher_pid" ]] && kill -0 "$launcher_pid" 2>/dev/null; then
-        kill "$launcher_pid" 2>/dev/null || true
         wait "$launcher_pid" 2>/dev/null || true
     fi
-    if [[ -n "$launcher_pid" ]]; then
-        flatpak kill "$app_id" >/dev/null 2>&1 || true
+    if [[ -n "${instance_id:-}" ]]; then
+        shutdown_deadline=$((SECONDS + 10))
+        while (( SECONDS < shutdown_deadline )); do
+            running_instances=$(flatpak ps --columns=instance 2>/dev/null || true)
+            if ! grep -Fxq "$instance_id" <<<"$running_instances"; then
+                break
+            fi
+            sleep 1
+        done
+        if grep -Fxq "$instance_id" <<<"$running_instances"; then
+            echo "Flycast render test: test instance $instance_id is still running after cleanup." >&2
+            (( result != 0 )) || result=1
+        fi
     fi
+
     if [[ -n "$previous_active_window" ]]; then
         xdotool windowactivate --sync "$previous_active_window" >/dev/null 2>&1 || true
     fi
@@ -87,12 +150,12 @@ flatpak run \
     --env="XDG_CONFIG_HOME=$work_dir/config" \
     --env="XDG_DATA_HOME=$work_dir/data" \
     --env="XDG_CACHE_HOME=$work_dir/cache" \
+    --instance-id-fd=3 \
     "$app_id" \
     -config "window:title=$window_title" \
-    "$cdi_path" >"$log_file" 2>&1 &
+    "$cdi_path" 3>"$instance_id_file" >"$log_file" 2>&1 &
 launcher_pid=$!
 
-start_timeout=${FLYCAST_START_TIMEOUT:-90}
 deadline=$((SECONDS + start_timeout))
 while (( SECONDS < deadline )); do
     window_tree=$(xwininfo -root -tree 2>/dev/null || true)
@@ -107,50 +170,19 @@ while (( SECONDS < deadline )); do
 done
 [[ -n "$window_id" ]] || die "Timed out waiting for the Flycast game window."
 grep -q 'REIOS: Booting up' "$log_file" || die "Timed out waiting for the REIOS boot marker."
+[[ -s "$instance_id_file" ]] || die "Flatpak did not report the test instance ID needed for safe cleanup."
 
 xdotool windowactivate --sync "$window_id" >/dev/null 2>&1 || true
-sleep 3
-import -window "$window_id" "$capture_path" || die "Could not capture the Flycast window."
-
-dimensions=$(identify -format '%w %h' "$capture_path")
-read -r width height <<<"$dimensions"
-awk -v width="$width" -v height="$height" 'BEGIN {
-    ratio = width / height
-    if(width < 320 || height < 240 || ratio < 1.30 || ratio > 1.36)
-        exit 1
-}' || die "Unexpected captured window dimensions: ${width}x${height}."
-
-samples=$(convert "$capture_path" -resize 640x480! -format \
-    '%[fx:p{320,120}.r] %[fx:p{320,120}.g] %[fx:p{320,120}.b] %[fx:p{160,350}.r] %[fx:p{160,350}.g] %[fx:p{160,350}.b] %[fx:p{480,350}.r] %[fx:p{480,350}.g] %[fx:p{480,350}.b] %[fx:p{320,240}.r] %[fx:p{320,240}.g] %[fx:p{320,240}.b] %[fx:p{32,32}.r] %[fx:p{32,32}.g] %[fx:p{32,32}.b]' \
-    info:)
-awk -v samples="$samples" -v capture="$capture_path" 'BEGIN {
-    n = split(samples, p, /[[:space:]]+/)
-    if(n != 15) {
-        print "FAIL: could not read expected pixel samples: " samples
-        exit 1
-    }
-
-    red = p[1] > 0.65 && p[1] > p[2] * 1.4 && p[1] > p[3] * 1.4
-    green = p[5] > 0.65 && p[5] > p[4] * 1.4 && p[5] > p[6] * 1.4
-    blue = p[9] > 0.65 && p[9] > p[7] * 1.4 && p[9] > p[8] * 1.2
-    center = p[10] > 0.25 && p[11] > 0.25 && p[12] > 0.25
-    background = p[13] < 0.08 && p[14] < 0.08 && p[15] < 0.08
-
-    if(!red || !green || !blue || !center || !background) {
-        print "FAIL: triangle pixel assertions failed."
-        printf "  red sample:   %.3f %.3f %.3f\n", p[1], p[2], p[3]
-        printf "  green sample: %.3f %.3f %.3f\n", p[4], p[5], p[6]
-        printf "  blue sample:  %.3f %.3f %.3f\n", p[7], p[8], p[9]
-        printf "  center:       %.3f %.3f %.3f\n", p[10], p[11], p[12]
-        printf "  background:   %.3f %.3f %.3f\n", p[13], p[14], p[15]
-        exit 1
-    }
-
-    print "PASS: Flycast rendered the expected red-green-blue Gouraud triangle."
-    print "Capture: " capture
-    printf "  red sample:   %.3f %.3f %.3f\n", p[1], p[2], p[3]
-    printf "  green sample: %.3f %.3f %.3f\n", p[4], p[5], p[6]
-    printf "  blue sample:  %.3f %.3f %.3f\n", p[7], p[8], p[9]
-    printf "  center:       %.3f %.3f %.3f\n", p[10], p[11], p[12]
-    printf "  background:   %.3f %.3f %.3f\n", p[13], p[14], p[15]
-}'
+render_deadline=$((SECONDS + render_timeout))
+last_check_output=
+while (( SECONDS < render_deadline )); do
+    "${image_import[@]}" -window "$window_id" "$capture_path" || die "Could not capture the Flycast window."
+    if last_check_output=$("$frame_checker" "$capture_path" 2>&1); then
+        printf '%s\n' "$last_check_output"
+        echo "Capture: $capture_path"
+        exit 0
+    fi
+    sleep 1
+done
+echo "$last_check_output" >&2
+die "Timed out waiting for a rendered triangle; the last capture is at $capture_path."

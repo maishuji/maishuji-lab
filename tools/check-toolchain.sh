@@ -2,6 +2,7 @@
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd -- "$script_dir/.." && pwd)"
 # shellcheck source=toolchain.lock
 source "$script_dir/toolchain.lock"
 
@@ -22,6 +23,11 @@ command -v cmake >/dev/null || fail 'cmake is not on PATH'
 command -v make >/dev/null || fail 'make is not on PATH'
 command -v kos-c++ >/dev/null || fail 'kos-c++ is not on PATH'
 
+grep -Fq "\"image\": \"$TOOLCHAIN_IMAGE\"" "$repo_root/.devcontainer/devcontainer.json" ||
+    fail 'devcontainer image digest does not match tools/toolchain.lock'
+grep -Fq "image: $TOOLCHAIN_IMAGE" "$repo_root/.github/workflows/build.yml" ||
+    fail 'CI image digest does not match tools/toolchain.lock'
+
 require_equal 'KOS version' "$TOOLCHAIN_KOS_VERSION" "${KOS_VERSION:-unset}"
 require_equal 'KOS sub-architecture' "$TOOLCHAIN_KOS_SUBARCH" "${KOS_SUBARCH:-unset}"
 require_equal 'SH-4 floating-point ABI' "$TOOLCHAIN_SH4_PRECISION" "${KOS_SH4_PRECISION:-unset}"
@@ -34,6 +40,14 @@ compiler_version="$("$KOS_CCPLUS" --version | sed -n '1p')"
 [[ "$compiler_version" == *"$TOOLCHAIN_GCC_VERSION"* ]] ||
     fail "KOS C++ compiler is '$compiler_version'; expected GCC $TOOLCHAIN_GCC_VERSION"
 
+binutils_version="$("$KOS_LD" --version | sed -n '1s/GNU ld (GNU Binutils) //p')"
+require_equal 'GNU Binutils version' "$TOOLCHAIN_BINUTILS_VERSION" "$binutils_version"
+
+newlib_version_file="$KOS_CC_BASE/sh-elf/include/_newlib_version.h"
+[[ -r "$newlib_version_file" ]] || fail "Newlib version header is missing: $newlib_version_file"
+newlib_version="$(sed -n 's/^#define _NEWLIB_VERSION "\(.*\)"/\1/p' "$newlib_version_file")"
+require_equal 'Newlib version' "$TOOLCHAIN_NEWLIB_VERSION" "$newlib_version"
+
 cmake_version="$(cmake --version | sed -n '1s/.*version //p')"
 require_equal 'CMake version' "$TOOLCHAIN_CMAKE_VERSION" "$cmake_version"
 
@@ -42,8 +56,10 @@ require_equal 'GNU Make version' "$TOOLCHAIN_MAKE_VERSION" "$make_version"
 
 printf 'Dreamcast toolchain matches tools/toolchain.lock\n'
 printf '  image: %s (%s)\n' "$TOOLCHAIN_IMAGE" "$TOOLCHAIN_IMAGE_PLATFORM"
-printf '  KOS: %s (source commit locked by the image digest)\n' "$TOOLCHAIN_KOS_VERSION"
+printf '  devcontainer and CI use the locked image\n'
+printf '  KOS: %s (snapshot %s, source %s)\n' "$TOOLCHAIN_KOS_VERSION" "$TOOLCHAIN_KOS_SNAPSHOT" "$TOOLCHAIN_KOS_COMMIT"
 printf '  compiler: %s\n' "$compiler_version"
+printf '  Binutils: %s; Newlib: %s\n' "$binutils_version" "$newlib_version"
 printf '  ABI: %s\n' "$KOS_SH4_PRECISION"
 printf '  CMake: %s; GNU Make: %s\n' "$cmake_version" "$make_version"
 printf '  optional packaging tool: %s\n' "$(command -v mkdcdisc || echo unavailable)"

@@ -9,7 +9,7 @@ DC_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.cdi
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run dreamcast-configure dreamcast-build dreamcast-cdi run-dc
+.PHONY: check-toolchain host-configure host-build host-run dreamcast-configure dreamcast-build dreamcast-cdi flycast-smoke run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -31,6 +31,9 @@ dreamcast-build: dreamcast-configure
 
 dreamcast-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_ELF)" -o "$(DC_CDI)" -n "maishuji-lab PVR smoke"
+
+flycast-smoke:
+	./tools/test-flycast-render.sh "$(DC_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

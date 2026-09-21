@@ -1,0 +1,10 @@
+.private/
+build/
+build-*/
+out/
+*.elf
+*.cdi
+*.map
+compile_commands.json
+core
+core.*

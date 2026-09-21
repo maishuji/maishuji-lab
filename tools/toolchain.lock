@@ -1,0 +1,11 @@
+# Image digest and Dreamcast build components verified on 2026-09-20.
+# Keep this file as simple shell assignments so it can be sourced by our tools.
+TOOLCHAIN_IMAGE='maishuji/dc-kos-image@sha256:21832edbd57c4eb91b316c61b61008a64344703f476197887601aea5422b9f3f'
+TOOLCHAIN_IMAGE_PLATFORM='linux/amd64'
+TOOLCHAIN_KOS_VERSION='2.2.2'
+TOOLCHAIN_KOS_COMMIT='63702a858c17c915b564b378407b1576c78668ec'
+TOOLCHAIN_GCC_VERSION='15.2.1'
+TOOLCHAIN_CMAKE_VERSION='3.31.4'
+TOOLCHAIN_MAKE_VERSION='4.4.1'
+TOOLCHAIN_KOS_SUBARCH='pristine'
+TOOLCHAIN_SH4_PRECISION='-m4-single-only'

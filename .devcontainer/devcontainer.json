@@ -1,0 +1,19 @@
+{
+  "name": "maishuji-lab Dreamcast development",
+  "image": "maishuji/dc-kos-image@sha256:21832edbd57c4eb91b316c61b61008a64344703f476197887601aea5422b9f3f",
+  "remoteUser": "non-root",
+  "updateRemoteUserUID": true,
+  "postCreateCommand": "./tools/with-kos.sh ./tools/check-toolchain.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.makefile-tools"
+      ],
+      "settings": {
+        "cmake.configureOnOpen": false
+      }
+    }
+  }
+}

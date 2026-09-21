@@ -26,10 +26,20 @@ while IFS= read -r name; do
 done < <(compgen -e)
 
 export KOS_SUBARCH="$TOOLCHAIN_KOS_SUBARCH"
-export KOS_SH4_PRECISION="$TOOLCHAIN_SH4_PRECISION"
 ulimit -c 0 2>/dev/null || true
 set +u
 source "$kos_env"
 set -u
+
+# KOS's environment script selects a floating-point ABI from a compiler probe.
+# Reapply the image lock afterward so headers, libraries, compile flags, and
+# link flags always use the same ABI even if that probe chooses differently.
+KOS_CFLAGS="${KOS_CFLAGS//-m4-single-only/}"
+KOS_CFLAGS="${KOS_CFLAGS//-m4-single/}"
+KOS_LDFLAGS="${KOS_LDFLAGS//-m4-single-only/}"
+KOS_LDFLAGS="${KOS_LDFLAGS//-m4-single/}"
+export KOS_SH4_PRECISION="$TOOLCHAIN_SH4_PRECISION"
+export KOS_CFLAGS="$KOS_CFLAGS $KOS_SH4_PRECISION"
+export KOS_LDFLAGS="$KOS_LDFLAGS $KOS_SH4_PRECISION"
 
 exec "$@"

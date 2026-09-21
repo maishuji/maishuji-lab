@@ -1,0 +1,33 @@
+name: Build Dreamcast examples
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dreamcast:
+    runs-on: ubuntu-latest
+    container:
+      image: maishuji/dc-kos-image@sha256:21832edbd57c4eb91b316c61b61008a64344703f476197887601aea5422b9f3f
+      options: --user root
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pinned KOS toolchain
+        run: ./tools/with-kos.sh ./tools/check-toolchain.sh
+        shell: bash
+      - name: Configure and build ${{ matrix.build_type }} ELF
+        run: make dreamcast-build DC_BUILD_TYPE=${{ matrix.build_type }}
+        shell: bash
+      - name: Upload ${{ matrix.build_type }} Dreamcast ELF
+        uses: actions/upload-artifact@v4
+        with:
+          name: maishuji-pvr-smoke-${{ matrix.build_type }}
+          path: build-dreamcast/maishuji-pvr-smoke.elf
+          if-no-files-found: error

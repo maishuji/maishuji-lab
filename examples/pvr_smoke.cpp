@@ -77,6 +77,8 @@ int main() {
     pvr_poly_cxt_t context;
     pvr_poly_cxt_col(&context, PVR_LIST_OP_POLY);
     context.gen.shading = PVR_SHADE_GOURAUD;
+    // This 2D reference should not disappear based on its vertex winding.
+    context.gen.culling = PVR_CULLING_NONE;
     pvr_poly_compile(&triangle_header, &context);
 
     set_vertex(triangle_vertices[0], PVR_CMD_VERTEX, 320.0f, 88.0f, 0xffff4040);

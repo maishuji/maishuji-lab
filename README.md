@@ -43,4 +43,11 @@ flatpak run --filesystem="$PWD/build-dreamcast:ro" org.flycast.Flycast \
   "$PWD/build-dreamcast/maishuji-pvr-smoke.cdi"
 ```
 
+To check the rendered triangle automatically, first create the CDI in the pinned development container, then run the Flycast pixel test from the Linux host. It requires the Flycast Flatpak, an X11/XWayland display, `xdotool`, and ImageMagick. Close any existing Flycast instance before the test; it saves a screenshot beside the CDI and returns a failure if the expected red, green, blue, center, and background pixels are missing.
+
+```sh
+make dreamcast-cdi
+make flycast-smoke
+```
+
 CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each target ELF as a build artifact. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.

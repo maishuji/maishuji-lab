@@ -83,12 +83,17 @@ capture_path=$(realpath -m "$capture_path")
 
 start_timeout=${FLYCAST_START_TIMEOUT:-90}
 render_timeout=${FLYCAST_RENDER_TIMEOUT:-30}
+stable_samples=${FLYCAST_STABLE_SAMPLES:-3}
 for timeout_value in "$start_timeout" "$render_timeout"; do
     [[ "$timeout_value" =~ ^[1-9][0-9]*$ ]] || {
         echo "Flycast timeouts must be positive whole seconds." >&2
         exit 2
     }
 done
+[[ "$stable_samples" =~ ^[1-9][0-9]*$ ]] || {
+    echo "FLYCAST_STABLE_SAMPLES must be a positive whole number." >&2
+    exit 2
+}
 
 work_dir=$(mktemp -d "${TMPDIR:-/tmp}/maishuji-flycast.XXXXXX")
 mkdir -p "$work_dir/config" "$work_dir/data" "$work_dir/cache"
@@ -175,14 +180,21 @@ grep -q 'REIOS: Booting up' "$log_file" || die "Timed out waiting for the REIOS 
 xdotool windowactivate --sync "$window_id" >/dev/null 2>&1 || true
 render_deadline=$((SECONDS + render_timeout))
 last_check_output=
+stable_count=0
 while (( SECONDS < render_deadline )); do
     "${image_import[@]}" -window "$window_id" "$capture_path" || die "Could not capture the Flycast window."
     if last_check_output=$("$frame_checker" "$capture_path" 2>&1); then
-        printf '%s\n' "$last_check_output"
-        echo "Capture: $capture_path"
-        exit 0
+        ((stable_count += 1))
+        if (( stable_count >= stable_samples )); then
+            printf '%s\n' "$last_check_output"
+            echo "Stable frames: $stable_count"
+            echo "Capture: $capture_path"
+            exit 0
+        fi
+    else
+        stable_count=0
     fi
     sleep 1
 done
 echo "$last_check_output" >&2
-die "Timed out waiting for a rendered triangle; the last capture is at $capture_path."
+die "Timed out waiting for $stable_samples consecutive rendered triangles; the last capture is at $capture_path."

@@ -113,6 +113,24 @@ the PVR, disables video, and exits for an unrecoverable smoke error. Phase 2
 will turn this policy into a small library result/status type and lifecycle
 checks without introducing `std::expected` or a generic renderer.
 
+## C++20 evidence
+
+The host smoke compiles, links, and executes checks for the small language
+subset currently needed by the project:
+
+- concepts and `constexpr` evaluation for a numeric helper;
+- `std::array` and fixed-extent `std::span` access;
+- a move-only type with non-throwing move construction and assignment;
+- deterministic RAII destruction of the moved-to owner.
+
+The raw target smoke separately compiles concepts, `constexpr`, and
+`std::span` together with the KOS headers and target packet assertions. The
+host executable proves native execution of the portable probes; the target
+ELF build proves target compile/link compatibility. Neither result claims that
+all of the C++ standard library or runtime facilities are available on the
+Dreamcast. Exceptions, RTTI, and hidden allocation remain outside the chosen
+target policy.
+
 ## Evidence status
 
 Phase 0 established the following evidence against the pinned image:

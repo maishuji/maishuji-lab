@@ -4,7 +4,7 @@ A small C++20 learning framework over KallistiOS for exploring Sega Dreamcast ha
 
 ## Set up the development environment
 
-Open this repository in VS Code and choose **Dev Containers: Reopen in Container**. The development container and CI use the same image digest and KOS toolchain. See [`docs/toolchain.md`](docs/toolchain.md) for the pinned versions and setup checks.
+Open this repository in VS Code and choose **Dev Containers: Reopen in Container**. The development container and CI use the same image digest and KOS toolchain. See [`docs/toolchain.md`](docs/toolchain.md) for the pinned versions and setup checks, and [`docs/kos-backend.md`](docs/kos-backend.md) for the raw KOS/PVR boundary and lifetime rules.
 
 Verify the environment in the integrated terminal:
 
@@ -43,7 +43,7 @@ flatpak run --filesystem="$PWD/build-dreamcast:ro" org.flycast.Flycast \
   "$PWD/build-dreamcast/maishuji-pvr-smoke.cdi"
 ```
 
-To check the rendered triangle automatically, first create the CDI in the pinned development container, then run the Flycast pixel test from the Linux host. It requires the Flycast Flatpak, an X11/XWayland display, `xdotool`, `xwininfo` (usually provided by `x11-utils`), and ImageMagick 6 or 7. Close any existing Flycast instance before the test. The test waits up to 30 seconds for the expected frame and checks averaged color regions inside and outside the triangle. It writes a screenshot beside the CDI, leaving the passing frame or last render-timeout frame for inspection.
+To check the rendered triangle automatically, first create the CDI in the pinned development container, then run the Flycast pixel test from the Linux host. It requires the Flycast Flatpak, an X11/XWayland display, `xdotool`, `xwininfo` (usually provided by `x11-utils`), and ImageMagick 6 or 7. Close any existing Flycast instance before the test. The test waits up to 30 seconds for three consecutive passing captures by default, checking averaged color regions inside and outside the triangle. It writes a screenshot beside the CDI, leaving the passing frame or last render-timeout frame for inspection. Set `FLYCAST_STABLE_SAMPLES` to adjust the required number of consecutive captures.
 
 ```sh
 make dreamcast-cdi

@@ -108,9 +108,10 @@ Phase 1 keeps the raw KOS return values visible:
 - target rendering and host contract tests remain separate because host
   execution cannot establish PVR behavior.
 
-The current raw example logs a failure and exits for an unrecoverable smoke
-error. Phase 2 will turn this policy into a small library result/status type
-and lifecycle checks without introducing `std::expected` or a generic renderer.
+The current raw example logs a failure, waits for rendering to stop, shuts down
+the PVR, disables video, and exits for an unrecoverable smoke error. Phase 2
+will turn this policy into a small library result/status type and lifecycle
+checks without introducing `std::expected` or a generic renderer.
 
 ## Evidence status
 

@@ -17,22 +17,25 @@ terminal.
 
 The installed Flycast Flatpak is v2.7. Its debug configuration includes:
 
-- `Debug:SerialConsoleEnabled=true`: request that the Dreamcast serial console
+- `config:Debug.SerialConsoleEnabled=yes`: request that the Dreamcast serial
+  console
   be dumped to Flycast's stdout.
-- `Debug:SerialPTY=true`: request a PTY-backed serial console. The option is
+- `config:Debug.SerialPTY=yes`: request a PTY-backed serial console. The option is
   present, but this setup did not expose a stable PTY path that can be copied
   into a template, so this guide does not assume one.
 
-The command-line form uses a colon between the section and key:
-`-config "Debug:SerialConsoleEnabled=true"`. Flycast's source defines the
-corresponding options in [`core/cfg/option.cpp`](https://github.com/flyinghead/flycast/blob/master/core/cfg/option.cpp).
+The command-line form uses a colon between the section and key. Because these
+options are stored in Flycast's `[config]` section, the complete command-line
+form is `-config "config:Debug.SerialConsoleEnabled=yes"`. Flycast's source
+defines the corresponding options in
+[`core/cfg/option.cpp`](https://github.com/flyinghead/flycast/blob/master/core/cfg/option.cpp).
 
-In this project, enabling `Debug:SerialConsoleEnabled=true` did not make the
-raw KOS `dbglog()` markers appear in Flycast stdout. The marker strings were
-still useful when a real serial/dcload console was connected, but they were not
-a reliable Flycast-only signal in the tested Flatpak environment. Keep this
-distinction in future templates instead of treating Flycast's emulator log as
-the guest serial log.
+The first command tested in this project used `Debug:SerialConsoleEnabled=true`,
+which targeted the wrong section and did not enable the feature. With the
+corrected `config:Debug.SerialConsoleEnabled=yes` form, Flycast v2.7 emitted
+the guest KOS startup console into the captured output. This means the option
+does work for the intended serial-console path; it is not merely a label for
+Flycast's own emulator log.
 
 ## Basic Flycast command
 
@@ -45,7 +48,7 @@ make dreamcast-cdi
 flatpak run \
   --filesystem="$PWD/build-dreamcast:ro" \
   org.flycast.Flycast \
-  -config "Debug:SerialConsoleEnabled=true" \
+  -config "config:Debug.SerialConsoleEnabled=yes" \
   -config "window:title=MAISHUJI_PVR_SMOKE" \
   "$PWD/build-dreamcast/maishuji-pvr-smoke.cdi"
 ```
@@ -56,7 +59,7 @@ To capture Flycast's stdout/stderr for inspection:
 flatpak run \
   --filesystem="$PWD/build-dreamcast:ro" \
   org.flycast.Flycast \
-  -config "Debug:SerialConsoleEnabled=true" \
+  -config "config:Debug.SerialConsoleEnabled=yes" \
   "$PWD/build-dreamcast/maishuji-pvr-smoke.cdi" 2>&1 | tee flycast.log
 ```
 
@@ -64,6 +67,44 @@ The resulting log can contain Flycast/REIOS output and may contain guest
 serial output if the guest's KOS debug device is actually connected to the
 emulated serial path. Do not use the presence of `REIOS: Booting up` as proof
 that `dbglog()` is working.
+
+## Flycast behavior and known caveats
+
+Flycast's own README points users to its
+[configuration wiki](https://github.com/TheArcadeStriker/flycast-wiki/wiki/Configuration-files-and-command-line-parameters)
+for these debug-only settings. The wiki describes
+`Debug.SerialConsoleEnabled` as a serial-cable option and `Debug.SerialPTY` as
+a Linux/Unix debugging option; they are not normal graphics or game settings.
+
+The serial option is transient when passed with `-config`, so it does not need
+to modify `emu.cfg`. If editing `emu.cfg` instead, do it while Flycast is
+closed: Flycast rewrites the file on exit, which can silently undo a manual
+change. The setting belongs in the `[config]` section:
+
+```ini
+[config]
+Debug.SerialConsoleEnabled = yes
+```
+
+There are two observable output paths during a KOS boot:
+
+- early startup text may be sent to the framebuffer console, so it is visible
+  in the Flycast window rather than in the serial log;
+- later guest serial output is forwarded by Flycast when the serial console is
+  enabled.
+
+Guest output is also buffered. For a marker that must survive a crash or an
+immediate emulator stop, flush after writing it:
+
+```cpp
+dbglog(DBG_NOTICE, "mygame: reached renderer init\n");
+dbgio_flush();
+```
+
+The KOS `dbglog()` macro ultimately writes through `printf()` to the active
+`dbgio` device, so this is still subject to the selected KOS backend. Flycast
+can only forward bytes that the guest actually sends to its emulated serial
+device.
 
 ## KOS side: what `dbglog()` uses
 
@@ -128,7 +169,7 @@ FLYCAST_REQUIRE_RUNTIME_MARKERS=1 make flycast-smoke
 not itself enable Flycast's serial-console option. The current script launches
 Flycast with its isolated log capture and window title, so a template that
 needs guest serial output should add
-`-config "Debug:SerialConsoleEnabled=true"` to its launcher and verify that
+`-config "config:Debug.SerialConsoleEnabled=yes"` to its launcher and verify that
 the selected KOS `dbgio` route is visible there.
 
 Use that mode only when the selected serial/dcload route is known to deliver

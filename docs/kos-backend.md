@@ -213,9 +213,11 @@ a PVR texture-memory allocation request that must fail, and the normal PVR
 shutdown path. Rendering is gated on those probes passing, so the Flycast
 harness's three consecutive valid captures establish that the probe path
 completed before submission. Flycast's KOS `dbgio` output is not surfaced by
-the installed Flatpak by default; when a serial/dcload console is available,
-the harness can additionally require the runtime log markers with
-`FLYCAST_REQUIRE_RUNTIME_MARKERS=1`. This does not claim that
+the installed Flatpak by default. The guest serial path can be enabled with
+Flycast's transient option
+`-config "config:Debug.SerialConsoleEnabled=yes"`; when that path or a real
+serial/dcload console is available, the harness can additionally require the
+runtime log markers with `FLYCAST_REQUIRE_RUNTIME_MARKERS=1`. This does not claim that
 exceptions, RTTI, or arbitrary standard-library allocation are appropriate for
 the library; those remain disabled or outside the target policy.
 

@@ -248,7 +248,8 @@ The Phase 1 raw baseline now adds the following evidence:
 - the host C++20 probe executes the concepts, `constexpr`, `span`, move-only,
   and RAII checks.
 
-No real-hardware result is claimed. The remaining Phase 1 work is to turn
-these observations into the small backend/API decisions, document the target
-console-output limitation, and preserve the raw triangle as the comparison
-reference.
+Phase 1 is complete for the pinned build and emulator baseline. No
+real-hardware result is claimed: the earlier upload attempt used an
+unconfirmed console address. Phase 2 can now introduce the small backend API
+against this raw triangle reference, while preserving the documented target
+console-output limitation and PVR lifetime rules.

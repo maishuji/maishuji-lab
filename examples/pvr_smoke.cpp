@@ -61,6 +61,20 @@ int draw_frame() {
     return pvr_scene_finish();
 }
 
+int shutdown_pvr() {
+    int status = pvr_wait_render_done();
+    if(status < 0)
+        dbglog(DBG_ERROR, "maishuji-lab: PVR render wait failed during shutdown\n");
+
+    if(pvr_shutdown() < 0) {
+        dbglog(DBG_ERROR, "maishuji-lab: PVR shutdown failed\n");
+        status = -1;
+    }
+
+    vid_set_enabled(0);
+    return status;
+}
+
 } // namespace
 
 int main() {
@@ -101,6 +115,7 @@ int main() {
     for(;;) {
         if(draw_frame() < 0) {
             dbglog(DBG_ERROR, "maishuji-lab: PVR frame submission failed\n");
+            shutdown_pvr();
             return 1;
         }
     }

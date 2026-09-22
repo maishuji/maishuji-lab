@@ -35,6 +35,10 @@ To send the ELF to a Dreamcast running `dcload-ip` over a Broadband Adapter, rep
 make run-dc DC_IP=YOUR_DREAMCAST_IP
 ```
 
+For the Flycast serial-console and KOS `dbgio` findings, including the
+limitations of guest log capture in the tested Flatpak setup, see
+[`docs/flycast-serial-logs.md`](docs/flycast-serial-logs.md).
+
 To create an optional self-booting CDI, use the pinned container for packaging. If Flycast is installed as a Flatpak, launch it with read-only access to the build output:
 
 ```sh

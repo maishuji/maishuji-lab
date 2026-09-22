@@ -28,6 +28,18 @@ The project uses public KOS headers and calls only:
 Private KOS headers, internal PVR structs, direct register access, and
 hard-coded Tile Accelerator addresses are outside this boundary.
 
+## Build-system decision
+
+The project keeps CMake as its primary build because its native KOS toolchain
+file reproduces the target compiler, linker, C++20 mode, disabled exceptions
+and RTTI, and no-LTO link policy used by the project. The tracked
+[`tools/kos-makefile-smoke.mk`](../tools/kos-makefile-smoke.mk) builds the same
+raw source with KOS's supplied Makefile rules and `kos-c++` wrapper. It uses
+the same C++20, no-exceptions, no-RTTI, and no-LTO policy; CMake may add
+Debug-only frame-pointer instrumentation. The Makefile path exists as a
+compatibility check, not as a second project build graph; the two paths must
+continue to produce independently buildable raw reference ELFs.
+
 ## Initialization baseline
 
 The raw smoke configures the following `pvr_init_params_t` values:
@@ -184,6 +196,8 @@ The Phase 1 raw baseline now adds the following evidence:
 
 - the explicit three-list, non-DMA `pvr_init_params_t` configuration builds in
   both Debug and Release with the pinned KOS 2.2.2 image;
+- both the CMake path and the minimal native KOS Makefile path build the raw
+  reference ELF with the pinned compiler and linker wrappers;
 - the pinned Debug CDI boots in Flycast v2.7 and passes three consecutive
   captures of the expected colored triangle;
 - the raw failure path explicitly waits for rendering, shuts down the PVR,

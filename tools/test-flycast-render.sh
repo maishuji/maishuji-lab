@@ -18,7 +18,7 @@ die() {
 cdi_path=$(realpath "$1")
 [[ -f "$cdi_path" ]] || { echo "CDI not found: $cdi_path" >&2; exit 2; }
 
-for utility in flatpak xwininfo xdotool awk grep tail mktemp realpath sleep; do
+for utility in flatpak xwininfo xdotool awk grep tail mktemp realpath sleep timeout; do
     command -v "$utility" >/dev/null 2>&1 || {
         echo "Required command not found: $utility" >&2
         exit 2
@@ -84,6 +84,8 @@ capture_path=$(realpath -m "$capture_path")
 start_timeout=${FLYCAST_START_TIMEOUT:-90}
 render_timeout=${FLYCAST_RENDER_TIMEOUT:-30}
 stable_samples=${FLYCAST_STABLE_SAMPLES:-3}
+capture_timeout=${FLYCAST_CAPTURE_TIMEOUT:-5}
+require_runtime_markers=${FLYCAST_REQUIRE_RUNTIME_MARKERS:-0}
 for timeout_value in "$start_timeout" "$render_timeout"; do
     [[ "$timeout_value" =~ ^[1-9][0-9]*$ ]] || {
         echo "Flycast timeouts must be positive whole seconds." >&2
@@ -92,6 +94,14 @@ for timeout_value in "$start_timeout" "$render_timeout"; do
 done
 [[ "$stable_samples" =~ ^[1-9][0-9]*$ ]] || {
     echo "FLYCAST_STABLE_SAMPLES must be a positive whole number." >&2
+    exit 2
+}
+[[ "$capture_timeout" =~ ^[1-9][0-9]*$ ]] || {
+    echo "FLYCAST_CAPTURE_TIMEOUT must be a positive whole number." >&2
+    exit 2
+}
+[[ "$require_runtime_markers" == 0 || "$require_runtime_markers" == 1 ]] || {
+    echo "FLYCAST_REQUIRE_RUNTIME_MARKERS must be 0 or 1." >&2
     exit 2
 }
 
@@ -181,20 +191,46 @@ xdotool windowactivate --sync "$window_id" >/dev/null 2>&1 || true
 render_deadline=$((SECONDS + render_timeout))
 last_check_output=
 stable_count=0
+
+runtime_probes_passed() {
+    grep -q 'maishuji-lab: runtime probes passed' "$log_file" &&
+        grep -q 'maishuji-lab: normal shutdown passed' "$log_file" &&
+        grep -q 'maishuji-lab: global destructor passed' "$log_file"
+}
+
+runtime_gate_passed() {
+    [[ "$require_runtime_markers" == 0 ]] || runtime_probes_passed
+}
+
+complete_success() {
+    printf '%s\n' "$last_check_output"
+    echo "Stable frames: $stable_count"
+    if [[ "$require_runtime_markers" == 1 ]]; then
+        echo "Runtime markers: passed"
+    else
+        echo "Runtime probes: render-gated"
+    fi
+    echo "Capture: $capture_path"
+    exit 0
+}
+
 while (( SECONDS < render_deadline )); do
-    "${image_import[@]}" -window "$window_id" "$capture_path" || die "Could not capture the Flycast window."
+    if (( stable_count >= stable_samples )) && runtime_gate_passed; then
+        complete_success
+    fi
+
+    if ! timeout "$capture_timeout" "${image_import[@]}" -window "$window_id" "$capture_path"; then
+        if (( stable_count >= stable_samples )) && runtime_gate_passed; then
+            complete_success
+        fi
+        die "Could not capture the Flycast window."
+    fi
     if last_check_output=$("$frame_checker" "$capture_path" 2>&1); then
         ((stable_count += 1))
-        if (( stable_count >= stable_samples )); then
-            printf '%s\n' "$last_check_output"
-            echo "Stable frames: $stable_count"
-            echo "Capture: $capture_path"
-            exit 0
-        fi
     else
         stable_count=0
     fi
     sleep 1
 done
 echo "$last_check_output" >&2
-die "Timed out waiting for $stable_samples consecutive rendered triangles; the last capture is at $capture_path."
+die "Timed out waiting for stable rendering and completed runtime probes; the last capture is at $capture_path."

@@ -131,9 +131,11 @@ Phase 1 keeps the raw KOS return values visible:
   execution cannot establish PVR behavior.
 
 The current raw example logs a failure, waits for rendering to stop, shuts down
-the PVR, disables video, and exits for an unrecoverable smoke error. Phase 2
-will turn this policy into a small library result/status type and lifecycle
-checks without introducing `std::expected` or a generic renderer.
+the PVR, disables video, and exits for an unrecoverable smoke error. Its normal
+path renders a finite reference run, performs the same wait/shutdown sequence,
+and returns successfully. Phase 2 will turn this policy into a small library
+result/status type and lifecycle checks without introducing `std::expected` or
+a generic renderer.
 
 ## C++20 evidence
 
@@ -152,6 +154,18 @@ ELF build proves target compile/link compatibility. Neither result claims that
 all of the C++ standard library or runtime facilities are available on the
 Dreamcast. Exceptions, RTTI, and hidden allocation remain outside the chosen
 target policy.
+
+The target smoke also executes a deliberately small runtime probe set before
+rendering: a global constructor, a local move-only object and its destructor,
+a PVR texture-memory allocation request that must fail, and the normal PVR
+shutdown path. Rendering is gated on those probes passing, so the Flycast
+harness's three consecutive valid captures establish that the probe path
+completed before submission. Flycast's KOS `dbgio` output is not surfaced by
+the installed Flatpak by default; when a serial/dcload console is available,
+the harness can additionally require the runtime log markers with
+`FLYCAST_REQUIRE_RUNTIME_MARKERS=1`. This does not claim that
+exceptions, RTTI, or arbitrary standard-library allocation are appropriate for
+the library; those remain disabled or outside the target policy.
 
 ## Evidence status
 
@@ -174,10 +188,13 @@ The Phase 1 raw baseline now adds the following evidence:
   captures of the expected colored triangle;
 - the raw failure path explicitly waits for rendering, shuts down the PVR,
   disables video, and returns an error status;
+- the same CDI reaches rendering only after the global-constructor,
+  local-move-only-cleanup, and PVR-allocation-failure probes pass; the finite
+  run then exercises normal PVR shutdown and process exit;
 - the host C++20 probe executes the concepts, `constexpr`, `span`, move-only,
   and RAII checks.
 
 No real-hardware result is claimed. The remaining Phase 1 work is to turn
-these observations into the small backend/API decisions, document any target
-runtime probes that cannot be established by the smoke, and preserve the raw
-triangle as the comparison reference.
+these observations into the small backend/API decisions, document the target
+console-output limitation, and preserve the raw triangle as the comparison
+reference.

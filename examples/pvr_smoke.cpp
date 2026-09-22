@@ -81,18 +81,16 @@ int main() {
     vid_set_enabled(0);
     vid_set_mode(DM_640x480, PM_RGB565);
 
-    pvr_init_params_t pvr_params = pvr_default_params;
-    pvr_params.opb_sizes[0] = PVR_BINSIZE_16; // opaque polygons
-    pvr_params.opb_sizes[1] = PVR_BINSIZE_0;  // opaque modifiers
-    pvr_params.opb_sizes[2] = PVR_BINSIZE_16; // translucent polygons
-    pvr_params.opb_sizes[3] = PVR_BINSIZE_0;  // translucent modifiers
-    pvr_params.opb_sizes[4] = PVR_BINSIZE_16; // punch-through polygons
-    pvr_params.vertex_buf_size = 512 * 1024;
-    pvr_params.dma_enabled = 0;
-    pvr_params.fsaa_enabled = 0;
-    pvr_params.autosort_disabled = 0;
-    pvr_params.opb_overflow_count = 3;
-    pvr_params.vbuf_doublebuf_disabled = 0;
+    pvr_init_params_t pvr_params = {
+        { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16,
+          PVR_BINSIZE_0, PVR_BINSIZE_16 },
+        512 * 1024,
+        0, // direct (non-DMA) submission
+        0, // FSAA disabled
+        0, // translucent autosort enabled
+        3, // OPB overflow count
+        0  // vertex-buffer double buffering enabled
+    };
 
     if(pvr_init(&pvr_params) < 0) {
         dbglog(DBG_ERROR, "maishuji-lab: PVR initialization failed\n");

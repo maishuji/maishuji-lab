@@ -40,6 +40,23 @@ Debug-only frame-pointer instrumentation. The Makefile path exists as a
 compatibility check, not as a second project build graph; the two paths must
 continue to produce independently buildable raw reference ELFs.
 
+## Effective target policy
+
+The pinned CMake builds and native KOS Makefile smoke agree on the policy that
+matters to the library:
+
+- C++20 without compiler extensions;
+- exceptions and RTTI disabled for target code;
+- no LTO at link time;
+- KOS's `kos-c++` compiler/linker wrappers and startup objects;
+- `-m4-single-only` reapplied by `tools/with-kos.sh` after KOS environment
+  setup, for both compile and link flags.
+
+The pinned Debug CMake command additionally uses `-DFRAME_POINTERS` and
+`-fno-omit-frame-pointer`; Release uses optimization and `-DNDEBUG`. Those are
+build-mode instrumentation choices, not API requirements. Host C++20 checks
+remain native and never link KOS libraries.
+
 ## Initialization baseline
 
 The raw smoke configures the following `pvr_init_params_t` values:
@@ -127,6 +144,29 @@ This gives the first library design a deliberately narrow contract: a frame
 owns its open scene, a render list borrows that frame, and resource destruction
 must happen after an explicit idle boundary. A constructor or destructor must
 not imply a hidden wait or silently reopen a KOS list.
+
+## Initial backend/API constraints
+
+The Phase 2 API can now be kept small and testable:
+
+- a single active PVR context is supported initially;
+- initialization is an explicit fallible operation that returns a status/result;
+- `List::Opaque`, `List::PunchThrough`, and `List::Translucent` remain project
+  concepts mapped to KOS constants only inside the backend;
+- `Frame` and `RenderList` are non-copyable and initially non-movable;
+- a `RenderList` can exist only while its owning `Frame` is collecting a scene;
+- failed acquisition creates no guard that later calls a KOS finish function;
+- ordinary destructors are non-throwing and do not perform hidden waits;
+- Debug checks reject nested frames, overlapping lists, closed-list reopening,
+  disabled-list use, and submission outside an open list;
+- the public layer does not expose `pvr_*` types, private KOS headers, or a
+  generic renderer interface.
+
+The allowed KOS-facing includes for this backend are `<kos.h>` for startup,
+video, and diagnostics and the public `<dc/pvr.h>` family for initialization,
+scene/list submission, packet compilation, and PVR texture-memory allocation.
+The implementation may read KOS internals for explanation and compatibility
+work, but it must not include `pvr_internal.h` or depend on private state.
 
 ## Error and runtime policy
 

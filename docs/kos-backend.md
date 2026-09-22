@@ -166,6 +166,18 @@ Phase 0 established the following evidence against the pinned image:
 - the prior upload attempt used an unconfirmed console address and did not
   execute, so no real-hardware result is claimed.
 
-Phase 1 still needs repeated-frame runtime verification, explicit recording of
-initialization and shutdown behavior, and the backend/API decisions that will
-follow from those observations.
+The Phase 1 raw baseline now adds the following evidence:
+
+- the explicit three-list, non-DMA `pvr_init_params_t` configuration builds in
+  both Debug and Release with the pinned KOS 2.2.2 image;
+- the pinned Debug CDI boots in Flycast v2.7 and passes three consecutive
+  captures of the expected colored triangle;
+- the raw failure path explicitly waits for rendering, shuts down the PVR,
+  disables video, and returns an error status;
+- the host C++20 probe executes the concepts, `constexpr`, `span`, move-only,
+  and RAII checks.
+
+No real-hardware result is claimed. The remaining Phase 1 work is to turn
+these observations into the small backend/API decisions, document any target
+runtime probes that cannot be established by the smoke, and preserve the raw
+triangle as the comparison reference.

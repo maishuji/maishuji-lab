@@ -94,6 +94,28 @@ the same scene. The eventual `Frame` and `RenderList` types must represent
 these transitions rather than implying that arbitrary nested scopes can reopen
 hardware lists.
 
+## Resource lifetime rules
+
+The raw boundary has four distinct lifetime intervals:
+
+1. The selected video mode must exist before `pvr_init()` and remain active
+   while the PVR is initialized.
+2. PVR-owned bins and vertex buffers begin at `pvr_init()` and end at
+   `pvr_shutdown()`. They consume texture memory and are not application-owned
+   allocations.
+3. Direct-submission packet storage must be aligned and readable for the
+   duration of each `pvr_prim()` call. The first baseline submits immediately;
+   it does not expose a persistent packet queue to the application.
+4. Any resource referenced by submitted rendering, especially texture-memory
+   allocations, remains alive until `pvr_wait_render_done()` establishes that
+   the previous scene has stopped using it. `pvr_scene_finish()` only closes
+   submission for the scene and is not a safe free/overwrite boundary.
+
+This gives the first library design a deliberately narrow contract: a frame
+owns its open scene, a render list borrows that frame, and resource destruction
+must happen after an explicit idle boundary. A constructor or destructor must
+not imply a hidden wait or silently reopen a KOS list.
+
 ## Error and runtime policy
 
 Phase 1 keeps the raw KOS return values visible:

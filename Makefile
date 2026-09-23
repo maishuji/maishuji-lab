@@ -1,5 +1,6 @@
 HOST_BUILD_DIR ?= build-host
 HOST_CMAKE_GENERATOR ?= "Unix Makefiles"
+HOST_TEST_EXE ?= maishuji-host-tests
 
 DC_BUILD_DIR ?= build-dreamcast
 DC_BUILD_TYPE ?= Release
@@ -10,7 +11,7 @@ KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-makefile-smoke flycast-smoke run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-makefile-smoke flycast-smoke run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -23,6 +24,9 @@ host-build: host-configure
 
 host-run: host-build
 	./$(HOST_BUILD_DIR)/maishuji-host-smoke
+
+host-test: host-build
+	./$(HOST_BUILD_DIR)/$(HOST_TEST_EXE)
 
 dreamcast-configure: check-toolchain
 	./tools/with-kos.sh cmake -S . -B $(DC_BUILD_DIR) -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=$(DC_BUILD_TYPE) -DCMAKE_TOOLCHAIN_FILE=$(KOS_TOOLCHAIN_FILE)

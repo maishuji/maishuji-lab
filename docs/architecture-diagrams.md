@@ -86,13 +86,13 @@ sequenceDiagram
         KOS-->>Backend: ready
         Pvr->>Backend: scene_begin()
         Backend->>KOS: pvr_scene_begin()
-        Pvr-->>App: Success; Frame active
+        Pvr-->>App: Success - Frame active
 
         App->>Frame: begin_list(list, Opaque)
         Frame->>Backend: list_begin(Opaque)
         Backend->>KOS: pvr_list_begin(OP_POLY)
         KOS-->>Backend: list open
-        Frame-->>App: Success; RenderList active
+        Frame-->>App: Success - RenderList active
 
         Note over App,List: Phase 2 scope boundary. Phase 3 adds pvr_prim() here.
 

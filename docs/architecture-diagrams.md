@@ -8,35 +8,38 @@ readable in narrow Markdown renderers.
 
 ## C4-style component view
 
-This view separates the public maishuji lifecycle objects from the private KOS
-adapter and the public KallistiOS/hardware boundary. It is a logical architecture
-view, not a source-file dependency graph.
+This C4-style view separates the public maishuji lifecycle components from the
+KOS boundary and Dreamcast hardware. The component path is intentionally linear:
+short edge labels keep the preview readable, while the sequence diagram below
+shows the detailed call order.
 
 ~~~mermaid
-%%{init: {"theme": "base", "flowchart": {"nodeSpacing": 42, "rankSpacing": 52}}}%%
-C4Component
-    title Phase 2 PVR lifecycle - logical component view
+%%{init: {"theme": "base", "flowchart": {"htmlLabels": true, "nodeSpacing": 48, "rankSpacing": 68, "curve": "linear"}}}%%
+flowchart LR
+    app["01-hello-pvr<br/>example loop + shutdown"]
 
-    Container(example, "01-hello-pvr", "C++20 Dreamcast ELF", "Runs the example loop and owns the explicit shutdown call")
+    subgraph library [maishuji static library]
+        direction LR
+        pvr["Pvr<br/>hardware context"]
+        frame["Frame<br/>scene scope"]
+        list["RenderList<br/>polygon list"]
+        adapter["KOS backend<br/>lifecycle adapter"]
 
-    Container_Boundary(library, "maishuji static library") {
-        Component(pvr, "PVR context", "maishuji::Pvr", "Owns one initialized video/PVR context and the render-wait boundary")
-        Component(frame, "Frame", "maishuji::Frame", "Owns one scene scope and prevents nested frames")
-        Component(list, "RenderList", "maishuji::RenderList", "Owns one active polygon list and prevents reopening it")
-        Component(adapter, "KOS PVR backend", "Internal adapter", "Maps lifecycle operations to public KOS calls without virtual dispatch")
-    }
+        pvr -->|begins| frame
+        frame -->|opens| list
+        list -->|closes through| adapter
+    end
 
-    System_Ext(kos, "KallistiOS public API", "<kos.h> + <dc/pvr.h>", "Provides video, scene, list, and render-wait operations")
-    System_Ext(hardware, "Dreamcast video + PVR", "SH-4 / PowerVR2", "Consumes the submitted scene and performs tile-based rendering")
+    subgraph platform [Dreamcast platform]
+        direction LR
+        kos["KallistiOS API<br/>kos.h + dc/pvr.h"]
+        hardware["Dreamcast PVR<br/>PowerVR2 renderer"]
 
-    Rel(example, pvr, "Initializes and drives", "C++")
-    Rel(pvr, frame, "Begins one frame")
-    Rel(frame, list, "Opens one list")
-    Rel(pvr, adapter, "Delegates setup, waits, and shutdown")
-    Rel(frame, adapter, "Delegates scene lifecycle")
-    Rel(list, adapter, "Delegates list lifecycle")
-    Rel(adapter, kos, "Calls public APIs only")
-    Rel(kos, hardware, "Controls video and PVR submission")
+        kos -->|controls| hardware
+    end
+
+    app -->|drives| pvr
+    adapter -->|calls| kos
 ~~~
 
 Read the boundary from left to right:

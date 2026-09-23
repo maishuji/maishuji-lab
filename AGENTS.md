@@ -11,6 +11,23 @@ the Sega Dreamcast. Keep Dreamcast concepts, costs, lifetimes, and hardware
 boundaries visible. Read the relevant README and `docs/` files before changing
 build, KOS, PVR, Flycast, or runtime behavior.
 
+Maintain the root [`GLOSSARY.md`](GLOSSARY.md) as the concise source for
+Dreamcast-, KOS-, and PVR-specific terminology used by the project. Add or
+update an entry when a change introduces a term that may be unfamiliar or
+ambiguous outside its hardware context. Keep entries short and pertinent, and
+use this exact two-line form: the first line is
+`<term>(<optional-scope>):`; the second starts with one tab followed by a
+third-person verb-based definition, for example:
+
+```text
+DMA(pvr):
+	Represents direct memory access used to move data without a CPU copy for every word.
+```
+
+Prefer the Dreamcast meaning when a term has multiple meanings, and update the
+glossary in the same change as the documentation or code that introduces the
+term.
+
 ## Git workflow
 
 - Inspect the current branch and worktree before starting. Preserve unrelated

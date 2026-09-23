@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build and run host C++20 smoke check
-        run: make host-run
+      - name: Build and run host C++20 and lifecycle checks
+        run: make host-run host-test
   dreamcast:
     runs-on: ubuntu-latest
     container:
@@ -35,5 +35,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: maishuji-pvr-smoke-${{ matrix.build_type }}
-          path: build-dreamcast/maishuji-pvr-smoke.elf
+          path: |
+            build-dreamcast/maishuji-pvr-smoke.elf
+            build-dreamcast/maishuji-hello-pvr.elf
           if-no-files-found: error

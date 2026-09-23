@@ -252,6 +252,7 @@ The Phase 1 raw baseline now adds the following evidence:
 
 Phase 1 is complete for the pinned build and emulator baseline. No
 real-hardware result is claimed: the earlier upload attempt used an
-unconfirmed console address. Phase 2 can now introduce the small backend API
-against this raw triangle reference, while preserving the documented target
-console-output limitation and PVR lifetime rules.
+unconfirmed console address. Phase 2 now implements the small backend API against this raw triangle
+reference. See docs/lifecycle.md for the public lifecycle mapping, explicit
+shutdown boundary, and host recording-backend evidence. Primitive submission
+remains outside this phase.

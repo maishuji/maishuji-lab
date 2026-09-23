@@ -9,13 +9,13 @@ readable in narrow Markdown renderers.
 ## C4-style component view
 
 This C4-style view separates the public maishuji lifecycle components from the
-KOS boundary and Dreamcast hardware. The component path is intentionally linear:
-short edge labels keep the preview readable, while the sequence diagram below
-shows the detailed call order.
+KOS boundary and Dreamcast hardware. It is stacked for narrow previews: the
+application sits above the library, and the platform sits below it. The sequence
+diagram shows the detailed call order.
 
 ~~~mermaid
-%%{init: {"theme": "base", "flowchart": {"htmlLabels": true, "nodeSpacing": 48, "rankSpacing": 68, "curve": "linear"}}}%%
-flowchart LR
+%%{init: {"theme": "base", "flowchart": {"htmlLabels": true, "nodeSpacing": 36, "rankSpacing": 48, "curve": "linear"}}}%%
+flowchart TB
     app["01-hello-pvr<br/>example loop + shutdown"]
 
     subgraph library [maishuji static library]
@@ -23,7 +23,7 @@ flowchart LR
         pvr["Pvr<br/>hardware context"]
         frame["Frame<br/>scene scope"]
         list["RenderList<br/>polygon list"]
-        adapter["KOS backend<br/>lifecycle adapter"]
+        adapter["KOS adapter<br/>lifecycle bridge"]
 
         pvr -->|begins| frame
         frame -->|opens| list
@@ -32,8 +32,8 @@ flowchart LR
 
     subgraph platform [Dreamcast platform]
         direction LR
-        kos["KallistiOS API<br/>kos.h + dc/pvr.h"]
-        hardware["Dreamcast PVR<br/>PowerVR2 renderer"]
+        kos["KallistiOS PVR API<br/>pvr_* calls"]
+        hardware["Dreamcast PowerVR2<br/>tile renderer"]
 
         kos -->|controls| hardware
     end
@@ -42,7 +42,7 @@ flowchart LR
     adapter -->|calls| kos
 ~~~
 
-Read the boundary from left to right:
+Read the layers from top to bottom; the library row reads left to right:
 
 - The example owns the application-level loop.
 - Pvr owns the hardware context; Frame and RenderList borrow that live
@@ -70,8 +70,8 @@ sequenceDiagram
     participant Pvr as Pvr
     participant Frame as Frame
     participant List as RenderList
-    participant Backend as KOS backend
-    participant KOS as KOS + Dreamcast PVR
+    participant Backend as KOS adapter
+    participant KOS as KallistiOS PVR API
 
     App->>Pvr: initialize(configuration)
     Pvr->>Backend: initialize(configuration)

@@ -3,6 +3,7 @@
 Phase 2 introduces the first maishuji library boundary around the raw KOS
 PVR sequence. It covers initialization and safe frame/list lifetimes; it does
 not submit vertices or textures yet.
+For a quick visual overview, see [the PVR architecture diagrams](architecture-diagrams.md).
 
 ## Public types
 

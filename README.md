@@ -5,6 +5,7 @@ A small C++20 learning framework over KallistiOS for exploring Sega Dreamcast ha
 ## Set up the development environment
 
 Open this repository in VS Code and choose **Dev Containers: Reopen in Container**. The development container and CI use the same image digest and KOS toolchain. See [`docs/toolchain.md`](docs/toolchain.md) for the pinned versions and setup checks, and [`docs/kos-backend.md`](docs/kos-backend.md) for the raw KOS/PVR boundary and lifetime rules.
+For a visual overview, see [the PVR architecture diagrams](docs/architecture-diagrams.md).
 
 Verify the environment in the integrated terminal:
 

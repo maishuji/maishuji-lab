@@ -165,12 +165,11 @@ make dreamcast-cdi
 FLYCAST_REQUIRE_RUNTIME_MARKERS=1 make flycast-smoke
 ```
 
-`FLYCAST_REQUIRE_RUNTIME_MARKERS=1` only changes the pass/fail gate; it does
-not itself enable Flycast's serial-console option. The current script launches
-Flycast with its isolated log capture and window title, so a template that
-needs guest serial output should add
-`-config "config:Debug.SerialConsoleEnabled=yes"` to its launcher and verify that
-the selected KOS `dbgio` route is visible there.
+`FLYCAST_REQUIRE_RUNTIME_MARKERS=1` only changes the pass/fail gate. The current
+script now enables Flycast's serial-console forwarding in addition to its
+isolated log capture and window title. This does not guarantee guest output:
+the selected KOS `dbgio` route must still deliver bytes to the emulated serial
+path.
 
 Use that mode only when the selected serial/dcload route is known to deliver
 KOS output into the captured Flycast log. In the tested Flatpak setup, the

@@ -167,6 +167,7 @@ flatpak run \
     --env="XDG_CACHE_HOME=$work_dir/cache" \
     --instance-id-fd=3 \
     "$app_id" \
+    -config "config:Debug.SerialConsoleEnabled=yes" \
     -config "window:title=$window_title" \
     "$cdi_path" 3>"$instance_id_file" >"$log_file" 2>&1 &
 launcher_pid=$!

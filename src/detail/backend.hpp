@@ -11,6 +11,10 @@ struct Backend {
     bool (*scene_finish)() noexcept;
     bool (*list_begin)(List list) noexcept;
     bool (*list_finish)() noexcept;
+    bool (*submit_triangle)(List list, const Triangle &triangle,
+                            const PrimitiveConfiguration &configuration) noexcept;
+    bool (*submit_quad)(List list, const Quad &quad,
+                        const PrimitiveConfiguration &configuration) noexcept;
     bool (*wait_render_done)() noexcept;
     bool (*shutdown)() noexcept;
 };

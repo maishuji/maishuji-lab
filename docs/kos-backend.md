@@ -1,6 +1,6 @@
 # Raw KOS/PVR boundary
 
-This document records the Phase 1 baseline before introducing maishuji-lab
+This document records the raw baseline used to define the maishuji-lab
 rendering abstractions. The target source of truth is the pinned KallistiOS
 environment in [`tools/toolchain.lock`](../tools/toolchain.lock): KOS 2.2.2,
 source snapshot `08FEB26`, commit
@@ -14,7 +14,7 @@ raw reference is [`examples/pvr_smoke.cpp`](../examples/pvr_smoke.cpp).
 
 The project uses public KOS headers and calls only:
 
-| Concern | Public KOS boundary | Phase 1 rule |
+| Concern | Public KOS boundary | Baseline rule |
 | --- | --- | --- |
 | Video mode | `vid_set_enabled()`, `vid_set_mode()` | Set a 2D mode before PVR initialization. |
 | PVR setup | `pvr_init()` with `pvr_init_params_t` | Configure enabled lists, vertex buffer, and DMA policy explicitly. |
@@ -65,7 +65,7 @@ The raw smoke configures the following `pvr_init_params_t` values:
 | --- | --- | --- |
 | Opaque polygon bin | `PVR_BINSIZE_16` | Keep the opaque list enabled for the reference triangle. |
 | Opaque modifier bin | `PVR_BINSIZE_0` | Not used by the reference. |
-| Translucent polygon bin | `PVR_BINSIZE_16` | Keep the second polygon list available for the Phase 1 boundary. |
+| Translucent polygon bin | `PVR_BINSIZE_16` | Keep the second polygon list available for the library boundary. |
 | Translucent modifier bin | `PVR_BINSIZE_0` | Not used by the reference. |
 | Punch-through bin | `PVR_BINSIZE_16` | Keep all three polygon list types enabled explicitly. |
 | Vertex buffer | `512 * 1024` bytes | Match the pinned KOS default while keeping the budget visible. |
@@ -147,7 +147,7 @@ not imply a hidden wait or silently reopen a KOS list.
 
 ## Initial backend/API constraints
 
-The Phase 2 API can now be kept small and testable:
+The public API can now be kept small and testable:
 
 - a single active PVR context is supported initially;
 - initialization is an explicit fallible operation that returns a status/result;
@@ -170,7 +170,7 @@ work, but it must not include `pvr_internal.h` or depend on private state.
 
 ## Error and runtime policy
 
-Phase 1 keeps the raw KOS return values visible:
+The raw baseline keeps KOS return values visible:
 
 - fallible setup and submission calls return an explicit status to the caller;
 - a failed setup path must not create a guard that later performs an unmatched
@@ -178,14 +178,14 @@ Phase 1 keeps the raw KOS return values visible:
 - programmer misuse is asserted in Debug-oriented library checks;
 - cleanup is non-throwing and does not require exceptions or RTTI;
 - the target path uses C++20 without extensions, with exceptions and RTTI
-  disabled as established by the Phase 0 build;
+  disabled as established by the pinned build;
 - target rendering and host contract tests remain separate because host
   execution cannot establish PVR behavior.
 
 The current raw example logs a failure, waits for rendering to stop, shuts down
 the PVR, disables video, and exits for an unrecoverable smoke error. Its normal
 path renders a finite reference run, performs the same wait/shutdown sequence,
-and returns successfully. Phase 2 will turn this policy into a small library
+and returns successfully. The lifecycle layer turns this policy into a small library
 result/status type and lifecycle checks without introducing `std::expected` or
 a generic renderer.
 
@@ -223,7 +223,7 @@ the library; those remain disabled or outside the target policy.
 
 ## Evidence status
 
-Phase 0 established the following evidence against the pinned image:
+The pinned build and emulator provide the following evidence:
 
 - host C++20 compile/link/execute smoke passed;
 - fresh Debug and Release SH-4 ELFs built;
@@ -234,7 +234,7 @@ Phase 0 established the following evidence against the pinned image:
 - the prior upload attempt used an unconfirmed console address and did not
   execute, so no real-hardware result is claimed.
 
-The Phase 1 raw baseline now adds the following evidence:
+The raw baseline adds the following evidence:
 
 - the explicit three-list, non-DMA `pvr_init_params_t` configuration builds in
   both Debug and Release with the pinned KOS 2.2.2 image;
@@ -250,9 +250,9 @@ The Phase 1 raw baseline now adds the following evidence:
 - the host C++20 probe executes the concepts, `constexpr`, `span`, move-only,
   and RAII checks.
 
-Phase 1 is complete for the pinned build and emulator baseline. No
+The raw baseline is complete for the pinned build and emulator baseline. No
 real-hardware result is claimed: the earlier upload attempt used an
-unconfirmed console address. Phase 2 now implements the small backend API against this raw triangle
+unconfirmed console address. The lifecycle layer now implements the small backend API against this raw triangle
 reference. See docs/lifecycle.md for the public lifecycle mapping, explicit
 shutdown boundary, and host recording-backend evidence. Primitive submission
 remains outside this phase.

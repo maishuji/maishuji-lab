@@ -1,8 +1,8 @@
-# Phase 2 PVR lifecycle
+# PVR lifecycle
 
-Phase 2 introduces the first maishuji library boundary around the raw KOS
-PVR sequence. It covers initialization and safe frame/list lifetimes; it does
-not submit vertices or textures yet.
+The maishuji library provides a small boundary around the raw KOS PVR
+sequence. It covers initialization and safe frame/list lifetimes; colored
+primitive submission is described in [primitives.md](primitives.md).
 For a quick visual overview, see [the PVR architecture diagrams](architecture-diagrams.md).
 
 ## Public types
@@ -89,4 +89,4 @@ The pinned target build compiles both the raw reference and
 maishuji-hello-pvr, which opens and finishes an opaque list for 600 frames.
 That proves target compilation and ABI compatibility; it is not emulator or
 real-hardware runtime evidence. Primitive submission remains in the raw
-reference until Phase 3.
+reference; see [primitives.md](primitives.md) for colored geometry.

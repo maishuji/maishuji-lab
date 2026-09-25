@@ -11,6 +11,50 @@ enum class List : std::uint8_t {
     Translucent,
 };
 
+enum class Culling : std::uint8_t {
+    None,
+    Clockwise,
+    CounterClockwise,
+};
+
+struct Color {
+    std::uint8_t red = 255;
+    std::uint8_t green = 255;
+    std::uint8_t blue = 255;
+    std::uint8_t alpha = 255;
+
+    constexpr std::uint32_t argb() const noexcept {
+        return (static_cast<std::uint32_t>(alpha) << 24) |
+               (static_cast<std::uint32_t>(red) << 16) |
+               (static_cast<std::uint32_t>(green) << 8) |
+               static_cast<std::uint32_t>(blue);
+    }
+};
+
+struct Vertex {
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 1.0f;
+    Color color{};
+};
+
+struct Triangle {
+    Vertex first{};
+    Vertex second{};
+    Vertex third{};
+};
+
+struct Quad {
+    Vertex top_left{};
+    Vertex bottom_left{};
+    Vertex top_right{};
+    Vertex bottom_right{};
+};
+
+struct PrimitiveConfiguration {
+    Culling culling = Culling::None;
+};
+
 struct Configuration {
     bool enable_opaque = true;
     bool enable_punch_through = true;
@@ -45,6 +89,7 @@ enum class Status : std::uint8_t {
     RenderListDisabled,
     RenderListBeginFailed,
     RenderListFinishFailed,
+    PrimitiveSubmissionFailed,
 };
 
 constexpr bool succeeded(Status status) noexcept {
@@ -142,6 +187,11 @@ public:
     RenderList &operator=(RenderList &&) = delete;
 
     Status finish() noexcept;
+    Status submit(const Triangle &triangle,
+                  const PrimitiveConfiguration &configuration = {}) noexcept;
+    Status submit(const Quad &quad,
+                  const PrimitiveConfiguration &configuration = {}) noexcept;
+
 
     bool active() const noexcept {
         return active_;

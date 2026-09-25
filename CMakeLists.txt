@@ -24,6 +24,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     add_executable(maishuji-hello-pvr examples/01-hello-pvr.cpp)
     target_link_libraries(maishuji-hello-pvr PRIVATE maishuji)
     target_compile_options(maishuji-hello-pvr PRIVATE -fno-exceptions -fno-rtti)
+
+    add_executable(maishuji-colored-primitives examples/02-colored-primitives.cpp)
+    target_link_libraries(maishuji-colored-primitives PRIVATE maishuji)
+    target_compile_options(maishuji-colored-primitives PRIVATE -fno-exceptions -fno-rtti)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

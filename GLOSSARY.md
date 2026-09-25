@@ -38,3 +38,15 @@ Flycast(emulator):
 
 CDI(disc-image):
 	Packages a bootable Dreamcast program and its assets into an image accepted by emulators or optical-disc tools.
+
+Gouraud(pvr):
+	Interpolates vertex colors across a polygon so the PVR shades each pixel from the submitted vertices.
+
+Culling(pvr):
+	Rejects polygons based on their winding before the PVR rasterizes them.
+
+Triangle-strip(pvr):
+	Reuses each pair of recent vertices so a sequence of vertices describes connected triangles.
+
+Polygon-header(pvr):
+	Describes the PVR list and rendering state that precede a primitive's vertex packets.

@@ -91,6 +91,8 @@ const char *status_name(Status status) noexcept {
         return "PVR render-list begin failed";
     case Status::RenderListFinishFailed:
         return "PVR render-list finish failed";
+    case Status::PrimitiveSubmissionFailed:
+        return "PVR primitive submission failed";
     }
 
     return "unknown status";
@@ -221,6 +223,32 @@ Status Frame::close_from_destructor() noexcept {
 RenderList::~RenderList() noexcept {
     if(active_)
         (void)finish();
+}
+
+Status RenderList::submit(
+    const Triangle &triangle,
+    const PrimitiveConfiguration &configuration) noexcept {
+    if(!active_ || owner_ == nullptr || owner_->owner_ == nullptr ||
+       owner_->active_list_ != this)
+        return Status::RenderListNotActive;
+
+    return owner_->owner_->backend_->submit_triangle(
+               list_type_, triangle, configuration)
+               ? Status::Success
+               : Status::PrimitiveSubmissionFailed;
+}
+
+Status RenderList::submit(
+    const Quad &quad,
+    const PrimitiveConfiguration &configuration) noexcept {
+    if(!active_ || owner_ == nullptr || owner_->owner_ == nullptr ||
+       owner_->active_list_ != this)
+        return Status::RenderListNotActive;
+
+    return owner_->owner_->backend_->submit_quad(
+               list_type_, quad, configuration)
+               ? Status::Success
+               : Status::PrimitiveSubmissionFailed;
 }
 
 Status RenderList::finish() noexcept {

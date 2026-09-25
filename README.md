@@ -22,7 +22,7 @@ make host-run
 make host-test
 ```
 
-See [docs/lifecycle.md](docs/lifecycle.md) for the Phase 2 lifecycle mapping and ownership rules.
+See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, and [docs/primitives.md](docs/primitives.md) for colored geometry.
 
 Build the PVR smoke example for Dreamcast:
 
@@ -31,7 +31,7 @@ make dreamcast-build DC_BUILD_TYPE=Debug
 make dreamcast-build DC_BUILD_TYPE=Release
 ```
 
-The raw reference output is `build-dreamcast/maishuji-pvr-smoke.elf`. The Phase 2 lifecycle example is `build-dreamcast/maishuji-hello-pvr.elf`; it repeats explicit frame and opaque-list scopes without submitting primitives yet. The raw example initializes video and PVR, then displays a colored triangle. Together they verify the C++20 compiler, KOS headers and libraries, CMake cross-compilation, and the SH-4 linker setup.
+The raw reference output is `build-dreamcast/maishuji-pvr-smoke.elf`. The lifecycle example is `build-dreamcast/maishuji-hello-pvr.elf`; it repeats explicit frame and opaque-list scopes. The colored primitive example is `build-dreamcast/maishuji-colored-primitives.elf`. The raw example initializes video and PVR, then displays a colored triangle. Together they verify the C++20 compiler, KOS headers and libraries, CMake cross-compilation, and the SH-4 linker setup.
 
 To send the ELF to a Dreamcast running `dcload-ip` over a Broadband Adapter, replace the placeholder with the console's address:
 

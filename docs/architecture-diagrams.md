@@ -1,6 +1,6 @@
 # PVR architecture diagrams
 
-These diagrams give a quick visual orientation to the Phase 2 PVR boundary.
+These diagrams give a quick visual orientation to the PVR boundary.
 The first is a C4-style logical component view; the second follows one
 01-hello-pvr frame from initialization through explicit shutdown. The diagrams
 keep the component labels short and the sequence to six lanes so they remain
@@ -58,9 +58,9 @@ Dreamcast flow stays readable.
 
 ## Frame sequence
 
-This sequence shows the normal path used by 01-hello-pvr. Phase 2 opens and
-closes scopes; Phase 3 will add primitive submission between list begin and
-list finish.
+This sequence shows the normal path used by the examples. The library
+opens and closes scopes and submits primitives between list begin and list
+finish.
 
 ~~~mermaid
 %%{init: {"theme": "base", "sequence": {"useMaxWidth": true, "wrap": true, "diagramMarginX": 28, "diagramMarginY": 18, "actorMargin": 42, "width": 170}}}%%
@@ -97,7 +97,7 @@ sequenceDiagram
         KOS-->>Backend: list open
         Frame-->>App: Success - RenderList active
 
-        Note over App,List: Phase 2 scope boundary. Phase 3 adds pvr_prim() here.
+        Note over App,List: Primitive packets are submitted inside the active list.
 
         App->>List: finish()
         List->>Backend: list_finish()

@@ -58,4 +58,12 @@ make dreamcast-cdi
 make flycast-smoke
 ```
 
+For the textured example, package the CDI in the pinned container and run
+the capability-specific Flycast check on the host:
+
+~~~sh
+make dreamcast-textured-cdi
+make flycast-textured-quad
+~~~
+
 CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each target ELF as a build artifact. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.

@@ -22,7 +22,7 @@ make host-run
 make host-test
 ```
 
-See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, and [docs/textures.md](docs/textures.md) for texture memory and uploads.
+See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
 
 Build the PVR smoke example for Dreamcast:
 

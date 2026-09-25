@@ -68,6 +68,13 @@ int main() {
         }
     }
 
+    const std::span<const std::uint16_t> pixel_data{pixels, 32 * 32};
+    const maishuji::TexturedQuad quads[3] = {
+        make_quad(16.0f, 152.0f),
+        make_quad(232.0f, 152.0f),
+        make_quad(448.0f, 152.0f),
+    };
+
     maishuji::Pvr pvr;
     maishuji::Status status = pvr.initialize();
     if(maishuji::failed(status)) {
@@ -76,49 +83,49 @@ int main() {
         return 1;
     }
 
-    maishuji::Texture texture;
-    status = texture.allocate(pvr, 32, 32);
-    if(maishuji::failed(status)) {
-        dbglog(DBG_ERROR, "maishuji: texture allocation failed: %s\n",
-               maishuji::status_name(status));
-        (void)pvr.shutdown();
-        return 1;
-    }
-
-    const std::span<const std::uint16_t> pixel_data{pixels, 32 * 32};
-    status = texture.upload(pixel_data);
-    if(maishuji::failed(status)) {
-        dbglog(DBG_ERROR, "maishuji: texture upload failed: %s\n",
-               maishuji::status_name(status));
-        (void)texture.release();
-        (void)pvr.shutdown();
-        return 1;
-    }
-
-    const maishuji::TexturedQuad quads[3] = {
-        make_quad(16.0f, 152.0f),
-        make_quad(232.0f, 152.0f),
-        make_quad(448.0f, 152.0f),
-    };
-
-    constexpr int frames = 600;
-    for(int frame = 0; frame < frames; ++frame) {
-        status = run_frame(pvr, texture, quads);
+    constexpr int texture_cycles = 8;
+    constexpr int frames_per_cycle = 75;
+    for(int cycle = 0; cycle < texture_cycles; ++cycle) {
+        maishuji::Texture texture;
+        status = texture.allocate(pvr, 32, 32);
         if(maishuji::failed(status)) {
-            dbglog(DBG_ERROR, "maishuji: textured frame %d failed: %s\n",
-                   frame, maishuji::status_name(status));
+            dbglog(DBG_ERROR, "maishuji: texture allocation failed in cycle %d: %s\n",
+                   cycle, maishuji::status_name(status));
+            (void)pvr.shutdown();
+            return 1;
+        }
+
+        status = texture.upload(pixel_data);
+        if(maishuji::failed(status)) {
+            dbglog(DBG_ERROR, "maishuji: texture upload failed in cycle %d: %s\n",
+                   cycle, maishuji::status_name(status));
             (void)texture.release();
             (void)pvr.shutdown();
             return 1;
         }
-    }
 
-    status = texture.release();
-    if(maishuji::failed(status)) {
-        dbglog(DBG_ERROR, "maishuji: texture release failed: %s\n",
-               maishuji::status_name(status));
-        (void)pvr.shutdown();
-        return 1;
+        for(int frame = 0; frame < frames_per_cycle; ++frame) {
+            status = run_frame(pvr, texture, quads);
+            if(maishuji::failed(status)) {
+                dbglog(DBG_ERROR,
+                       "maishuji: textured frame %d in cycle %d failed: %s\n",
+                       frame, cycle, maishuji::status_name(status));
+                if(texture.allocated())
+                    (void)texture.release();
+                (void)pvr.shutdown();
+                return 1;
+            }
+        }
+
+        status = texture.release();
+        if(maishuji::failed(status)) {
+            dbglog(DBG_ERROR, "maishuji: texture release failed in cycle %d: %s\n",
+                   cycle, maishuji::status_name(status));
+            if(texture.allocated())
+                (void)texture.release();
+            (void)pvr.shutdown();
+            return 1;
+        }
     }
 
     status = pvr.shutdown();
@@ -128,6 +135,7 @@ int main() {
         return 1;
     }
 
-    dbglog(DBG_NOTICE, "maishuji: textured quad passed\n");
+    dbglog(DBG_NOTICE, "maishuji: textured quad passed (%d texture cycles)\n",
+           texture_cycles);
     return 0;
 }

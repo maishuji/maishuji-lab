@@ -80,12 +80,14 @@ texture data. The moved-from object is empty and can be destroyed normally.
 
 ## List variants and example
 
-examples/03-textured-quad.cpp uploads one alpha-bearing checker texture, then
-submits three quads in one frame: opaque, punch-through, and translucent. The
-list selects the PVR polygon-list processing; the texture alpha values make
-the differences visible without adding a material system. The example repeats
-the frame for 600 iterations, releases the texture at the explicit render-wait
-boundary, and only then shuts down PVR.
+examples/03-textured-quad.cpp uploads one alpha-bearing checker texture,
+submits three quads in one frame—opaque, punch-through, and translucent—and
+then repeats that workload for eight texture lifetimes. Each lifetime renders
+75 frames, waits at Texture::release(), and allocates the next texture only
+after the previous PVR handle has been freed. The total remains 600 frames,
+but the example now exercises repeated VRAM reuse instead of only one
+allocation. The texture alpha values make the list differences visible
+without adding a material system.
 
 The KOS mapping is intentionally direct:
 
@@ -98,5 +100,6 @@ The KOS mapping is intentionally direct:
 
 The host recording backend tests these ownership, validation, move, failure, and
 wait rules without claiming to emulate PVR rasterization. Target Debug and
-Release builds are the cross-compilation check; emulator or hardware rendering
-remains a separate runtime check.
+Release builds are the cross-compilation check, and the dedicated Flycast gate
+checks the rendered textured output. The repeated lifetime workload is not a
+hardware performance measurement; real Dreamcast validation remains separate.

@@ -233,6 +233,58 @@ void test_scope_cleanup() {
                   "shutdown after destructor cleanup");
 }
 
+void test_colored_primitives() {
+    using namespace maishuji;
+
+    test::reset_recording();
+
+    const Triangle triangle{
+        {320.0f, 88.0f, 1.0f, {255, 64, 64, 255}},
+        {88.0f, 392.0f, 1.0f, {64, 255, 64, 255}},
+        {552.0f, 392.0f, 1.0f, {64, 128, 255, 255}},
+    };
+    const Quad quad{
+        {120.0f, 120.0f, 1.0f, {255, 255, 255, 255}},
+        {120.0f, 300.0f, 1.0f, {255, 128, 64, 255}},
+        {300.0f, 120.0f, 1.0f, {128, 192, 255, 255}},
+        {300.0f, 300.0f, 1.0f, {255, 64, 192, 255}},
+    };
+
+    Pvr pvr;
+    Frame frame;
+    RenderList opaque;
+
+    expect_status(pvr.initialize(), Status::Success,
+                  "initialize primitive test");
+    expect_status(opaque.submit(triangle), Status::RenderListNotActive,
+                  "reject primitive outside list");
+    expect_status(pvr.begin_frame(frame), Status::Success,
+                  "begin primitive frame");
+    expect_status(frame.begin_list(opaque, List::Opaque), Status::Success,
+                  "begin primitive list");
+    expect_status(opaque.submit(triangle), Status::Success,
+                  "submit triangle");
+    expect_status(opaque.submit(quad), Status::Success,
+                  "submit quad");
+
+    test::fail_next(test::FailurePoint::PrimitiveSubmit);
+    expect_status(opaque.submit(triangle), Status::PrimitiveSubmissionFailed,
+                  "propagate primitive failure");
+
+    expect_status(opaque.finish(), Status::Success,
+                  "finish primitive list");
+    expect_status(frame.finish(), Status::Success,
+                  "finish primitive frame");
+    expect_status(pvr.shutdown(), Status::Success,
+                  "shutdown primitive PVR");
+    expect_equal(test::recording().triangle_submit_calls, 2,
+                 "triangle submission call count");
+    expect_equal(test::recording().quad_submit_calls, 1,
+                 "quad submission call count");
+    expect_true(test::recording().last_primitive_list == List::Opaque,
+                "primitive list matches active list");
+}
+
 } // namespace
 
 int main() {
@@ -240,6 +292,7 @@ int main() {
     test_configuration_and_disabled_list();
     test_failed_acquisition_and_cleanup();
     test_scope_cleanup();
+    test_colored_primitives();
 
     if(failures != 0) {
         std::fprintf(stderr, "%d lifecycle test(s) failed\n", failures);

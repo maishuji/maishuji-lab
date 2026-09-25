@@ -1,6 +1,6 @@
 # Dreamcast serial logs with Flycast
 
-This guide records the serial/logging findings from the Phase 1 PVR work so
+This guide records the serial/logging findings from the raw PVR work so
 they can be reused in another Dreamcast template project. It covers two
 different channels that are easy to confuse:
 

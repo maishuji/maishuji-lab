@@ -58,6 +58,24 @@ bool list_finish() noexcept {
     return consume_failure(FailurePoint::ListFinish);
 }
 
+bool submit_triangle(List list, const Triangle &triangle,
+                     const PrimitiveConfiguration &configuration) noexcept {
+    (void)triangle;
+    (void)configuration;
+    ++state.triangle_submit_calls;
+    state.last_primitive_list = list;
+    return consume_failure(FailurePoint::PrimitiveSubmit);
+}
+
+bool submit_quad(List list, const Quad &quad,
+                 const PrimitiveConfiguration &configuration) noexcept {
+    (void)quad;
+    (void)configuration;
+    ++state.quad_submit_calls;
+    state.last_primitive_list = list;
+    return consume_failure(FailurePoint::PrimitiveSubmit);
+}
+
 bool wait_render_done() noexcept {
     ++state.render_wait_calls;
     return consume_failure(FailurePoint::RenderWait);
@@ -95,6 +113,8 @@ const Backend &default_backend() noexcept {
         maishuji::test::scene_finish,
         maishuji::test::list_begin,
         maishuji::test::list_finish,
+        maishuji::test::submit_triangle,
+        maishuji::test::submit_quad,
         maishuji::test::wait_render_done,
         maishuji::test::shutdown,
     };

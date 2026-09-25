@@ -26,18 +26,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Verify pinned KOS toolchain
-        run: ./tools/with-kos.sh ./tools/check-toolchain.sh
+        run: make check-toolchain
         shell: bash
       - name: Configure and build ${{ matrix.build_type }} ELF
         run: make dreamcast-build DC_BUILD_TYPE=${{ matrix.build_type }}
         shell: bash
-      - name: Upload ${{ matrix.build_type }} Dreamcast ELF
+      - name: Record target build evidence
+        run: ./tools/with-kos.sh ./tools/write-target-build-manifest.sh build-dreamcast ${{ matrix.build_type }}
+        shell: bash
+      - name: Upload ${{ matrix.build_type }} Dreamcast build evidence
         uses: actions/upload-artifact@v4
         with:
           name: maishuji-pvr-examples-${{ matrix.build_type }}
           path: |
-            build-dreamcast/maishuji-pvr-smoke.elf
-            build-dreamcast/maishuji-hello-pvr.elf
-            build-dreamcast/maishuji-colored-primitives.elf
-            build-dreamcast/maishuji-textured-quad.elf
+            build-dreamcast/*.elf
+            build-dreamcast/*.map
+            build-dreamcast/target-build-manifest.txt
+            build-dreamcast/target-size.txt
+            build-dreamcast/target-toolchain.lock
           if-no-files-found: error

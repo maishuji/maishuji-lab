@@ -66,4 +66,4 @@ make dreamcast-textured-cdi
 make flycast-textured-quad
 ~~~
 
-CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each target ELF as a build artifact. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.
+CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each ELF with its linker map, size summary, toolchain lock, and build manifest. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.

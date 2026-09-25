@@ -149,6 +149,77 @@ bool submit_quad(List list, const Quad &quad,
     return submit_colored(list, vertices, 4, configuration);
 }
 
+void fill_textured_vertex(pvr_vertex_t &destination, std::uint32_t flags,
+                          const TexturedVertex &source) noexcept {
+    destination.flags = flags;
+    destination.x = source.x;
+    destination.y = source.y;
+    destination.z = source.z;
+    destination.u = source.u;
+    destination.v = source.v;
+    destination.argb = source.color.argb();
+    destination.oargb = 0;
+}
+
+bool texture_allocate(std::size_t bytes, TextureHandle &handle) noexcept {
+    pvr_ptr_t pointer = pvr_mem_malloc(bytes);
+    if(pointer == nullptr)
+        return false;
+
+    handle = reinterpret_cast<std::uintptr_t>(pointer);
+    return true;
+}
+
+bool texture_upload(TextureHandle handle, const std::uint16_t *pixels,
+                    std::size_t bytes) noexcept {
+    pvr_txr_load(pixels, reinterpret_cast<pvr_ptr_t>(handle), bytes);
+    return true;
+}
+
+void texture_free(TextureHandle handle) noexcept {
+    pvr_mem_free(reinterpret_cast<pvr_ptr_t>(handle));
+}
+
+bool submit_textured_quad(
+    List list, TextureHandle handle, std::uint16_t width,
+    std::uint16_t height, const TexturedQuad &quad,
+    const PrimitiveConfiguration &configuration) noexcept {
+    alignas(32) pvr_poly_hdr_t header;
+    alignas(32) pvr_vertex_t packet[4];
+
+    pvr_poly_cxt_t context;
+    pvr_poly_cxt_txr(
+        &context, to_kos_list(list),
+        PVR_TXRFMT_ARGB4444 | PVR_TXRFMT_NONTWIDDLED,
+        static_cast<int>(width), static_cast<int>(height),
+        reinterpret_cast<pvr_ptr_t>(handle), PVR_FILTER_NEAREST);
+    context.gen.shading = PVR_SHADE_GOURAUD;
+    context.gen.culling = to_kos_culling(configuration.culling);
+    pvr_poly_compile(&header, &context);
+
+    const TexturedVertex vertices[4] = {
+        quad.top_left,
+        quad.bottom_left,
+        quad.top_right,
+        quad.bottom_right,
+    };
+    for(std::size_t index = 0; index < 4; ++index) {
+        const std::uint32_t flags =
+            index + 1 == 4 ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
+        fill_textured_vertex(packet[index], flags, vertices[index]);
+    }
+
+    if(pvr_prim(&header, sizeof(header)) < 0)
+        return false;
+
+    for(const pvr_vertex_t &vertex : packet) {
+        if(pvr_prim(&vertex, sizeof(vertex)) < 0)
+            return false;
+    }
+
+    return true;
+}
+
 bool wait_render_done() noexcept {
     return pvr_wait_render_done() >= 0;
 }
@@ -171,6 +242,10 @@ const Backend &default_backend() noexcept {
         list_finish,
         submit_triangle,
         submit_quad,
+        texture_allocate,
+        texture_upload,
+        texture_free,
+        submit_textured_quad,
         wait_render_done,
         shutdown,
     };

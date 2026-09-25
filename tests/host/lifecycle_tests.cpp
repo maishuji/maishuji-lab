@@ -2,7 +2,9 @@
 
 #include "maishuji/pvr.hpp"
 
+#include <array>
 #include <cstdio>
+#include <utility>
 
 namespace {
 
@@ -233,6 +235,112 @@ void test_scope_cleanup() {
                   "shutdown after destructor cleanup");
 }
 
+void test_texture_ownership() {
+    using namespace maishuji;
+
+    test::reset_recording();
+
+    Texture texture;
+    Pvr pvr;
+    expect_status(texture.allocate(pvr, 8, 8), Status::NotInitialized,
+                  "reject texture allocation before initialize");
+    expect_status(pvr.initialize(), Status::Success,
+                  "initialize texture test PVR");
+    expect_status(texture.allocate(pvr, 3, 8),
+                  Status::TextureInvalidDimensions,
+                  "reject non-power-of-two texture dimensions");
+
+    Texture allocation_failure;
+    test::fail_next(test::FailurePoint::TextureAllocate);
+    expect_status(allocation_failure.allocate(pvr, 8, 8),
+                  Status::TextureAllocationFailed,
+                  "propagate texture allocation failure");
+
+    expect_status(texture.allocate(pvr, 8, 8), Status::Success,
+                  "allocate texture");
+    expect_status(texture.allocate(pvr, 8, 8),
+                  Status::TextureAlreadyAllocated,
+                  "reject duplicate texture allocation");
+
+    std::array<std::uint16_t, 64> pixels{};
+    expect_status(texture.upload(pixels), Status::Success,
+                  "upload texture data");
+    expect_equal(test::recording().last_texture_upload_bytes,
+                 sizeof(pixels), "texture upload byte count");
+    std::array<std::uint16_t, 63> short_pixels{};
+    expect_status(texture.upload(short_pixels), Status::TextureInvalidData,
+                  "reject short texture upload");
+    test::fail_next(test::FailurePoint::TextureUpload);
+    expect_status(texture.upload(pixels), Status::TextureUploadFailed,
+                  "propagate texture upload failure");
+    expect_status(texture.upload(pixels), Status::Success,
+                  "retry texture upload");
+
+    Texture moved(std::move(texture));
+    expect_true(!texture.allocated(), "move construction clears source");
+    expect_true(moved.allocated(), "move construction keeps allocation");
+    Texture assigned;
+    assigned = std::move(moved);
+    expect_true(!moved.allocated(), "move assignment clears source");
+    expect_true(assigned.allocated(), "move assignment keeps allocation");
+
+    const TexturedQuad quad{
+        {80.0f, 100.0f, 1.0f, 0.0f, 0.0f},
+        {80.0f, 220.0f, 1.0f, 0.0f, 1.0f},
+        {200.0f, 100.0f, 1.0f, 1.0f, 0.0f},
+        {200.0f, 220.0f, 1.0f, 1.0f, 1.0f},
+    };
+    Texture unallocated;
+    Frame frame;
+    RenderList list;
+    expect_status(list.submit(assigned, quad), Status::RenderListNotActive,
+                  "reject textured submission outside list");
+    expect_status(pvr.begin_frame(frame), Status::Success,
+                  "begin texture frame");
+    expect_status(frame.begin_list(list, List::Opaque), Status::Success,
+                  "begin texture list");
+    expect_status(list.submit(unallocated, quad), Status::TextureNotAllocated,
+                  "reject unallocated texture submission");
+    expect_status(list.submit(assigned, quad), Status::Success,
+                  "submit textured quad");
+    test::fail_next(test::FailurePoint::TexturedSubmit);
+    expect_status(list.submit(assigned, quad),
+                  Status::PrimitiveSubmissionFailed,
+                  "propagate textured submission failure");
+    expect_status(list.finish(), Status::Success, "finish texture list");
+    expect_status(frame.finish(), Status::Success, "finish texture frame");
+
+    Frame active_frame;
+    expect_status(pvr.begin_frame(active_frame), Status::Success,
+                  "begin active release frame");
+    expect_status(assigned.release(), Status::FrameActive,
+                  "reject texture release during active frame");
+    expect_status(active_frame.finish(), Status::Success,
+                  "finish active release frame");
+
+    test::fail_next(test::FailurePoint::RenderWait);
+    expect_status(assigned.release(), Status::RenderWaitFailed,
+                  "propagate texture release wait failure");
+    expect_true(assigned.allocated(),
+                "retain texture allocation after release wait failure");
+    expect_status(assigned.release(), Status::Success,
+                  "release texture after render wait");
+    expect_true(!assigned.allocated(), "release clears texture allocation");
+    expect_status(pvr.shutdown(), Status::Success,
+                  "shutdown texture test PVR");
+
+    expect_equal(test::recording().texture_allocate_calls, 2,
+                 "texture allocation call count");
+    expect_equal(test::recording().texture_upload_calls, 3,
+                 "texture upload call count");
+    expect_equal(test::recording().texture_free_calls, 1,
+                 "texture free call count");
+    expect_equal(test::recording().textured_quad_submit_calls, 2,
+                 "textured quad submission call count");
+    expect_true(test::recording().last_primitive_list == List::Opaque,
+                "textured list matches active list");
+}
+
 void test_colored_primitives() {
     using namespace maishuji;
 
@@ -293,6 +401,7 @@ int main() {
     test_failed_acquisition_and_cleanup();
     test_scope_cleanup();
     test_colored_primitives();
+    test_texture_ownership();
 
     if(failures != 0) {
         std::fprintf(stderr, "%d lifecycle test(s) failed\n", failures);

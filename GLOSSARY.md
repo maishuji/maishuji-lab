@@ -50,3 +50,10 @@ Triangle-strip(pvr):
 
 Polygon-header(pvr):
 	Describes the PVR list and rendering state that precede a primitive's vertex packets.
+
+
+ARGB4444(texture):
+	Stores four-bit alpha, red, green, and blue channels in one 16-bit PVR texel.
+
+Twiddling(pvr):
+	Reorders texture addresses for PVR locality; the supported texture path uses non-twiddled row-major data.

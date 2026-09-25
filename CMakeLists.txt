@@ -28,6 +28,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     add_executable(maishuji-colored-primitives examples/02-colored-primitives.cpp)
     target_link_libraries(maishuji-colored-primitives PRIVATE maishuji)
     target_compile_options(maishuji-colored-primitives PRIVATE -fno-exceptions -fno-rtti)
+
+    add_executable(maishuji-textured-quad examples/03-textured-quad.cpp)
+    target_link_libraries(maishuji-textured-quad PRIVATE maishuji)
+    target_compile_options(maishuji-textured-quad PRIVATE -fno-exceptions -fno-rtti)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

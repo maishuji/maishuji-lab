@@ -185,6 +185,21 @@ The implementation is in
 for stable rendered frames by default; marker checking is an additional gate,
 not a replacement for the frame check.
 
+The same launcher accepts FLYCAST_FRAME_CHECKER so examples can use a
+capability-specific pixel checker. The textured example has its own CDI target
+and checker:
+
+~~~sh
+make dreamcast-textured-cdi
+make flycast-textured-quad
+~~~
+
+That check samples the centers of the three 176x176 quads and the surrounding
+background after normalizing the capture to 640x480. It proves that the
+textured example is visibly rendering in Flycast, but it does not establish
+Dreamcast hardware timing, exact alpha/blend equations, or long-run VRAM
+accounting.
+
 ## Real Dreamcast with dcload-ip
 
 For a physical console, the normal development path is:

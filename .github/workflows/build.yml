@@ -34,8 +34,10 @@ jobs:
       - name: Upload ${{ matrix.build_type }} Dreamcast ELF
         uses: actions/upload-artifact@v4
         with:
-          name: maishuji-pvr-smoke-${{ matrix.build_type }}
+          name: maishuji-pvr-examples-${{ matrix.build_type }}
           path: |
             build-dreamcast/maishuji-pvr-smoke.elf
             build-dreamcast/maishuji-hello-pvr.elf
+            build-dreamcast/maishuji-colored-primitives.elf
+            build-dreamcast/maishuji-textured-quad.elf
           if-no-files-found: error

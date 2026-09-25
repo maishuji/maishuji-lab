@@ -7,11 +7,13 @@ DC_BUILD_TYPE ?= Release
 DC_IP ?=
 DC_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.elf
 DC_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.cdi
+DC_TEXTURED_ELF ?= $(DC_BUILD_DIR)/maishuji-textured-quad.elf
+DC_TEXTURED_CDI ?= $(DC_BUILD_DIR)/maishuji-textured-quad.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-makefile-smoke flycast-smoke run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -37,11 +39,19 @@ dreamcast-build: dreamcast-configure
 dreamcast-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_ELF)" -o "$(DC_CDI)" -n "maishuji-lab PVR smoke"
 
+dreamcast-textured-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXTURED_ELF)" -o "$(DC_TEXTURED_CDI)" -n "maishuji-lab textured quad"
+
 dreamcast-makefile-smoke: check-toolchain
 	./tools/with-kos.sh "$(MAKE)" -f tools/kos-makefile-smoke.mk BUILD_DIR="$(KOS_MAKEFILE_BUILD_DIR)"
 
 flycast-smoke:
 	./tools/test-flycast-render.sh "$(DC_CDI)"
+
+flycast-textured-quad:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-textured-frame.sh \
+	FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_TEXTURED \
+	./tools/test-flycast-render.sh "$(DC_TEXTURED_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

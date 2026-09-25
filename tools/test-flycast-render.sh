@@ -35,7 +35,10 @@ else
 fi
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
-frame_checker="$script_dir/check-flycast-frame.sh"
+frame_checker=${FLYCAST_FRAME_CHECKER:-"$script_dir/check-flycast-frame.sh"}
+if [[ "$frame_checker" != /* ]]; then
+    frame_checker=$(realpath "$frame_checker")
+fi
 [[ -x "$frame_checker" ]] || {
     echo "Frame checker is missing or not executable: $frame_checker" >&2
     exit 2
@@ -109,7 +112,7 @@ work_dir=$(mktemp -d "${TMPDIR:-/tmp}/maishuji-flycast.XXXXXX")
 mkdir -p "$work_dir/config" "$work_dir/data" "$work_dir/cache"
 log_file="$work_dir/flycast.log"
 instance_id_file="$work_dir/instance-id"
-window_title="MAISHUJI_PVR_SMOKE_${BASHPID}"
+window_title="${FLYCAST_WINDOW_TITLE:-MAISHUJI_PVR_SMOKE}_${BASHPID}"
 window_id=
 launcher_pid=
 previous_active_window=$(xdotool getactivewindow 2>/dev/null || true)

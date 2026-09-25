@@ -341,6 +341,62 @@ void test_texture_ownership() {
                 "textured list matches active list");
 }
 
+void test_texture_repeated_cycles() {
+    using namespace maishuji;
+
+    test::reset_recording();
+
+    Pvr pvr;
+    expect_status(pvr.initialize(), Status::Success,
+                  "initialize repeated texture-cycle PVR");
+
+    const std::array<std::uint16_t, 64> pixels{};
+    const TexturedQuad quad{
+        {80.0f, 100.0f, 1.0f, 0.0f, 0.0f},
+        {80.0f, 220.0f, 1.0f, 0.0f, 1.0f},
+        {200.0f, 100.0f, 1.0f, 1.0f, 0.0f},
+        {200.0f, 220.0f, 1.0f, 1.0f, 1.0f},
+    };
+
+    constexpr int cycles = 8;
+    for(int cycle = 0; cycle < cycles; ++cycle) {
+        Texture texture;
+        expect_status(texture.allocate(pvr, 8, 8), Status::Success,
+                      "allocate repeated texture cycle");
+        expect_status(texture.upload(pixels), Status::Success,
+                      "upload repeated texture cycle");
+
+        Frame frame;
+        RenderList list;
+        expect_status(pvr.begin_frame(frame), Status::Success,
+                      "begin repeated texture frame");
+        expect_status(frame.begin_list(list, List::Opaque), Status::Success,
+                      "begin repeated texture list");
+        expect_status(list.submit(texture, quad), Status::Success,
+                      "submit repeated texture quad");
+        expect_status(list.finish(), Status::Success,
+                      "finish repeated texture list");
+        expect_status(frame.finish(), Status::Success,
+                      "finish repeated texture frame");
+        expect_status(texture.release(), Status::Success,
+                      "release repeated texture cycle");
+    }
+
+    expect_status(pvr.shutdown(), Status::Success,
+                  "shutdown repeated texture-cycle PVR");
+    expect_equal(test::recording().texture_allocate_calls, cycles,
+                 "repeated texture allocation count");
+    expect_equal(test::recording().texture_upload_calls, cycles,
+                 "repeated texture upload count");
+    expect_equal(test::recording().textured_quad_submit_calls, cycles,
+                 "repeated textured submission count");
+    expect_equal(test::recording().texture_free_calls, cycles,
+                 "repeated texture free count");
+    expect_equal(test::recording().render_wait_calls,
+                 static_cast<std::size_t>(cycles + 1),
+                 "repeated texture render-wait count");
+}
+
 void test_colored_primitives() {
     using namespace maishuji;
 
@@ -402,6 +458,7 @@ int main() {
     test_scope_cleanup();
     test_colored_primitives();
     test_texture_ownership();
+    test_texture_repeated_cycles();
 
     if(failures != 0) {
         std::fprintf(stderr, "%d lifecycle test(s) failed\n", failures);

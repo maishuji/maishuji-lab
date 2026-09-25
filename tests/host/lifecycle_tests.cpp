@@ -290,6 +290,25 @@ void test_texture_ownership() {
         {200.0f, 100.0f, 1.0f, 1.0f, 0.0f},
         {200.0f, 220.0f, 1.0f, 1.0f, 1.0f},
     };
+    Pvr other_pvr;
+    Frame other_frame;
+    RenderList other_list;
+    expect_status(other_pvr.initialize(), Status::Success,
+                  "initialize second texture-context PVR");
+    expect_status(other_pvr.begin_frame(other_frame), Status::Success,
+                  "begin second texture-context frame");
+    expect_status(other_frame.begin_list(other_list, List::Opaque),
+                  Status::Success, "begin second texture-context list");
+    expect_status(other_list.submit(assigned, quad),
+                  Status::TextureContextMismatch,
+                  "reject texture from another PVR context");
+    expect_status(other_list.finish(), Status::Success,
+                  "finish second texture-context list");
+    expect_status(other_frame.finish(), Status::Success,
+                  "finish second texture-context frame");
+    expect_status(other_pvr.shutdown(), Status::Success,
+                  "shutdown second texture-context PVR");
+
     Texture unallocated;
     Frame frame;
     RenderList list;

@@ -200,6 +200,37 @@ textured example is visibly rendering in Flycast, but it does not establish
 Dreamcast hardware timing, exact alpha/blend equations, or long-run VRAM
 accounting.
 
+## Recorded textured runtime check
+
+On 2026-09-25, the pinned Release textured CDI passed the host render gate with
+Flycast v2.7:
+
+~~~sh
+make flycast-textured-quad FLYCAST_STABLE_SAMPLES=3
+~~~
+
+The gate required three consecutive captures and reported:
+
+~~~text
+PASS: Flycast rendered opaque, punch-through, and translucent textured quads.
+  opaque center:      0.237 0.237 0.474
+  punch center:       0.237 0.237 0.474
+  translucent center: 0.237 0.237 0.474
+  above quads:        0.020 0.020 0.000
+  left of quads:      0.020 0.020 0.000
+  right of quads:     0.020 0.020 0.000
+  below quads:        0.020 0.020 0.000
+Stable frames: 3
+Runtime probes: render-gated
+~~~
+
+The guest log also reported maishuji: textured quad passed (8 texture cycles).
+This confirms the repeated allocation/upload/draw/release workload reached
+normal completion while the captured frame showed all three list variants.
+The test is render-gated rather than marker-gated, so the serial-forwarding
+caveats above still apply. A preceding attempt failed in the host X11 window
+capture step; the clean rerun passed without changing the CDI.
+
 ## Real Dreamcast with dcload-ip
 
 For a physical console, the normal development path is:

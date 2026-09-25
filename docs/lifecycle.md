@@ -23,6 +23,28 @@ The public API is include/maishuji/pvr.hpp:
 The API stores no persistent primitive queue and performs no per-frame heap
 allocation.
 
+## Public API review
+
+The public surface is intentionally limited to the ownership and submission
+concepts used by the examples:
+
+- Pvr owns one initialized context and requires explicit shutdown.
+- Frame and RenderList are non-copyable, non-movable lifecycle guards whose
+  status can be observed through explicit finish calls.
+- Texture is move-only, keeps CPU upload data separate from PVR memory, and
+  rejects submission through a different Pvr context.
+- Triangle, Quad, TexturedQuad, and PrimitiveConfiguration expose the geometry
+  and culling choices demonstrated by the examples without introducing a
+  material system, scene graph, generic renderer, or persistent queue.
+- The public header contains no KOS types, private headers, raw PVR handles, or
+  ownership-transfer escape hatch. The raw KOS comparison stays in the separate
+  reference example and backend documentation.
+
+This keeps the API names aligned with Dreamcast concepts while leaving packet
+layout, list constants, texture handles, and synchronization calls inside the
+KOS backend. The deliberately omitted raw escape hatch can be reconsidered
+only when a concrete use case justifies a borrowed, state-checked interface.
+
 ## KOS mapping
 
 | maishuji operation | KOS operation | Boundary and cost |

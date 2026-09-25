@@ -28,6 +28,20 @@ The project uses public KOS headers and calls only:
 Private KOS headers, internal PVR structs, direct register access, and
 hard-coded Tile Accelerator addresses are outside this boundary.
 
+### Raw-KOS escape hatch
+
+The v0.1 public API deliberately exposes no raw KOS handle, borrowed backend
+accessor, or callback that can interleave unmanaged KOS lifecycle calls. The
+raw reference remains available as a separate source example in
+examples/pvr_smoke.cpp, so the hardware boundary can still be studied and
+compared without widening the library contract.
+
+A future escape hatch must have a concrete teaching or integration use case. If
+one is needed, it should borrow rather than transfer ownership, require the
+caller to already be inside the active Frame and RenderList state, and forbid
+reopening or finishing scopes owned by maishuji. Until that need exists, keeping
+the backend private makes list lifetime and resource synchronization auditable.
+
 ## Build-system decision
 
 The project keeps CMake as its primary build because its native KOS toolchain

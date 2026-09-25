@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 
 namespace maishuji {
 
@@ -55,6 +56,22 @@ struct PrimitiveConfiguration {
     Culling culling = Culling::None;
 };
 
+struct TexturedVertex {
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 1.0f;
+    float u = 0.0f;
+    float v = 0.0f;
+    Color color{};
+};
+
+struct TexturedQuad {
+    TexturedVertex top_left{};
+    TexturedVertex bottom_left{};
+    TexturedVertex top_right{};
+    TexturedVertex bottom_right{};
+};
+
 struct Configuration {
     bool enable_opaque = true;
     bool enable_punch_through = true;
@@ -90,6 +107,13 @@ enum class Status : std::uint8_t {
     RenderListBeginFailed,
     RenderListFinishFailed,
     PrimitiveSubmissionFailed,
+    TextureAlreadyAllocated,
+    TextureNotAllocated,
+    TextureInvalidDimensions,
+    TextureAllocationFailed,
+    TextureInvalidData,
+    TextureUploadFailed,
+    TextureContextMismatch,
 };
 
 constexpr bool succeeded(Status status) noexcept {
@@ -104,6 +128,7 @@ const char *status_name(Status status) noexcept;
 
 class Frame;
 class RenderList;
+class Texture;
 
 namespace detail {
 struct Backend;
@@ -135,11 +160,49 @@ public:
 private:
     friend class Frame;
     friend class RenderList;
+    friend class Texture;
 
     const detail::Backend *backend_;
     Configuration configuration_{};
     Frame *active_frame_ = nullptr;
     bool initialized_ = false;
+};
+
+class Texture {
+public:
+    Texture() noexcept = default;
+    ~Texture() noexcept;
+
+    Texture(const Texture &) = delete;
+    Texture &operator=(const Texture &) = delete;
+    Texture(Texture &&other) noexcept;
+    Texture &operator=(Texture &&other) noexcept;
+
+    Status allocate(Pvr &pvr, std::uint16_t width,
+                    std::uint16_t height) noexcept;
+    Status upload(std::span<const std::uint16_t> pixels) noexcept;
+    Status release() noexcept;
+
+    bool allocated() const noexcept {
+        return allocated_;
+    }
+
+    std::uint16_t width() const noexcept {
+        return width_;
+    }
+
+    std::uint16_t height() const noexcept {
+        return height_;
+    }
+
+private:
+    friend class RenderList;
+
+    Pvr *owner_ = nullptr;
+    std::uintptr_t handle_ = 0;
+    std::uint16_t width_ = 0;
+    std::uint16_t height_ = 0;
+    bool allocated_ = false;
 };
 
 class Frame {
@@ -191,7 +254,8 @@ public:
                   const PrimitiveConfiguration &configuration = {}) noexcept;
     Status submit(const Quad &quad,
                   const PrimitiveConfiguration &configuration = {}) noexcept;
-
+    Status submit(const Texture &texture, const TexturedQuad &quad,
+                  const PrimitiveConfiguration &configuration = {}) noexcept;
 
     bool active() const noexcept {
         return active_;

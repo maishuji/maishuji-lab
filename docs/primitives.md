@@ -67,3 +67,8 @@ quad submits one header and four vertices. The direct path performs no
 per-frame heap allocation, but it still consumes CPU time for header
 compilation and packet submission. pvr_scene_finish() closes submission; the
 later render wait remains the resource-idle boundary.
+
+
+For texture-backed geometry, see [textures.md](textures.md). It keeps texture
+VRAM ownership, ARGB4444 upload data, sampling, and release synchronization
+separate from the colored primitive packet path.

@@ -47,6 +47,22 @@ bool list_enabled(const Configuration &configuration, List list) noexcept {
     return false;
 }
 
+bool power_of_two(std::uint16_t value) noexcept {
+    return value >= 4 && value <= 1024 &&
+           (value & static_cast<std::uint16_t>(value - 1)) == 0;
+}
+
+bool valid_texture_dimensions(std::uint16_t width,
+                              std::uint16_t height) noexcept {
+    return power_of_two(width) && power_of_two(height);
+}
+
+std::size_t texture_bytes(std::uint16_t width,
+                          std::uint16_t height) noexcept {
+    return static_cast<std::size_t>(width) *
+           static_cast<std::size_t>(height) * sizeof(std::uint16_t);
+}
+
 } // namespace
 
 const char *status_name(Status status) noexcept {
@@ -93,6 +109,20 @@ const char *status_name(Status status) noexcept {
         return "PVR render-list finish failed";
     case Status::PrimitiveSubmissionFailed:
         return "PVR primitive submission failed";
+    case Status::TextureAlreadyAllocated:
+        return "texture already allocated";
+    case Status::TextureNotAllocated:
+        return "texture not allocated";
+    case Status::TextureInvalidDimensions:
+        return "texture dimensions must be power-of-two values from 4 to 1024";
+    case Status::TextureAllocationFailed:
+        return "texture VRAM allocation failed";
+    case Status::TextureInvalidData:
+        return "texture upload data has the wrong size";
+    case Status::TextureUploadFailed:
+        return "texture upload failed";
+    case Status::TextureContextMismatch:
+        return "texture belongs to a different PVR context";
     }
 
     return "unknown status";
@@ -104,6 +134,100 @@ Pvr::Pvr() noexcept
 Pvr::~Pvr() noexcept {
     assert(!initialized_);
     assert(active_frame_ == nullptr);
+}
+
+Texture::~Texture() noexcept {
+    assert(!allocated_);
+}
+
+Texture::Texture(Texture &&other) noexcept
+    : owner_(other.owner_),
+      handle_(other.handle_),
+      width_(other.width_),
+      height_(other.height_),
+      allocated_(other.allocated_) {
+    other.owner_ = nullptr;
+    other.handle_ = 0;
+    other.width_ = 0;
+    other.height_ = 0;
+    other.allocated_ = false;
+}
+
+Texture &Texture::operator=(Texture &&other) noexcept {
+    if(this == &other)
+        return *this;
+
+    assert(!allocated_);
+    owner_ = other.owner_;
+    handle_ = other.handle_;
+    width_ = other.width_;
+    height_ = other.height_;
+    allocated_ = other.allocated_;
+
+    other.owner_ = nullptr;
+    other.handle_ = 0;
+    other.width_ = 0;
+    other.height_ = 0;
+    other.allocated_ = false;
+    return *this;
+}
+
+Status Texture::allocate(Pvr &pvr, std::uint16_t width,
+                         std::uint16_t height) noexcept {
+    if(allocated_)
+        return Status::TextureAlreadyAllocated;
+    if(!pvr.initialized_)
+        return Status::NotInitialized;
+    if(!valid_texture_dimensions(width, height))
+        return Status::TextureInvalidDimensions;
+
+    detail::TextureHandle handle = 0;
+    if(!pvr.backend_->texture_allocate(texture_bytes(width, height), handle))
+        return Status::TextureAllocationFailed;
+
+    owner_ = &pvr;
+    handle_ = handle;
+    width_ = width;
+    height_ = height;
+    allocated_ = true;
+    return Status::Success;
+}
+
+Status Texture::upload(std::span<const std::uint16_t> pixels) noexcept {
+    if(!allocated_ || owner_ == nullptr)
+        return Status::TextureNotAllocated;
+
+    const std::size_t expected_pixels =
+        static_cast<std::size_t>(width_) * static_cast<std::size_t>(height_);
+    if(pixels.size() != expected_pixels)
+        return Status::TextureInvalidData;
+
+    if(!owner_->backend_->texture_upload(
+           static_cast<detail::TextureHandle>(handle_), pixels.data(),
+           texture_bytes(width_, height_)))
+        return Status::TextureUploadFailed;
+
+    return Status::Success;
+}
+
+Status Texture::release() noexcept {
+    if(!allocated_ || owner_ == nullptr)
+        return Status::TextureNotAllocated;
+    if(!owner_->initialized_)
+        return Status::NotInitialized;
+
+    const Status wait_status = owner_->wait_render_done();
+    if(failed(wait_status))
+        return wait_status;
+
+    owner_->backend_->texture_free(
+        static_cast<detail::TextureHandle>(handle_));
+    owner_ = nullptr;
+    handle_ = 0;
+    width_ = 0;
+    height_ = 0;
+    allocated_ = false;
+    return Status::Success;
 }
 
 Status Pvr::initialize(const Configuration &configuration) noexcept {
@@ -247,6 +371,26 @@ Status RenderList::submit(
 
     return owner_->owner_->backend_->submit_quad(
                list_type_, quad, configuration)
+               ? Status::Success
+               : Status::PrimitiveSubmissionFailed;
+}
+
+Status RenderList::submit(
+    const Texture &texture,
+    const TexturedQuad &quad,
+    const PrimitiveConfiguration &configuration) noexcept {
+    if(!active_ || owner_ == nullptr || owner_->owner_ == nullptr ||
+       owner_->active_list_ != this)
+        return Status::RenderListNotActive;
+    if(!texture.allocated_ || texture.owner_ == nullptr)
+        return Status::TextureNotAllocated;
+    if(texture.owner_ != owner_->owner_)
+        return Status::TextureContextMismatch;
+
+    return owner_->owner_->backend_->submit_textured_quad(
+               list_type_,
+               static_cast<detail::TextureHandle>(texture.handle_),
+               texture.width_, texture.height_, quad, configuration)
                ? Status::Success
                : Status::PrimitiveSubmissionFailed;
 }

@@ -7,6 +7,7 @@ namespace {
 
 Recording state{};
 FailurePoint next_failure = FailurePoint::None;
+std::uintptr_t next_texture_handle = 1;
 
 bool consume_failure(FailurePoint point) noexcept {
     if(next_failure != point)
@@ -76,6 +77,46 @@ bool submit_quad(List list, const Quad &quad,
     return consume_failure(FailurePoint::PrimitiveSubmit);
 }
 
+bool texture_allocate(std::size_t bytes, detail::TextureHandle &handle) noexcept {
+    (void)bytes;
+    ++state.texture_allocate_calls;
+    if(!consume_failure(FailurePoint::TextureAllocate)) {
+        handle = 0;
+        return false;
+    }
+
+    handle = next_texture_handle++;
+    return true;
+}
+
+bool texture_upload(detail::TextureHandle handle, const std::uint16_t *pixels,
+                    std::size_t bytes) noexcept {
+    (void)handle;
+    (void)pixels;
+    ++state.texture_upload_calls;
+    state.last_texture_upload_bytes = bytes;
+    return consume_failure(FailurePoint::TextureUpload);
+}
+
+void texture_free(detail::TextureHandle handle) noexcept {
+    (void)handle;
+    ++state.texture_free_calls;
+}
+
+bool submit_textured_quad(
+    List list, detail::TextureHandle handle, std::uint16_t width,
+    std::uint16_t height, const TexturedQuad &quad,
+    const PrimitiveConfiguration &configuration) noexcept {
+    (void)handle;
+    (void)width;
+    (void)height;
+    (void)quad;
+    (void)configuration;
+    ++state.textured_quad_submit_calls;
+    state.last_primitive_list = list;
+    return consume_failure(FailurePoint::TexturedSubmit);
+}
+
 bool wait_render_done() noexcept {
     ++state.render_wait_calls;
     return consume_failure(FailurePoint::RenderWait);
@@ -91,6 +132,7 @@ bool shutdown() noexcept {
 void reset_recording() noexcept {
     state = {};
     next_failure = FailurePoint::None;
+    next_texture_handle = 1;
 }
 
 void fail_next(FailurePoint point) noexcept {
@@ -115,6 +157,10 @@ const Backend &default_backend() noexcept {
         maishuji::test::list_finish,
         maishuji::test::submit_triangle,
         maishuji::test::submit_quad,
+        maishuji::test::texture_allocate,
+        maishuji::test::texture_upload,
+        maishuji::test::texture_free,
+        maishuji::test::submit_textured_quad,
         maishuji::test::wait_render_done,
         maishuji::test::shutdown,
     };

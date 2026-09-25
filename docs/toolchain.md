@@ -42,3 +42,24 @@ The installed template originally used different image tags for development and 
 KOS's environment script probes `-m4-single` and may choose it. This image's library ABI is locked to `-m4-single-only`, so the wrapper overrides the detected choice after the environment loads and removes any conflicting ABI option from compile and link flags. The lock check verifies both flags and rejects a conflicting `-m4-single` token. Keep target builds inside this image because the workstation's separate KOS installation uses a different ABI.
 
 The project minimum is CMake `3.13`, matching the minimum required by KOS's supplied CMake toolchain. The pinned image provides CMake `3.31.4`. Dreamcast builds use KOS's `kallistios.toolchain.cmake` file and Unix Makefiles; host builds use a separate build directory and native compiler.
+
+## CI build evidence
+
+Each pinned Debug and Release Dreamcast job publishes the four example ELFs,
+their linker map files, a target-size summary, a copy of tools/toolchain.lock,
+and target-build-manifest.txt. The manifest records the checked-out source
+commit, requested build type, verified KOS/compiler versions, working-tree
+status, ELF sizes, and the expected map files. The CI workflow intentionally
+does not publish CDIs: the current images are large, and emulator output is
+recorded as a separate runtime result rather than as a cross-build artifact.
+
+To reproduce the manifest inside the pinned image after a target build:
+
+~~~sh
+./tools/with-kos.sh ./tools/write-target-build-manifest.sh \
+  build-dreamcast Release
+~~~
+
+The script fails if an expected ELF or linker map is missing, so an artifact
+can be inspected without assuming that a successful compiler exit produced all
+evidence files.

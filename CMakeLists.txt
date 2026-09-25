@@ -32,6 +32,16 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     add_executable(maishuji-textured-quad examples/03-textured-quad.cpp)
     target_link_libraries(maishuji-textured-quad PRIVATE maishuji)
     target_compile_options(maishuji-textured-quad PRIVATE -fno-exceptions -fno-rtti)
+
+    function(maishuji_enable_link_map target)
+        target_link_options(${target} PRIVATE
+            "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${target}.map")
+    endfunction()
+
+    maishuji_enable_link_map(maishuji-pvr-smoke)
+    maishuji_enable_link_map(maishuji-hello-pvr)
+    maishuji_enable_link_map(maishuji-colored-primitives)
+    maishuji_enable_link_map(maishuji-textured-quad)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

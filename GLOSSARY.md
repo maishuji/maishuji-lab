@@ -63,3 +63,9 @@ Pixel-snapping(api):
 
 Logical-grid(api):
 	Maps a smaller design resolution to a fixed output resolution while preserving integer pixel blocks.
+
+UV-coordinate(texture):
+	Selects a normalized position inside a texture for a submitted vertex.
+
+Sprite-region(api):
+	Defines the normalized UV rectangle and logical bounds used to build a textured quad.

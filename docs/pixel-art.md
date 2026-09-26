@@ -23,10 +23,25 @@ applied. Half-pixel values round away from zero. The helper does not clamp to
 the logical viewport, so callers can intentionally place geometry off-screen
 and leave clipping to the rendering path.
 
-This is a coordinate utility, not a complete sprite system. The texture API
-still owns the texture allocation and upload, while TexturedQuad still owns
-the submitted UVs and vertex positions. A later sprite helper can build on
-these rules without hiding the texture lifetime or PVR submission boundary.
+The sprite helper builds a TexturedQuad from those same rules without taking
+ownership of a texture or submitting to a list:
+
+~~~cpp
+#include <maishuji/sprite.hpp>
+
+const maishuji::Sprite sprite{
+    {10.25f, 20.75f},
+    {16.0f, 12.0f},
+    {0.25f, 0.5f, 0.75f, 1.0f},
+};
+const maishuji::TexturedQuad quad = maishuji::make_sprite_quad(sprite);
+list.submit(texture, quad);
+~~~
+
+The sprite position and far edge are snapped independently, then scaled to
+output coordinates. SpriteUv uses normalized UVs, so the caller keeps texture
+dimensions and atlas policy explicit. Texture allocation, upload, lifetime,
+and list submission remain the responsibility of the existing APIs.
 
 ## Subpixel comparison
 

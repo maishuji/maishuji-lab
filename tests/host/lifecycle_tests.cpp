@@ -2,6 +2,7 @@
 
 #include "maishuji/pixel.hpp"
 #include "maishuji/pvr.hpp"
+#include "maishuji/sprite.hpp"
 
 #include <array>
 #include <cstdio>
@@ -70,6 +71,33 @@ void test_pixel_grid() {
     expect_true(PixelGrid::logical_height * PixelGrid::output_scale ==
                     PixelGrid::output_height,
                 "logical height matches output scale");
+}
+
+void test_sprite_quad() {
+    using namespace maishuji;
+
+    constexpr Sprite sprite{
+        {10.25f, 20.75f},
+        {16.0f, 12.0f},
+        {0.25f, 0.5f, 0.75f, 1.0f},
+        0.75f,
+        {255, 128, 64, 255},
+    };
+    constexpr TexturedQuad quad = make_sprite_quad(sprite);
+
+    static_assert(quad.top_left.x == 20.0f);
+    static_assert(quad.top_left.y == 42.0f);
+    static_assert(quad.bottom_right.x == 52.0f);
+    static_assert(quad.bottom_right.y == 66.0f);
+    static_assert(quad.top_left.u == 0.25f);
+    static_assert(quad.bottom_right.v == 1.0f);
+
+    expect_float(quad.bottom_left.x, 20.0f,
+                 "sprite left edge uses snapped position");
+    expect_float(quad.top_right.y, 42.0f,
+                 "sprite top edge uses snapped position");
+    expect_true(quad.top_left.color.argb() == 0xffff8040u,
+                "sprite tint reaches every vertex");
 }
 
 void test_basic_lifecycle() {
@@ -506,6 +534,7 @@ void test_colored_primitives() {
 
 int main() {
     test_pixel_grid();
+    test_sprite_quad();
     test_basic_lifecycle();
     test_configuration_and_disabled_list();
     test_failed_acquisition_and_cleanup();

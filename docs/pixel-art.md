@@ -39,9 +39,19 @@ list.submit(texture, quad);
 ~~~
 
 The sprite position and far edge are snapped independently, then scaled to
-output coordinates. SpriteUv uses normalized UVs, so the caller keeps texture
-dimensions and atlas policy explicit. Texture allocation, upload, lifetime,
-and list submission remain the responsibility of the existing APIs.
+output coordinates. For an atlas region, derive normalized UVs from texel
+bounds using the texture dimensions:
+
+~~~cpp
+const maishuji::SpriteRegion region{8, 4, 16, 12};
+const maishuji::SpriteUv uv =
+    region.normalized(texture.width(), texture.height());
+~~~
+
+SpriteUv remains available when normalized coordinates are already known.
+Texture allocation, upload, lifetime, and list submission remain the
+responsibility of the existing APIs. Region bounds are not clamped; zero
+texture dimensions return an empty UV rectangle.
 
 ## Subpixel comparison
 

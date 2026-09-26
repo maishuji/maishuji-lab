@@ -68,4 +68,4 @@ UV-coordinate(texture):
 	Selects a normalized position inside a texture for a submitted vertex.
 
 Sprite-region(api):
-	Defines the normalized UV rectangle and logical bounds used to build a textured quad.
+	Defines the texture-space rectangle used to derive normalized UVs for a textured quad.

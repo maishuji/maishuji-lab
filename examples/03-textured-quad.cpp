@@ -10,8 +10,10 @@ namespace {
 
 maishuji::TexturedQuad make_quad(float left, float top) noexcept {
     constexpr maishuji::PixelPoint size{88.0f, 88.0f};
+    constexpr maishuji::SpriteRegion full_texture{0, 0, 32, 32};
     return maishuji::make_sprite_quad(
-        maishuji::Sprite{{left, top}, size});
+        maishuji::Sprite{
+            {left, top}, size, full_texture.normalized(32, 32)});
 }
 
 maishuji::Status run_frame(

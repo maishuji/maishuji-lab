@@ -89,7 +89,9 @@ but the example now exercises repeated VRAM reuse instead of only one
 allocation. The texture alpha values make the list differences visible
 without adding a material system. The example builds each 176x176 output quad
 through Sprite: its 88x88 logical size is scaled by PixelGrid, while the
-texture remains an independently allocated resource.
+texture remains an independently allocated resource. SpriteRegion can derive
+the normalized UVs for a sub-rectangle from texture.width() and
+texture.height() without changing that ownership model.
 
 The KOS mapping is intentionally direct:
 

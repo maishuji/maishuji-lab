@@ -66,11 +66,19 @@ make dreamcast-textured-cdi
 make flycast-textured-quad
 ~~~
 
-The pixel-sprite example can be packaged for later emulator or hardware
-checks. Its build and CDI packaging do not claim runtime rendering validation:
+For the pixel-sprite example, package the CDI and run the capability-specific
+Flycast check on the host:
 
 ~~~sh
 make dreamcast-pixel-sprites-cdi
+make flycast-pixel-sprites
 ~~~
+
+This check samples broad regions around the moving sprites, so it verifies the
+two atlas cells and their left/right color roles without depending on one exact
+animation frame. The example exits after its finite 96-frame sequence, so the
+target requires one passing capture rather than the three consecutive captures
+used by the long-running smoke example. Emulator validation still does not
+replace real Dreamcast hardware validation.
 
 CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each ELF with its linker map, size summary, toolchain lock, and build manifest. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.

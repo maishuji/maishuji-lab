@@ -15,7 +15,7 @@ KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -57,6 +57,12 @@ flycast-textured-quad:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-textured-frame.sh \
 	FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_TEXTURED \
 	./tools/test-flycast-render.sh "$(DC_TEXTURED_CDI)"
+
+flycast-pixel-sprites:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-pixel-sprites-frame.sh \
+	FLYCAST_WINDOW_TITLE=MAISHUJI_PIXEL_SPRITES \
+	FLYCAST_STABLE_SAMPLES=1 \
+	./tools/test-flycast-render.sh "$(DC_PIXEL_SPRITES_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

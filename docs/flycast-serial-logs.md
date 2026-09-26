@@ -200,6 +200,20 @@ textured example is visibly rendering in Flycast, but it does not establish
 Dreamcast hardware timing, exact alpha/blend equations, or long-run VRAM
 accounting.
 
+The pixel-sprite example has a matching capability-specific check:
+
+~~~sh
+make dreamcast-pixel-sprites-cdi
+make flycast-pixel-sprites
+~~~
+
+It samples broad regions around the moving sprites after normalizing the
+capture to 640x480. The left region must be red-dominant, the right region must
+be green/blue-dominant, and the surrounding samples must remain dark. The
+example renders a finite 96-frame sequence and exits, so this target requires
+one passing capture; a three-sample run can race the emulator closing its game
+window.
+
 ## Recorded textured runtime check
 
 On 2026-09-25, the pinned Release textured CDI passed the host render gate with
@@ -230,6 +244,33 @@ normal completion while the captured frame showed all three list variants.
 The test is render-gated rather than marker-gated, so the serial-forwarding
 caveats above still apply. A preceding attempt failed in the host X11 window
 capture step; the clean rerun passed without changing the CDI.
+
+## Recorded pixel-sprite runtime check
+
+On 2026-09-26, the pinned Debug pixel-sprite CDI passed the host render gate
+with Flycast v2.7:
+
+~~~sh
+make flycast-pixel-sprites
+~~~
+
+The target reported:
+
+~~~text
+PASS: Flycast rendered both atlas sprite regions.
+  left sprite region:  0.181 0.055 0.080
+  right sprite region: 0.055 0.181 0.165
+  above sprites:       0.020 0.020 0.000
+  below sprites:       0.020 0.020 0.000
+Stable frames: 1
+Runtime probes: render-gated
+~~~
+
+The guest log also reported `maishuji: pixel sprites passed (96 frames;
+snapped versus subpixel)` and exited with return code 0. This confirms that
+Flycast booted the CDI, completed the finite frame sequence, and displayed the
+two atlas regions with the expected color roles. It does not establish
+Dreamcast hardware timing, exact texture sampling, or physical-console output.
 
 ## Real Dreamcast with dcload-ip
 

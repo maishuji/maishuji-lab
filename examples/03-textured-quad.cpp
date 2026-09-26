@@ -1,4 +1,5 @@
 #include "maishuji/pvr.hpp"
+#include "maishuji/sprite.hpp"
 
 #include <cstdint>
 #include <span>
@@ -8,14 +9,11 @@
 namespace {
 
 maishuji::TexturedQuad make_quad(float left, float top) noexcept {
-    constexpr float width = 176.0f;
-    constexpr float height = 176.0f;
-    return {
-        {left, top, 1.0f, 0.0f, 0.0f},
-        {left, top + height, 1.0f, 0.0f, 1.0f},
-        {left + width, top, 1.0f, 1.0f, 0.0f},
-        {left + width, top + height, 1.0f, 1.0f, 1.0f},
-    };
+    constexpr maishuji::PixelPoint size{88.0f, 88.0f};
+    constexpr maishuji::SpriteRegion full_texture{0, 0, 32, 32};
+    return maishuji::make_sprite_quad(
+        maishuji::Sprite{
+            {left, top}, size, full_texture.normalized(32, 32)});
 }
 
 maishuji::Status run_frame(
@@ -70,9 +68,9 @@ int main() {
 
     const std::span<const std::uint16_t> pixel_data{pixels, 32 * 32};
     const maishuji::TexturedQuad quads[3] = {
-        make_quad(16.0f, 152.0f),
-        make_quad(232.0f, 152.0f),
-        make_quad(448.0f, 152.0f),
+        make_quad(8.0f, 76.0f),
+        make_quad(116.0f, 76.0f),
+        make_quad(224.0f, 76.0f),
     };
 
     maishuji::Pvr pvr;

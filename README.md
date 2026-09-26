@@ -22,7 +22,7 @@ make host-run
 make host-test
 ```
 
-See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
+See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, [docs/pixel-art.md](docs/pixel-art.md) for logical pixel coordinates, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
 
 Build the PVR smoke example for Dreamcast:
 
@@ -31,7 +31,7 @@ make dreamcast-build DC_BUILD_TYPE=Debug
 make dreamcast-build DC_BUILD_TYPE=Release
 ```
 
-The raw reference output is build-dreamcast/maishuji-pvr-smoke.elf. The lifecycle example is build-dreamcast/maishuji-hello-pvr.elf; the colored primitive example is build-dreamcast/maishuji-colored-primitives.elf; the textured example is build-dreamcast/maishuji-textured-quad.elf. The raw example initializes video and PVR, then displays a colored triangle. Together they verify the C++20 compiler, KOS headers and libraries, CMake cross-compilation, and the SH-4 linker setup.
+The raw reference output is build-dreamcast/maishuji-pvr-smoke.elf. The lifecycle example is build-dreamcast/maishuji-hello-pvr.elf; the colored primitive example is build-dreamcast/maishuji-colored-primitives.elf; the textured example is build-dreamcast/maishuji-textured-quad.elf; and the pixel-sprite example is build-dreamcast/maishuji-pixel-sprites.elf. The raw example initializes video and PVR, then displays a colored triangle. The pixel-sprite example compares logical-grid snapping with direct subpixel output coordinates using a deterministic two-cell texture atlas.
 
 To send the ELF to a Dreamcast running `dcload-ip` over a Broadband Adapter, replace the placeholder with the console's address:
 
@@ -65,5 +65,20 @@ the capability-specific Flycast check on the host:
 make dreamcast-textured-cdi
 make flycast-textured-quad
 ~~~
+
+For the pixel-sprite example, package the CDI and run the capability-specific
+Flycast check on the host:
+
+~~~sh
+make dreamcast-pixel-sprites-cdi
+make flycast-pixel-sprites
+~~~
+
+This check samples broad regions around the moving sprites, so it verifies the
+two atlas cells and their left/right color roles without depending on one exact
+animation frame. The example exits after its finite 96-frame sequence, so the
+target requires one passing capture rather than the three consecutive captures
+used by the long-running smoke example. Emulator validation still does not
+replace real Dreamcast hardware validation.
 
 CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each ELF with its linker map, size summary, toolchain lock, and build manifest. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.

@@ -33,6 +33,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     target_link_libraries(maishuji-textured-quad PRIVATE maishuji)
     target_compile_options(maishuji-textured-quad PRIVATE -fno-exceptions -fno-rtti)
 
+    add_executable(maishuji-pixel-sprites examples/04-pixel-sprites.cpp)
+    target_link_libraries(maishuji-pixel-sprites PRIVATE maishuji)
+    target_compile_options(maishuji-pixel-sprites PRIVATE -fno-exceptions -fno-rtti)
+
     function(maishuji_enable_link_map target)
         target_link_options(${target} PRIVATE
             "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${target}.map")
@@ -42,6 +46,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-hello-pvr)
     maishuji_enable_link_map(maishuji-colored-primitives)
     maishuji_enable_link_map(maishuji-textured-quad)
+    maishuji_enable_link_map(maishuji-pixel-sprites)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

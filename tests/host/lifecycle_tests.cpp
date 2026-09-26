@@ -1,6 +1,8 @@
 #include "recording_backend.hpp"
 
+#include "maishuji/pixel.hpp"
 #include "maishuji/pvr.hpp"
+#include "maishuji/sprite.hpp"
 
 #include <array>
 #include <cstdio>
@@ -36,6 +38,92 @@ void expect_equal(std::size_t actual, std::size_t expected, const char *label) {
     std::fprintf(stderr, "%s: expected %zu, got %zu\n",
                  label, expected, actual);
     ++failures;
+}
+
+void expect_float(float actual, float expected, const char *label) {
+    if(actual == expected)
+        return;
+
+    std::fprintf(stderr, "%s: expected %.2f, got %.2f\n",
+                 label, static_cast<double>(expected),
+                 static_cast<double>(actual));
+    ++failures;
+}
+
+void test_pixel_grid() {
+    using namespace maishuji;
+
+    constexpr PixelGrid grid;
+    constexpr PixelPoint snapped = grid.snap({10.49f, -2.5f});
+    static_assert(snapped.x == 10.0f);
+    static_assert(snapped.y == -3.0f);
+
+    const PixelPoint output = grid.to_output({10.25f, 20.75f});
+    expect_float(output.x, 20.0f, "logical x maps to doubled output");
+    expect_float(output.y, 42.0f, "logical y maps to doubled output");
+    expect_float(grid.to_output({10.49f, 20.49f}).x, 20.0f,
+                 "subpixel x remains on snapped pixel");
+    expect_float(grid.to_output({10.51f, 20.51f}).y, 42.0f,
+                 "subpixel y rounds at the logical boundary");
+    expect_true(PixelGrid::logical_width * PixelGrid::output_scale ==
+                    PixelGrid::output_width,
+                "logical width matches output scale");
+    expect_true(PixelGrid::logical_height * PixelGrid::output_scale ==
+                    PixelGrid::output_height,
+                "logical height matches output scale");
+}
+
+void test_sprite_quad() {
+    using namespace maishuji;
+
+    constexpr SpriteRegion cell = SpriteRegion::cell(2, 1, 8, 4);
+    static_assert(cell.left == 16);
+    static_assert(cell.top == 4);
+    static_assert(cell.width == 8);
+    static_assert(cell.height == 4);
+
+    constexpr SpriteRegion region{8, 4, 16, 12};
+    constexpr SpriteUv uv = region.normalized(32, 32);
+    constexpr SpriteUv full_uv =
+        SpriteRegion{0, 0, 32, 32}.normalized(32, 32);
+    constexpr SpriteUv invalid_uv = region.normalized(0, 32);
+    constexpr Sprite sprite{
+        {10.25f, 20.75f},
+        {16.0f, 12.0f},
+        uv,
+        0.75f,
+        {255, 128, 64, 255},
+    };
+    constexpr TexturedQuad quad = make_sprite_quad(sprite);
+
+    static_assert(uv.left == 0.25f);
+    static_assert(uv.top == 0.125f);
+    static_assert(uv.right == 0.75f);
+    static_assert(uv.bottom == 0.5f);
+    static_assert(full_uv.left == 0.0f);
+    static_assert(full_uv.top == 0.0f);
+    static_assert(full_uv.right == 1.0f);
+    static_assert(full_uv.bottom == 1.0f);
+    static_assert(invalid_uv.left == 0.0f);
+    static_assert(invalid_uv.top == 0.0f);
+    static_assert(invalid_uv.right == 0.0f);
+    static_assert(invalid_uv.bottom == 0.0f);
+
+    static_assert(quad.top_left.x == 20.0f);
+    static_assert(quad.top_left.y == 42.0f);
+    static_assert(quad.bottom_right.x == 52.0f);
+    static_assert(quad.bottom_right.y == 66.0f);
+    static_assert(quad.top_left.u == 0.25f);
+    static_assert(quad.top_left.v == 0.125f);
+    static_assert(quad.bottom_right.u == 0.75f);
+    static_assert(quad.bottom_right.v == 0.5f);
+
+    expect_float(quad.bottom_left.x, 20.0f,
+                 "sprite left edge uses snapped position");
+    expect_float(quad.top_right.y, 42.0f,
+                 "sprite top edge uses snapped position");
+    expect_true(quad.top_left.color.argb() == 0xffff8040u,
+                "sprite tint reaches every vertex");
 }
 
 void test_basic_lifecycle() {
@@ -284,12 +372,10 @@ void test_texture_ownership() {
     expect_true(!moved.allocated(), "move assignment clears source");
     expect_true(assigned.allocated(), "move assignment keeps allocation");
 
-    const TexturedQuad quad{
-        {80.0f, 100.0f, 1.0f, 0.0f, 0.0f},
-        {80.0f, 220.0f, 1.0f, 0.0f, 1.0f},
-        {200.0f, 100.0f, 1.0f, 1.0f, 0.0f},
-        {200.0f, 220.0f, 1.0f, 1.0f, 1.0f},
-    };
+    constexpr SpriteRegion full_region = SpriteRegion::cell(0, 0, 8, 8);
+    constexpr TexturedQuad quad = make_sprite_quad(
+        Sprite{{40.0f, 50.0f}, {60.0f, 60.0f},
+               full_region.normalized(8, 8)});
     Pvr other_pvr;
     Frame other_frame;
     RenderList other_list;
@@ -358,6 +444,12 @@ void test_texture_ownership() {
                  "textured quad submission call count");
     expect_true(test::recording().last_primitive_list == List::Opaque,
                 "textured list matches active list");
+    expect_float(test::recording().last_textured_quad.top_left.x,
+                 quad.top_left.x,
+                 "recording keeps submitted textured geometry");
+    expect_float(test::recording().last_textured_quad.bottom_right.y,
+                 quad.bottom_right.y,
+                 "recording keeps submitted sprite bounds");
 }
 
 void test_texture_repeated_cycles() {
@@ -471,6 +563,8 @@ void test_colored_primitives() {
 } // namespace
 
 int main() {
+    test_pixel_grid();
+    test_sprite_quad();
     test_basic_lifecycle();
     test_configuration_and_disabled_list();
     test_failed_acquisition_and_cleanup();

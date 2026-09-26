@@ -57,3 +57,21 @@ ARGB4444(texture):
 
 Twiddling(pvr):
 	Reorders texture addresses for PVR locality; the supported texture path uses non-twiddled row-major data.
+
+Pixel-snapping(api):
+	Rounds a coordinate to the nearest logical pixel before pixel-art scaling or submission.
+
+Logical-grid(api):
+	Maps a smaller design resolution to a fixed output resolution while preserving integer pixel blocks.
+
+UV-coordinate(texture):
+	Selects a normalized position inside a texture for a submitted vertex.
+
+Sprite-region(api):
+	Defines the texture-space rectangle used to derive normalized UVs for a textured quad.
+
+Texture-atlas(texture):
+	Packs multiple sprite images into one texture allocation for shared sampling state.
+
+Subpixel-motion(api):
+	Preserves fractional output coordinates instead of snapping to the logical pixel grid.

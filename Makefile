@@ -9,11 +9,13 @@ DC_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.elf
 DC_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.cdi
 DC_TEXTURED_ELF ?= $(DC_BUILD_DIR)/maishuji-textured-quad.elf
 DC_TEXTURED_CDI ?= $(DC_BUILD_DIR)/maishuji-textured-quad.cdi
+DC_PIXEL_SPRITES_ELF ?= $(DC_BUILD_DIR)/maishuji-pixel-sprites.elf
+DC_PIXEL_SPRITES_CDI ?= $(DC_BUILD_DIR)/maishuji-pixel-sprites.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -42,6 +44,9 @@ dreamcast-cdi: dreamcast-build
 dreamcast-textured-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXTURED_ELF)" -o "$(DC_TEXTURED_CDI)" -n "maishuji-lab textured quad"
 
+dreamcast-pixel-sprites-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_PIXEL_SPRITES_ELF)" -o "$(DC_PIXEL_SPRITES_CDI)" -n "maishuji-lab pixel sprites"
+
 dreamcast-makefile-smoke: check-toolchain
 	./tools/with-kos.sh "$(MAKE)" -f tools/kos-makefile-smoke.mk BUILD_DIR="$(KOS_MAKEFILE_BUILD_DIR)"
 
@@ -52,6 +57,12 @@ flycast-textured-quad:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-textured-frame.sh \
 	FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_TEXTURED \
 	./tools/test-flycast-render.sh "$(DC_TEXTURED_CDI)"
+
+flycast-pixel-sprites:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-pixel-sprites-frame.sh \
+	FLYCAST_WINDOW_TITLE=MAISHUJI_PIXEL_SPRITES \
+	FLYCAST_STABLE_SAMPLES=1 \
+	./tools/test-flycast-render.sh "$(DC_PIXEL_SPRITES_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

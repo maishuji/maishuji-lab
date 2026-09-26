@@ -76,21 +76,41 @@ void test_pixel_grid() {
 void test_sprite_quad() {
     using namespace maishuji;
 
+    constexpr SpriteRegion region{8, 4, 16, 12};
+    constexpr SpriteUv uv = region.normalized(32, 32);
+    constexpr SpriteUv full_uv =
+        SpriteRegion{0, 0, 32, 32}.normalized(32, 32);
+    constexpr SpriteUv invalid_uv = region.normalized(0, 32);
     constexpr Sprite sprite{
         {10.25f, 20.75f},
         {16.0f, 12.0f},
-        {0.25f, 0.5f, 0.75f, 1.0f},
+        uv,
         0.75f,
         {255, 128, 64, 255},
     };
     constexpr TexturedQuad quad = make_sprite_quad(sprite);
+
+    static_assert(uv.left == 0.25f);
+    static_assert(uv.top == 0.125f);
+    static_assert(uv.right == 0.75f);
+    static_assert(uv.bottom == 0.5f);
+    static_assert(full_uv.left == 0.0f);
+    static_assert(full_uv.top == 0.0f);
+    static_assert(full_uv.right == 1.0f);
+    static_assert(full_uv.bottom == 1.0f);
+    static_assert(invalid_uv.left == 0.0f);
+    static_assert(invalid_uv.top == 0.0f);
+    static_assert(invalid_uv.right == 0.0f);
+    static_assert(invalid_uv.bottom == 0.0f);
 
     static_assert(quad.top_left.x == 20.0f);
     static_assert(quad.top_left.y == 42.0f);
     static_assert(quad.bottom_right.x == 52.0f);
     static_assert(quad.bottom_right.y == 66.0f);
     static_assert(quad.top_left.u == 0.25f);
-    static_assert(quad.bottom_right.v == 1.0f);
+    static_assert(quad.top_left.v == 0.125f);
+    static_assert(quad.bottom_right.u == 0.75f);
+    static_assert(quad.bottom_right.v == 0.5f);
 
     expect_float(quad.bottom_left.x, 20.0f,
                  "sprite left edge uses snapped position");

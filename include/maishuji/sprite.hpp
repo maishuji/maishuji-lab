@@ -20,6 +20,19 @@ struct SpriteRegion {
     std::uint16_t width = 0;
     std::uint16_t height = 0;
 
+    static constexpr SpriteRegion cell(
+        std::uint16_t column, std::uint16_t row,
+        std::uint16_t cell_width, std::uint16_t cell_height) noexcept {
+        return {
+            static_cast<std::uint16_t>(
+                static_cast<std::uint32_t>(column) * cell_width),
+            static_cast<std::uint16_t>(
+                static_cast<std::uint32_t>(row) * cell_height),
+            cell_width,
+            cell_height,
+        };
+    }
+
     constexpr SpriteUv normalized(std::uint16_t texture_width,
                                    std::uint16_t texture_height) const noexcept {
         if(texture_width == 0 || texture_height == 0)

@@ -36,6 +36,9 @@ concepts used by the examples:
 - Triangle, Quad, TexturedQuad, and PrimitiveConfiguration expose the geometry
   and culling choices demonstrated by the examples without introducing a
   material system, scene graph, generic renderer, or persistent queue.
+- PixelGrid, Sprite, SpriteRegion, and SpriteUv provide portable coordinate and
+  UV helpers that build existing TexturedQuad values without owning textures or
+  lists.
 - The public header contains no KOS types, private headers, raw PVR handles, or
   ownership-transfer escape hatch. The raw KOS comparison stays in the separate
   reference example and backend documentation.

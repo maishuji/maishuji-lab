@@ -76,6 +76,12 @@ void test_pixel_grid() {
 void test_sprite_quad() {
     using namespace maishuji;
 
+    constexpr SpriteRegion cell = SpriteRegion::cell(2, 1, 8, 4);
+    static_assert(cell.left == 16);
+    static_assert(cell.top == 4);
+    static_assert(cell.width == 8);
+    static_assert(cell.height == 4);
+
     constexpr SpriteRegion region{8, 4, 16, 12};
     constexpr SpriteUv uv = region.normalized(32, 32);
     constexpr SpriteUv full_uv =
@@ -366,12 +372,10 @@ void test_texture_ownership() {
     expect_true(!moved.allocated(), "move assignment clears source");
     expect_true(assigned.allocated(), "move assignment keeps allocation");
 
-    const TexturedQuad quad{
-        {80.0f, 100.0f, 1.0f, 0.0f, 0.0f},
-        {80.0f, 220.0f, 1.0f, 0.0f, 1.0f},
-        {200.0f, 100.0f, 1.0f, 1.0f, 0.0f},
-        {200.0f, 220.0f, 1.0f, 1.0f, 1.0f},
-    };
+    constexpr SpriteRegion full_region = SpriteRegion::cell(0, 0, 8, 8);
+    constexpr TexturedQuad quad = make_sprite_quad(
+        Sprite{{40.0f, 50.0f}, {60.0f, 60.0f},
+               full_region.normalized(8, 8)});
     Pvr other_pvr;
     Frame other_frame;
     RenderList other_list;
@@ -440,6 +444,12 @@ void test_texture_ownership() {
                  "textured quad submission call count");
     expect_true(test::recording().last_primitive_list == List::Opaque,
                 "textured list matches active list");
+    expect_float(test::recording().last_textured_quad.top_left.x,
+                 quad.top_left.x,
+                 "recording keeps submitted textured geometry");
+    expect_float(test::recording().last_textured_quad.bottom_right.y,
+                 quad.bottom_right.y,
+                 "recording keeps submitted sprite bounds");
 }
 
 void test_texture_repeated_cycles() {

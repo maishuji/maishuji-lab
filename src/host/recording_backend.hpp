@@ -36,6 +36,7 @@ struct Recording {
     std::size_t texture_upload_calls = 0;
     std::size_t texture_free_calls = 0;
     std::size_t textured_quad_submit_calls = 0;
+    TexturedQuad last_textured_quad{};
     std::size_t last_texture_upload_bytes = 0;
     std::size_t render_wait_calls = 0;
     std::size_t shutdown_calls = 0;

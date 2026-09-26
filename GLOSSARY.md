@@ -69,3 +69,9 @@ UV-coordinate(texture):
 
 Sprite-region(api):
 	Defines the texture-space rectangle used to derive normalized UVs for a textured quad.
+
+Texture-atlas(texture):
+	Packs multiple sprite images into one texture allocation for shared sampling state.
+
+Subpixel-motion(api):
+	Preserves fractional output coordinates instead of snapping to the logical pixel grid.

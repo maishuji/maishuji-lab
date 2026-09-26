@@ -9,11 +9,13 @@ DC_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.elf
 DC_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.cdi
 DC_TEXTURED_ELF ?= $(DC_BUILD_DIR)/maishuji-textured-quad.elf
 DC_TEXTURED_CDI ?= $(DC_BUILD_DIR)/maishuji-textured-quad.cdi
+DC_PIXEL_SPRITES_ELF ?= $(DC_BUILD_DIR)/maishuji-pixel-sprites.elf
+DC_PIXEL_SPRITES_CDI ?= $(DC_BUILD_DIR)/maishuji-pixel-sprites.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -41,6 +43,9 @@ dreamcast-cdi: dreamcast-build
 
 dreamcast-textured-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXTURED_ELF)" -o "$(DC_TEXTURED_CDI)" -n "maishuji-lab textured quad"
+
+dreamcast-pixel-sprites-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_PIXEL_SPRITES_ELF)" -o "$(DC_PIXEL_SPRITES_CDI)" -n "maishuji-lab pixel sprites"
 
 dreamcast-makefile-smoke: check-toolchain
 	./tools/with-kos.sh "$(MAKE)" -f tools/kos-makefile-smoke.mk BUILD_DIR="$(KOS_MAKEFILE_BUILD_DIR)"

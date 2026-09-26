@@ -61,6 +61,28 @@ rounding crosses the next logical pixel. Effects or 3D elements that need
 subpixel movement can continue to submit their full-resolution coordinates
 directly through the existing primitive API.
 
-The helper is covered by host tests. Host tests verify the portable rounding
-and mapping contract; they do not verify PVR rasterization or a real
-Dreamcast's display timing.
+## Atlas cells and motion comparison
+
+SpriteRegion::cell selects a uniform atlas cell without introducing an asset
+loader:
+
+~~~cpp
+const maishuji::SpriteRegion frame =
+    maishuji::SpriteRegion::cell(1, 0, 16, 16);
+const maishuji::SpriteUv uv = frame.normalized(32, 16);
+~~~
+
+examples/04-pixel-sprites.cpp uploads a deterministic 32x16 two-cell atlas.
+The first sprite advances in logical coordinates through make_sprite_quad(),
+so its output position changes in snapped 2x2 steps. The second uses the same
+kind of texture region but submits a direct TexturedQuad at full output
+coordinates, preserving fractional motion. Both paths still submit one
+quad at a time through the existing RenderList API.
+
+Build the example with the pinned target toolchain and package it with
+make dreamcast-pixel-sprites-cdi; those steps validate compilation and image
+creation, not rendered output.
+
+The helper is covered by host tests. Host tests verify the portable rounding,
+cell selection, UV mapping, and recorded geometry; they do not verify PVR
+rasterization or a real Dreamcast's display timing.

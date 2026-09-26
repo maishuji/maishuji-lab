@@ -110,8 +110,8 @@ bool submit_textured_quad(
     (void)handle;
     (void)width;
     (void)height;
-    (void)quad;
     (void)configuration;
+    state.last_textured_quad = quad;
     ++state.textured_quad_submit_calls;
     state.last_primitive_list = list;
     return consume_failure(FailurePoint::TexturedSubmit);

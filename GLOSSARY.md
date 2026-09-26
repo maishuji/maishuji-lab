@@ -57,3 +57,9 @@ ARGB4444(texture):
 
 Twiddling(pvr):
 	Reorders texture addresses for PVR locality; the supported texture path uses non-twiddled row-major data.
+
+Pixel-snapping(api):
+	Rounds a coordinate to the nearest logical pixel before pixel-art scaling or submission.
+
+Logical-grid(api):
+	Maps a smaller design resolution to a fixed output resolution while preserving integer pixel blocks.

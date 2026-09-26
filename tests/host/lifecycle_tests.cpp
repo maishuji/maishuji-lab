@@ -1,5 +1,6 @@
 #include "recording_backend.hpp"
 
+#include "maishuji/pixel.hpp"
 #include "maishuji/pvr.hpp"
 
 #include <array>
@@ -36,6 +37,39 @@ void expect_equal(std::size_t actual, std::size_t expected, const char *label) {
     std::fprintf(stderr, "%s: expected %zu, got %zu\n",
                  label, expected, actual);
     ++failures;
+}
+
+void expect_float(float actual, float expected, const char *label) {
+    if(actual == expected)
+        return;
+
+    std::fprintf(stderr, "%s: expected %.2f, got %.2f\n",
+                 label, static_cast<double>(expected),
+                 static_cast<double>(actual));
+    ++failures;
+}
+
+void test_pixel_grid() {
+    using namespace maishuji;
+
+    constexpr PixelGrid grid;
+    constexpr PixelPoint snapped = grid.snap({10.49f, -2.5f});
+    static_assert(snapped.x == 10.0f);
+    static_assert(snapped.y == -3.0f);
+
+    const PixelPoint output = grid.to_output({10.25f, 20.75f});
+    expect_float(output.x, 20.0f, "logical x maps to doubled output");
+    expect_float(output.y, 42.0f, "logical y maps to doubled output");
+    expect_float(grid.to_output({10.49f, 20.49f}).x, 20.0f,
+                 "subpixel x remains on snapped pixel");
+    expect_float(grid.to_output({10.51f, 20.51f}).y, 42.0f,
+                 "subpixel y rounds at the logical boundary");
+    expect_true(PixelGrid::logical_width * PixelGrid::output_scale ==
+                    PixelGrid::output_width,
+                "logical width matches output scale");
+    expect_true(PixelGrid::logical_height * PixelGrid::output_scale ==
+                    PixelGrid::output_height,
+                "logical height matches output scale");
 }
 
 void test_basic_lifecycle() {
@@ -471,6 +505,7 @@ void test_colored_primitives() {
 } // namespace
 
 int main() {
+    test_pixel_grid();
     test_basic_lifecycle();
     test_configuration_and_disabled_list();
     test_failed_acquisition_and_cleanup();

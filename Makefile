@@ -11,11 +11,13 @@ DC_TEXTURED_ELF ?= $(DC_BUILD_DIR)/maishuji-textured-quad.elf
 DC_TEXTURED_CDI ?= $(DC_BUILD_DIR)/maishuji-textured-quad.cdi
 DC_PIXEL_SPRITES_ELF ?= $(DC_BUILD_DIR)/maishuji-pixel-sprites.elf
 DC_PIXEL_SPRITES_CDI ?= $(DC_BUILD_DIR)/maishuji-pixel-sprites.cdi
+DC_LIFECYCLE_ELF ?= $(DC_BUILD_DIR)/maishuji-hello-pvr.elf
+DC_LIFECYCLE_CDI ?= $(DC_BUILD_DIR)/maishuji-hello-pvr.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -41,6 +43,9 @@ dreamcast-build: dreamcast-configure
 dreamcast-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_ELF)" -o "$(DC_CDI)" -n "maishuji-lab PVR smoke"
 
+dreamcast-lifecycle-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_LIFECYCLE_ELF)" -o "$(DC_LIFECYCLE_CDI)" -n "maishuji-lab hello PVR lifecycle"
+
 dreamcast-textured-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXTURED_ELF)" -o "$(DC_TEXTURED_CDI)" -n "maishuji-lab textured quad"
 
@@ -52,6 +57,13 @@ dreamcast-makefile-smoke: check-toolchain
 
 flycast-smoke:
 	./tools/test-flycast-render.sh "$(DC_CDI)"
+
+flycast-lifecycle:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-lifecycle-frame.sh \
+	FLYCAST_WINDOW_TITLE=MAISHUJI_HELLO_PVR \
+	FLYCAST_STABLE_SAMPLES=1 \
+	FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: hello-pvr lifecycle smoke passed" \
+	./tools/test-flycast-render.sh "$(DC_LIFECYCLE_CDI)"
 
 flycast-textured-quad:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-textured-frame.sh \

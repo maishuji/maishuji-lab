@@ -66,9 +66,10 @@ OPB overflow count of 3, and vertex-buffer double buffering.
 
 ## Lifetime rules
 
-A Pvr object must outlive its Frame and RenderList objects and must be shut
-down after all active scopes have finished. Pvr::shutdown() returns
-FrameActive instead of guessing how to close an open scene.
+A Pvr object must outlive its Frame, RenderList, and allocated Texture
+objects and must be shut down after all of them have finished or been released.
+Pvr::shutdown() returns FrameActive or TextureActive instead of guessing how to
+close an open scene or invalidate a live texture.
 
 Frame::finish() returns RenderListActive when a list remains open. A
 RenderList must finish before its frame. Both scope types close an active KOS
@@ -98,6 +99,7 @@ adapter in src/host/recording_backend.cpp.
 The host recording adapter tests:
 
 - initialization and shutdown ownership;
+- shutdown rejection while a texture remains allocated;
 - one active frame and one active list at a time;
 - disabled-list and invalid-configuration rejection;
 - failed ready, scene, list, render-wait, and initialization operations;

@@ -71,9 +71,11 @@ calling KOS pvr_mem_free(). That wait is an intentional synchronization cost;
 release during an active frame returns FrameActive, and a failed render wait
 leaves the allocation owned by the texture so the caller can retry.
 
-Release textures before shutting down their Pvr. Destruction of an allocated
-Texture is a programmer error detected by the debug assertion; explicit
-release keeps the lifetime and wait visible.
+Release textures before shutting down their Pvr. Pvr::shutdown() returns
+TextureActive while any texture remains allocated, so a live texture cannot be
+left pointing at a shut-down context. Destruction of an allocated Texture is a
+programmer error detected by the debug assertion; explicit release keeps the
+lifetime and wait visible.
 
 Move construction and move assignment transfer the PVR handle without copying
 texture data. The moved-from object is empty and can be destroyed normally.

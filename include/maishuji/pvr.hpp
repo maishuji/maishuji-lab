@@ -94,6 +94,7 @@ enum class Status : std::uint8_t {
     BackendShutdownFailed,
     FrameAlreadyActive,
     FrameActive,
+    TextureActive,
     FrameNotActive,
     WaitReadyFailed,
     SceneBeginFailed,
@@ -165,6 +166,7 @@ private:
     const detail::Backend *backend_;
     Configuration configuration_{};
     Frame *active_frame_ = nullptr;
+    std::size_t active_texture_count_ = 0;
     bool initialized_ = false;
 };
 

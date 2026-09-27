@@ -86,6 +86,10 @@ bool texture_allocate(std::size_t bytes, detail::TextureHandle &handle) noexcept
     }
 
     handle = next_texture_handle++;
+    ++state.live_texture_allocations;
+    if(state.live_texture_allocations > state.peak_texture_allocations)
+        state.peak_texture_allocations = state.live_texture_allocations;
+    state.last_texture_allocate_bytes = bytes;
     return true;
 }
 
@@ -101,6 +105,8 @@ bool texture_upload(detail::TextureHandle handle, const std::uint16_t *pixels,
 void texture_free(detail::TextureHandle handle) noexcept {
     (void)handle;
     ++state.texture_free_calls;
+    if(state.live_texture_allocations > 0)
+        --state.live_texture_allocations;
 }
 
 bool submit_textured_quad(

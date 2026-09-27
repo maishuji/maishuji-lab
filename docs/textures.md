@@ -103,7 +103,11 @@ The KOS mapping is intentionally direct:
 | Texture::release() | pvr_wait_render_done() then pvr_mem_free() | blocks until the GPU is idle before freeing VRAM |
 
 The host recording backend tests these ownership, validation, move, failure, and
-wait rules without claiming to emulate PVR rasterization. Target Debug and
-Release builds are the cross-compilation check, and the dedicated Flycast gate
-checks the rendered textured output. The repeated lifetime workload is not a
-hardware performance measurement; real Dreamcast validation remains separate.
+wait rules without claiming to emulate PVR rasterization. It also tracks live
+and peak texture allocations so the repeated-cycle test can assert that every
+allocation is released and that the workload reuses one live texture at a time.
+This is host-side ownership accounting, not a measurement of the PVR's actual
+free-space or fragmentation behavior. Target Debug and Release builds are the
+cross-compilation check, and the dedicated Flycast gate checks the rendered
+textured output. The repeated lifetime workload is not a hardware performance
+measurement; real Dreamcast validation remains separate.

@@ -436,6 +436,12 @@ void test_texture_ownership() {
 
     expect_equal(test::recording().texture_allocate_calls, 2,
                  "texture allocation call count");
+    expect_equal(test::recording().live_texture_allocations, 0,
+                 "texture ownership returns to zero live allocations");
+    expect_equal(test::recording().peak_texture_allocations, 1,
+                 "texture ownership peak allocation count");
+    expect_equal(test::recording().last_texture_allocate_bytes,
+                 sizeof(pixels), "texture allocation byte count");
     expect_equal(test::recording().texture_upload_calls, 3,
                  "texture upload call count");
     expect_equal(test::recording().texture_free_calls, 1,
@@ -503,6 +509,10 @@ void test_texture_repeated_cycles() {
                  "repeated textured submission count");
     expect_equal(test::recording().texture_free_calls, cycles,
                  "repeated texture free count");
+    expect_equal(test::recording().live_texture_allocations, 0,
+                 "repeated texture cycles leave no live allocations");
+    expect_equal(test::recording().peak_texture_allocations, 1,
+                 "repeated texture cycles reuse one live allocation");
     expect_equal(test::recording().render_wait_calls,
                  static_cast<std::size_t>(cycles + 1),
                  "repeated texture render-wait count");

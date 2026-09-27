@@ -462,6 +462,42 @@ void test_texture_ownership() {
                  "recording keeps submitted sprite bounds");
 }
 
+void test_multiple_texture_shutdown_guard() {
+    using namespace maishuji;
+
+    test::reset_recording();
+
+    Pvr pvr;
+    Texture first;
+    Texture second;
+    expect_status(pvr.initialize(), Status::Success,
+                  "initialize multiple-texture shutdown test");
+    expect_status(first.allocate(pvr, 8, 8), Status::Success,
+                  "allocate first shutdown-guard texture");
+    expect_status(second.allocate(pvr, 4, 4), Status::Success,
+                  "allocate second shutdown-guard texture");
+
+    expect_status(pvr.shutdown(), Status::TextureActive,
+                  "reject shutdown with two allocated textures");
+    expect_status(first.release(), Status::Success,
+                  "release first shutdown-guard texture");
+    expect_status(pvr.shutdown(), Status::TextureActive,
+                  "reject shutdown with one allocated texture");
+    expect_status(second.release(), Status::Success,
+                  "release second shutdown-guard texture");
+    expect_status(pvr.shutdown(), Status::Success,
+                  "shutdown after all textures release");
+
+    expect_equal(test::recording().live_texture_allocations, 0,
+                 "multiple textures leave no live allocations");
+    expect_equal(test::recording().peak_texture_allocations, 2,
+                 "multiple textures record the live allocation peak");
+    expect_equal(test::recording().texture_free_calls, 2,
+                 "multiple textures are both freed");
+    expect_equal(test::recording().render_wait_calls, 3,
+                 "multiple textures wait before each release and shutdown");
+}
+
 void test_texture_repeated_cycles() {
     using namespace maishuji;
 
@@ -585,6 +621,7 @@ int main() {
     test_scope_cleanup();
     test_colored_primitives();
     test_texture_ownership();
+    test_multiple_texture_shutdown_guard();
     test_texture_repeated_cycles();
 
     if(failures != 0) {

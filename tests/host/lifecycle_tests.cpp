@@ -394,6 +394,10 @@ void test_texture_ownership() {
                   "finish second texture-context frame");
     expect_status(other_pvr.shutdown(), Status::Success,
                   "shutdown second texture-context PVR");
+    expect_status(pvr.shutdown(), Status::TextureActive,
+                  "reject shutdown with allocated texture");
+    expect_true(pvr.initialized(),
+                "retain PVR while texture remains allocated");
 
     Texture unallocated;
     Frame frame;

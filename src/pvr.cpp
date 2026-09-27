@@ -83,6 +83,8 @@ const char *status_name(Status status) noexcept {
         return "frame already active";
     case Status::FrameActive:
         return "frame still active";
+    case Status::TextureActive:
+        return "texture still allocated";
     case Status::FrameNotActive:
         return "frame not active";
     case Status::WaitReadyFailed:
@@ -190,6 +192,7 @@ Status Texture::allocate(Pvr &pvr, std::uint16_t width,
     width_ = width;
     height_ = height;
     allocated_ = true;
+    ++pvr.active_texture_count_;
     return Status::Success;
 }
 
@@ -222,6 +225,8 @@ Status Texture::release() noexcept {
 
     owner_->backend_->texture_free(
         static_cast<detail::TextureHandle>(handle_));
+    assert(owner_->active_texture_count_ > 0);
+    --owner_->active_texture_count_;
     owner_ = nullptr;
     handle_ = 0;
     width_ = 0;
@@ -277,6 +282,8 @@ Status Pvr::shutdown() noexcept {
         return Status::NotInitialized;
     if(active_frame_ != nullptr)
         return Status::FrameActive;
+    if(active_texture_count_ != 0)
+        return Status::TextureActive;
 
     const bool render_waited = backend_->wait_render_done();
     const bool shutdown_succeeded = backend_->shutdown();

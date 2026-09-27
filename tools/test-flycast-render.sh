@@ -83,12 +83,14 @@ capture_path=$(realpath -m "$capture_path")
     echo "Capture path must not overwrite the CDI: $capture_path" >&2
     exit 2
 }
+rm -f -- "$capture_path"
 
 start_timeout=${FLYCAST_START_TIMEOUT:-90}
 render_timeout=${FLYCAST_RENDER_TIMEOUT:-30}
 stable_samples=${FLYCAST_STABLE_SAMPLES:-3}
 capture_timeout=${FLYCAST_CAPTURE_TIMEOUT:-5}
 require_runtime_markers=${FLYCAST_REQUIRE_RUNTIME_MARKERS:-0}
+required_runtime_marker=${FLYCAST_REQUIRED_RUNTIME_MARKER:-}
 for timeout_value in "$start_timeout" "$render_timeout"; do
     [[ "$timeout_value" =~ ^[1-9][0-9]*$ ]] || {
         echo "Flycast timeouts must be positive whole seconds." >&2
@@ -203,7 +205,14 @@ runtime_probes_passed() {
 }
 
 runtime_gate_passed() {
-    [[ "$require_runtime_markers" == 0 ]] || runtime_probes_passed
+    if [[ "$require_runtime_markers" == 1 ]] && ! runtime_probes_passed; then
+        return 1
+    fi
+    if [[ -n "$required_runtime_marker" ]] &&
+       ! grep -Fq -- "$required_runtime_marker" "$log_file"; then
+        return 1
+    fi
+    return 0
 }
 
 complete_success() {
@@ -213,6 +222,9 @@ complete_success() {
         echo "Runtime markers: passed"
     else
         echo "Runtime probes: render-gated"
+    fi
+    if [[ -n "$required_runtime_marker" ]]; then
+        echo "Required runtime marker: passed"
     fi
     echo "Capture: $capture_path"
     exit 0
@@ -224,6 +236,13 @@ while (( SECONDS < render_deadline )); do
     fi
 
     if ! timeout "$capture_timeout" "${image_import[@]}" -window "$window_id" "$capture_path"; then
+        if [[ -f "$capture_path" ]] &&
+           last_check_output=$("$frame_checker" "$capture_path" 2>&1); then
+            ((stable_count += 1))
+            if (( stable_count >= stable_samples )) && runtime_gate_passed; then
+                complete_success
+            fi
+        fi
         if (( stable_count >= stable_samples )) && runtime_gate_passed; then
             complete_success
         fi

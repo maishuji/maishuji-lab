@@ -58,6 +58,14 @@ make dreamcast-cdi
 make flycast-smoke
 ```
 
+For the lifecycle example, package the CDI and run its dark-frame check
+with an exact guest completion marker:
+
+~~~sh
+make dreamcast-lifecycle-cdi
+make flycast-lifecycle
+~~~
+
 For the textured example, package the CDI in the pinned container and run
 the capability-specific Flycast check on the host:
 

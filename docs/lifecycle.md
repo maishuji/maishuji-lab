@@ -114,6 +114,8 @@ make host-test
 
 The pinned target build compiles both the raw reference and
 maishuji-hello-pvr, which opens and finishes an opaque list for 600 frames.
-That proves target compilation and ABI compatibility; it is not emulator or
-real-hardware runtime evidence. Primitive submission remains in the raw
-reference; see [primitives.md](primitives.md) for colored geometry.
+The Debug lifecycle CDI also passes the Flycast dark-frame gate with the exact
+guest completion marker, proving that the target loop reaches normal shutdown
+in the emulator. This remains emulator evidence, not real-hardware runtime
+evidence. Primitive submission remains in the raw reference; see
+[primitives.md](primitives.md) for colored geometry.

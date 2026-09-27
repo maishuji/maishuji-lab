@@ -186,7 +186,18 @@ for stable rendered frames by default; marker checking is an additional gate,
 not a replacement for the frame check.
 
 The same launcher accepts FLYCAST_FRAME_CHECKER so examples can use a
-capability-specific pixel checker. The textured example has its own CDI target
+capability-specific pixel checker. FLYCAST_REQUIRED_RUNTIME_MARKER adds a
+single exact guest-log requirement to the render gate. The lifecycle example
+uses this with its finite 600-frame loop:
+
+~~~sh
+make dreamcast-lifecycle-cdi
+make flycast-lifecycle
+~~~
+
+Its dark-frame checker confirms the expected empty 4:3 output while the exact
+KOS marker confirms that all frames, list finishes, scene finishes, and the
+explicit shutdown path completed. The textured example has its own CDI target
 and checker:
 
 ~~~sh
@@ -213,6 +224,35 @@ be green/blue-dominant, and the surrounding samples must remain dark. The
 example renders a finite 96-frame sequence and exits, so this target requires
 one passing capture; a three-sample run can race the emulator closing its game
 window.
+
+## Recorded lifecycle runtime check
+
+On 2026-09-27, the pinned Debug lifecycle CDI passed the host render gate with
+Flycast v2.7:
+
+~~~sh
+make dreamcast-lifecycle-cdi
+make flycast-lifecycle
+~~~
+
+The target reported:
+
+~~~text
+PASS: Flycast rendered the expected dark lifecycle frame.
+  above:  0.020 0.020 0.000
+  center: 0.020 0.020 0.000
+  left:   0.020 0.020 0.000
+  right:  0.020 0.020 0.000
+  below:  0.020 0.020 0.000
+Stable frames: 7
+Runtime probes: render-gated
+Required runtime marker: passed
+~~~
+
+The guest log contained maishuji: hello-pvr lifecycle smoke passed and exited
+with return code 0. This confirms the 600-frame frame/list lifecycle reached
+normal shutdown in Flycast. The dark-frame check does not establish primitive
+rasterization or real Dreamcast hardware behavior.
 
 ## Recorded textured runtime check
 

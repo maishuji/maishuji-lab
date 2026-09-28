@@ -84,3 +84,12 @@ View-matrix(math):
 
 Projection-matrix(math):
 	Maps camera-space positions into clip space for perspective projection.
+
+Clip-space(math):
+	Represents homogeneous coordinates before perspective division and viewport mapping.
+
+Viewport(api):
+	Defines the output rectangle used to map normalized device coordinates to screen positions.
+
+Mesh(api):
+	Describes span-backed indexed vertices that become submitted PVR triangles.

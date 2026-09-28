@@ -33,12 +33,16 @@ concepts used by the examples:
   status can be observed through explicit finish calls.
 - Texture is move-only, keeps CPU upload data separate from PVR memory, and
   rejects submission through a different Pvr context.
-- Triangle, Quad, TexturedQuad, and PrimitiveConfiguration expose the geometry
-  and culling choices demonstrated by the examples without introducing a
-  material system, scene graph, generic renderer, or persistent queue.
-- PixelGrid, Sprite, SpriteRegion, and SpriteUv provide portable coordinate and
-  UV helpers that build existing TexturedQuad values without owning textures or
-  lists.
+- Triangle, Quad, TexturedQuad, Mesh, Viewport, and PrimitiveConfiguration
+  expose the geometry, projection boundary, and culling choices demonstrated by
+  the examples without introducing a material system, scene graph, generic
+  renderer, or persistent queue.
+- PixelGrid, Sprite, SpriteRegion, and SpriteUv provide portable coordinate
+  and UV helpers that build existing TexturedQuad values without owning
+  textures or lists.
+- Vec2, Vec3, Vec4, Mat4, Transform, Camera, and ProjectedPoint provide
+  portable math and projection helpers; they do not own render resources or
+  perform list submission.
 - The public header contains no KOS types, private headers, raw PVR handles, or
   ownership-transfer escape hatch. The raw KOS comparison stays in the separate
   reference example and backend documentation.
@@ -114,6 +118,8 @@ make host-test
 
 The pinned target build compiles both the raw reference and
 maishuji-hello-pvr, which opens and finishes an opaque list for 600 frames.
+The basic-3D target additionally projects a 36-index cube into twelve colored
+triangles through the same list and packet boundary.
 The Debug lifecycle CDI also passes the Flycast dark-frame gate with the exact
 guest completion marker, proving that the target loop reaches normal shutdown
 in the emulator. This remains emulator evidence, not real-hardware runtime

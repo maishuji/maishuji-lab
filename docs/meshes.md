@@ -50,3 +50,22 @@ A failed backend submission can occur after earlier triangles in the same mesh
 have already been submitted. Callers that need all-or-nothing batching should
 validate their mesh and use a separate recording or command-building layer;
 this API does not pretend to provide transactional submission.
+
+## KOS mapping
+
+Mesh projection is a CPU-side calculation. The KOS backend receives the same
+screen-space pvr_vertex_t packets used by the colored Triangle API; it does not
+receive a maishuji Mesh or a matrix object.
+
+For each indexed triangle, the path:
+
+1. Applies model, view, and perspective matrices on the SH-4-side submission
+   code.
+2. Performs perspective division and maps NDC to the 640x480 viewport.
+3. Packs the resulting position and color into the existing PVR vertex packet.
+4. Compiles the active list's polygon header and submits one header plus three
+   vertices through pvr_prim().
+
+Culling remains a PrimitiveConfiguration choice passed to the same KOS polygon
+context. The mesh API therefore adds CPU transform work without hiding list
+selection, packet layout, or synchronization behind a generic renderer.

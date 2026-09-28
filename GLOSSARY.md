@@ -75,3 +75,12 @@ Texture-atlas(texture):
 
 Subpixel-motion(api):
 	Preserves fractional output coordinates instead of snapping to the logical pixel grid.
+
+NDC(math):
+	Represents normalized device coordinates after perspective division and before viewport mapping.
+
+View-matrix(math):
+	Converts world-space positions into coordinates relative to a camera.
+
+Projection-matrix(math):
+	Maps camera-space positions into clip space for perspective projection.

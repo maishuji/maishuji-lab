@@ -18,6 +18,14 @@ enum class Culling : std::uint8_t {
     CounterClockwise,
 };
 
+enum class DepthCompare : std::uint8_t {
+    Less,
+    LessOrEqual,
+    Greater,
+    GreaterOrEqual,
+    Always,
+};
+
 struct Color {
     std::uint8_t red = 255;
     std::uint8_t green = 255;
@@ -54,6 +62,8 @@ struct Quad {
 
 struct PrimitiveConfiguration {
     Culling culling = Culling::None;
+    DepthCompare depth_compare = DepthCompare::Less;
+    bool depth_write = true;
 };
 
 struct TexturedVertex {

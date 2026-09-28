@@ -62,7 +62,7 @@ bool list_finish() noexcept {
 bool submit_triangle(List list, const Triangle &triangle,
                      const PrimitiveConfiguration &configuration) noexcept {
     state.last_triangle = triangle;
-    (void)configuration;
+    state.last_primitive_configuration = configuration;
     ++state.triangle_submit_calls;
     state.last_primitive_list = list;
     return consume_failure(FailurePoint::PrimitiveSubmit);
@@ -71,7 +71,7 @@ bool submit_triangle(List list, const Triangle &triangle,
 bool submit_quad(List list, const Quad &quad,
                  const PrimitiveConfiguration &configuration) noexcept {
     (void)quad;
-    (void)configuration;
+    state.last_primitive_configuration = configuration;
     ++state.quad_submit_calls;
     state.last_primitive_list = list;
     return consume_failure(FailurePoint::PrimitiveSubmit);
@@ -116,7 +116,7 @@ bool submit_textured_quad(
     (void)handle;
     (void)width;
     (void)height;
-    (void)configuration;
+    state.last_primitive_configuration = configuration;
     state.last_textured_quad = quad;
     ++state.textured_quad_submit_calls;
     state.last_primitive_list = list;

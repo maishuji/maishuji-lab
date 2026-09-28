@@ -85,6 +85,29 @@ pvr_cull_mode_t to_kos_culling(Culling culling) noexcept {
     return PVR_CULLING_NONE;
 }
 
+pvr_depthcmp_mode_t to_kos_depth_compare(DepthCompare comparison) noexcept {
+    switch(comparison) {
+    case DepthCompare::Less:
+        return PVR_DEPTHCMP_LESS;
+    case DepthCompare::LessOrEqual:
+        return PVR_DEPTHCMP_LEQUAL;
+    case DepthCompare::Greater:
+        return PVR_DEPTHCMP_GREATER;
+    case DepthCompare::GreaterOrEqual:
+        return PVR_DEPTHCMP_GEQUAL;
+    case DepthCompare::Always:
+        return PVR_DEPTHCMP_ALWAYS;
+    }
+
+    return PVR_DEPTHCMP_LESS;
+}
+
+void apply_depth_policy(pvr_poly_cxt_t &context,
+                        const PrimitiveConfiguration &configuration) noexcept {
+    context.depth.comparison = to_kos_depth_compare(configuration.depth_compare);
+    context.depth.write = configuration.depth_write;
+}
+
 void fill_vertex(pvr_vertex_t &destination, std::uint32_t flags,
                  const Vertex &source) noexcept {
     destination.flags = flags;
@@ -109,6 +132,7 @@ bool submit_colored(List list, const Vertex *vertices, std::size_t count,
     pvr_poly_cxt_col(&context, to_kos_list(list));
     context.gen.shading = PVR_SHADE_GOURAUD;
     context.gen.culling = to_kos_culling(configuration.culling);
+    apply_depth_policy(context, configuration);
     pvr_poly_compile(&header, &context);
 
     for(std::size_t index = 0; index < count; ++index) {
@@ -195,6 +219,7 @@ bool submit_textured_quad(
         reinterpret_cast<pvr_ptr_t>(handle), PVR_FILTER_NEAREST);
     context.gen.shading = PVR_SHADE_GOURAUD;
     context.gen.culling = to_kos_culling(configuration.culling);
+    apply_depth_policy(context, configuration);
     pvr_poly_compile(&header, &context);
 
     const TexturedVertex vertices[4] = {

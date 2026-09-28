@@ -644,20 +644,37 @@ void test_mesh_submission() {
     expect_true(test::recording().last_triangle.first.z > 0.0f &&
                     test::recording().last_triangle.first.z < 1.0f,
                 "mesh maps depth into positive PVR range");
+    expect_true(test::recording().last_primitive_configuration.culling ==
+                    Culling::None &&
+                    test::recording().last_primitive_configuration.depth_compare ==
+                        DepthCompare::Less &&
+                    test::recording().last_primitive_configuration.depth_write,
+                "mesh uses explicit default depth policy");
+
+    const PrimitiveConfiguration mesh_policy{
+        Culling::CounterClockwise, DepthCompare::Greater, false};
+    expect_status(list.submit(mesh, camera, transform, viewport, mesh_policy),
+                  Status::Success, "submit mesh with explicit depth policy");
+    expect_true(test::recording().last_primitive_configuration.culling ==
+                    Culling::CounterClockwise &&
+                    test::recording().last_primitive_configuration.depth_compare ==
+                        DepthCompare::Greater &&
+                    !test::recording().last_primitive_configuration.depth_write,
+                "mesh forwards explicit culling and depth policy");
 
     const std::array<std::uint16_t, 3> invalid_indices{0, 1, 9};
     expect_status(list.submit(
                       Mesh{vertices, invalid_indices}, camera, transform,
                       viewport),
                   Status::MeshInvalidData, "reject out-of-range mesh index");
-    expect_equal(test::recording().triangle_submit_calls, 2,
+    expect_equal(test::recording().triangle_submit_calls, 4,
                  "invalid mesh does not submit a partial triangle");
 
     Camera invalid_camera = camera;
     invalid_camera.aspect_ratio = 0.0f;
     expect_status(list.submit(mesh, invalid_camera, transform, viewport),
                   Status::InvalidCamera, "reject invalid camera");
-    expect_equal(test::recording().triangle_submit_calls, 2,
+    expect_equal(test::recording().triangle_submit_calls, 4,
                  "invalid camera does not submit geometry");
 
     const std::array<MeshVertex, 3> clipped_vertices{
@@ -744,6 +761,17 @@ void test_colored_primitives() {
     expect_status(opaque.submit(quad), Status::Success,
                   "submit quad");
 
+    const PrimitiveConfiguration primitive_policy{
+        Culling::Clockwise, DepthCompare::LessOrEqual, false};
+    expect_status(opaque.submit(triangle, primitive_policy), Status::Success,
+                  "submit primitive with explicit depth policy");
+    expect_true(test::recording().last_primitive_configuration.culling ==
+                    Culling::Clockwise &&
+                    test::recording().last_primitive_configuration.depth_compare ==
+                        DepthCompare::LessOrEqual &&
+                    !test::recording().last_primitive_configuration.depth_write,
+                "primitive forwards explicit culling and depth policy");
+
     test::fail_next(test::FailurePoint::PrimitiveSubmit);
     expect_status(opaque.submit(triangle), Status::PrimitiveSubmissionFailed,
                   "propagate primitive failure");
@@ -754,7 +782,7 @@ void test_colored_primitives() {
                   "finish primitive frame");
     expect_status(pvr.shutdown(), Status::Success,
                   "shutdown primitive PVR");
-    expect_equal(test::recording().triangle_submit_calls, 2,
+    expect_equal(test::recording().triangle_submit_calls, 3,
                  "triangle submission call count");
     expect_equal(test::recording().quad_submit_calls, 1,
                  "quad submission call count");

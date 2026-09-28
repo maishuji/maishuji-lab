@@ -68,6 +68,9 @@ For each indexed triangle, the path:
 4. Compiles the active list's polygon header and submits one header plus three
    vertices through pvr_prim().
 
-Culling remains a PrimitiveConfiguration choice passed to the same KOS polygon
-context. The mesh API therefore adds CPU transform work without hiding list
-selection, packet layout, or synchronization behind a generic renderer.
+Culling and depth policy remain PrimitiveConfiguration choices passed to the
+same KOS polygon context. The default is no culling, DepthCompare::Less, and
+depth writes enabled; use a different policy when the mesh's winding or
+layering requires it. The mesh API therefore adds CPU transform work without
+hiding list selection, packet layout, or synchronization behind a generic
+renderer.

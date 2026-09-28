@@ -73,6 +73,32 @@ textured example is 4,400 bytes larger than the raw reference in this build;
 that difference includes the texture implementation, example, and linked
 code paths.
 
+## Basic 3D structural comparison
+
+The basic-3D example contains 36 indices, or 12 triangles. The current mesh
+submission path performs 36 per-index projections and calls the existing
+colored-triangle backend once per triangle. That produces:
+
+| Path | Projected triangles | pvr_prim calls per triangle | Calls per frame |
+| --- | ---: | ---: | ---: |
+| Basic-3D indexed cube | 12 | 1 header + 3 vertices = 4 | 48 |
+
+The path uses no explicit temporary transformed-vertex cache or per-frame heap
+allocation. Shared indices are recomputed intentionally so the first example
+keeps the CPU transform cost visible rather than introducing a hidden cache.
+
+The pinned Release comparison was collected with the same command sequence as
+the earlier table:
+
+| ELF | text | data | bss | decimal total |
+| --- | ---: | ---: | ---: | ---: |
+| maishuji-colored-primitives.elf | 308056 | 13412 | 40340 | 361808 |
+| maishuji-basic-3d.elf | 317972 | 13412 | 40340 | 371724 |
+
+The basic-3D example is 9,916 bytes larger in total, all in text for this
+build. The difference includes the example, math, mesh projection, and linked
+code paths; it is not an isolated cost for one matrix function.
+
 ## Limits of this evidence
 
 This is a structural packet-count and binary-size comparison. It does not

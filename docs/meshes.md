@@ -40,6 +40,52 @@ The mapping is reversed for PVR depth ordering: nearer geometry receives the
 larger submitted value, farther geometry the smaller value, matching the
 default DepthCompare::Greater policy.
 
+## Recorded 3D depth-ordering finding
+
+On 2026-09-28, review of the fogged cube found that the first projection path
+mapped nearer geometry to smaller submitted z values while the explicit default
+policy used DepthCompare::Greater. That combination could let the far cube face
+win the depth test. The existing color/background checker did not detect this
+because it only established that a cube-shaped image was visible.
+
+The correction keeps the pinned KOS-compatible Greater comparison and reverses
+the mesh viewport depth mapping:
+
+- the near plane maps to the larger submitted value;
+- the far plane maps to the smaller submitted value.
+
+The host lifecycle test now submits overlapping near and far triangles and
+asserts that the near triangle receives the larger PVR depth. The fogged
+example also uses a static capture pose with a blue near face and red far face;
+its Flycast checker samples the center and requires blue to dominate, covering
+the visible occlusion case.
+
+Reproduce the corrected checks with:
+
+~~~sh
+make host-test
+make dreamcast-fogged-3d-cdi
+make flycast-fogged-3d
+~~~
+
+Observed corrected Flycast result:
+
+~~~text
+PASS: Flycast rendered the fogged 3D mesh with near-face depth ordering.
+  mesh center: 0.081 0.154 0.485
+  above mesh:  0.020 0.020 0.000
+  left mesh:   0.020 0.020 0.000
+  right mesh:  0.020 0.020 0.000
+  below mesh:  0.020 0.020 0.000
+Stable frames: 2
+Runtime probes: render-gated
+Required runtime marker: passed
+~~~
+
+The emulator check validates this fixed fixture and the runtime marker. It does
+not prove every possible winding, camera, or mesh ordering case; arbitrary
+scenes still need appropriate culling and depth policy choices.
+
 ## Cost and boundary
 
 The first implementation projects every referenced vertex for every triangle,

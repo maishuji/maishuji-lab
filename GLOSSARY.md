@@ -51,6 +51,12 @@ Depth-compare(pvr):
 Depth-write(pvr):
 	Controls whether a passing polygon updates the PVR depth buffer.
 
+Fog(api):
+	Blends mesh vertex colors toward a configured color by camera-space depth.
+
+Camera-space-depth(math):
+	Measures positive distance along the camera view direction after the view transform.
+
 Triangle-strip(pvr):
 	Reuses each pair of recent vertices so a sequence of vertices describes connected triangles.
 

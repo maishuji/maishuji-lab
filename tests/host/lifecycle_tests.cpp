@@ -647,34 +647,54 @@ void test_mesh_submission() {
     expect_true(test::recording().last_primitive_configuration.culling ==
                     Culling::None &&
                     test::recording().last_primitive_configuration.depth_compare ==
-                        DepthCompare::Less &&
+                        DepthCompare::Greater &&
                     test::recording().last_primitive_configuration.depth_write,
                 "mesh uses explicit default depth policy");
 
     const PrimitiveConfiguration mesh_policy{
-        Culling::CounterClockwise, DepthCompare::Greater, false};
+        Culling::CounterClockwise, DepthCompare::Less, false};
     expect_status(list.submit(mesh, camera, transform, viewport, mesh_policy),
                   Status::Success, "submit mesh with explicit depth policy");
     expect_true(test::recording().last_primitive_configuration.culling ==
                     Culling::CounterClockwise &&
                     test::recording().last_primitive_configuration.depth_compare ==
-                        DepthCompare::Greater &&
+                        DepthCompare::Less &&
                     !test::recording().last_primitive_configuration.depth_write,
                 "mesh forwards explicit culling and depth policy");
+
+    const Fog fog{{8, 16, 32, 255}, 0.0f, 1.0f, true};
+    expect_status(list.submit_fogged(mesh, camera, transform, viewport, fog),
+                  Status::Success, "submit mesh with linear fog");
+    expect_equal(test::recording().triangle_submit_calls, 6,
+                 "fogged mesh submits the same triangle count");
+    expect_true(test::recording().last_triangle.first.color.red == fog.color.red &&
+                    test::recording().last_triangle.first.color.green ==
+                        fog.color.green &&
+                    test::recording().last_triangle.first.color.blue ==
+                        fog.color.blue,
+                "fog blends distant mesh vertices to the fog color");
+
+    Fog invalid_fog = fog;
+    invalid_fog.end = invalid_fog.start;
+    expect_status(list.submit_fogged(
+                      mesh, camera, transform, viewport, invalid_fog),
+                  Status::InvalidFog, "reject invalid fog range");
+    expect_equal(test::recording().triangle_submit_calls, 6,
+                 "invalid fog does not submit geometry");
 
     const std::array<std::uint16_t, 3> invalid_indices{0, 1, 9};
     expect_status(list.submit(
                       Mesh{vertices, invalid_indices}, camera, transform,
                       viewport),
                   Status::MeshInvalidData, "reject out-of-range mesh index");
-    expect_equal(test::recording().triangle_submit_calls, 4,
+    expect_equal(test::recording().triangle_submit_calls, 6,
                  "invalid mesh does not submit a partial triangle");
 
     Camera invalid_camera = camera;
     invalid_camera.aspect_ratio = 0.0f;
     expect_status(list.submit(mesh, invalid_camera, transform, viewport),
                   Status::InvalidCamera, "reject invalid camera");
-    expect_equal(test::recording().triangle_submit_calls, 4,
+    expect_equal(test::recording().triangle_submit_calls, 6,
                  "invalid camera does not submit geometry");
 
     const std::array<MeshVertex, 3> clipped_vertices{

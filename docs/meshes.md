@@ -69,8 +69,11 @@ For each indexed triangle, the path:
    vertices through pvr_prim().
 
 Culling and depth policy remain PrimitiveConfiguration choices passed to the
-same KOS polygon context. The default is no culling, DepthCompare::Less, and
-depth writes enabled; use a different policy when the mesh's winding or
-layering requires it. The mesh API therefore adds CPU transform work without
+same KOS polygon context. The default is no culling, DepthCompare::Greater,
+and depth writes enabled; this matches the pinned KOS context while making the
+choice visible in the public API. Use a different policy when the mesh's
+winding or layering requires it. The mesh API therefore adds CPU transform work without
 hiding list selection, packet layout, or synchronization behind a generic
-renderer.
+renderer. Optional camera-space linear fog is documented in
+[fog.md](fog.md); it blends mesh vertex colors before this same clipping and
+submission path.

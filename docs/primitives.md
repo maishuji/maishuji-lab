@@ -52,10 +52,11 @@ PrimitiveConfiguration{Culling::Clockwise} or
 PrimitiveConfiguration{Culling::CounterClockwise} and keep the vertex order
 consistent with the selected mode.
 
-Depth policy is explicit in PrimitiveConfiguration. DepthCompare::Less is the
-default: smaller submitted z values pass, and depth_write defaults to true.
-DepthCompare::LessOrEqual, Greater, GreaterOrEqual, and Always are available for
-specialized layering or debugging. Set depth_write to false for a primitive
+Depth policy is explicit in PrimitiveConfiguration. DepthCompare::Greater is
+the default: larger submitted z values pass, matching the pinned KOS polygon
+context, and depth_write defaults to true. DepthCompare::Less, LessOrEqual,
+GreaterOrEqual, and Always are available for specialized layering or
+debugging. Set depth_write to false for a primitive
 that should test depth without updating the buffer. The KOS backend copies both
 fields into the compiled polygon context for colored and textured submissions.
 

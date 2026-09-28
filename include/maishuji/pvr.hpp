@@ -62,7 +62,7 @@ struct Quad {
 
 struct PrimitiveConfiguration {
     Culling culling = Culling::None;
-    DepthCompare depth_compare = DepthCompare::Less;
+    DepthCompare depth_compare = DepthCompare::Greater;
     bool depth_write = true;
 };
 
@@ -120,6 +120,7 @@ enum class Status : std::uint8_t {
     PrimitiveSubmissionFailed,
     MeshInvalidData,
     InvalidCamera,
+    InvalidFog,
     MeshProjectionFailed,
     TextureAlreadyAllocated,
     TextureNotAllocated,
@@ -147,6 +148,7 @@ struct Mesh;
 struct Camera;
 struct Transform;
 struct Viewport;
+struct Fog;
 
 namespace detail {
 struct Backend;
@@ -278,6 +280,10 @@ public:
     Status submit(const Mesh &mesh, const Camera &camera,
                   const Transform &transform, const Viewport &viewport,
                   const PrimitiveConfiguration &configuration = {}) noexcept;
+    Status submit_fogged(const Mesh &mesh, const Camera &camera,
+                         const Transform &transform, const Viewport &viewport,
+                         const Fog &fog,
+                         const PrimitiveConfiguration &configuration = {}) noexcept;
 
     bool active() const noexcept {
         return active_;

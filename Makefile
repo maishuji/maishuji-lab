@@ -15,11 +15,13 @@ DC_LIFECYCLE_ELF ?= $(DC_BUILD_DIR)/maishuji-hello-pvr.elf
 DC_LIFECYCLE_CDI ?= $(DC_BUILD_DIR)/maishuji-hello-pvr.cdi
 DC_BASIC_3D_ELF ?= $(DC_BUILD_DIR)/maishuji-basic-3d.elf
 DC_BASIC_3D_CDI ?= $(DC_BUILD_DIR)/maishuji-basic-3d.cdi
+DC_FOGGED_3D_ELF ?= $(DC_BUILD_DIR)/maishuji-fogged-3d.elf
+DC_FOGGED_3D_CDI ?= $(DC_BUILD_DIR)/maishuji-fogged-3d.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -50,6 +52,9 @@ dreamcast-lifecycle-cdi: dreamcast-build
 
 dreamcast-basic-3d-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_BASIC_3D_ELF)" -o "$(DC_BASIC_3D_CDI)" -n "maishuji-lab basic 3D"
+
+dreamcast-fogged-3d-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_FOGGED_3D_ELF)" -o "$(DC_FOGGED_3D_CDI)" -n "maishuji-lab fogged 3D"
 
 dreamcast-textured-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXTURED_ELF)" -o "$(DC_TEXTURED_CDI)" -n "maishuji-lab textured quad"
@@ -83,6 +88,9 @@ flycast-pixel-sprites:
 
 flycast-basic-3d:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-basic-3d-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_BASIC_3D FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: basic 3D passed (180 frames; projected mesh)" ./tools/test-flycast-render.sh "$(DC_BASIC_3D_CDI)"
+
+flycast-fogged-3d:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-fogged-3d-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_FOGGED_3D FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: fogged 3D passed (180 frames; camera-space linear fog)" ./tools/test-flycast-render.sh "$(DC_FOGGED_3D_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

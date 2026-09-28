@@ -252,6 +252,8 @@ const char *status_name(Status status) noexcept {
         return "mesh data or viewport is invalid";
     case Status::InvalidCamera:
         return "camera parameters are invalid";
+    case Status::InvalidFog:
+        return "fog parameters are invalid";
     case Status::MeshProjectionFailed:
         return "mesh vertex cannot be projected";
     case Status::TextureAlreadyAllocated:
@@ -549,6 +551,14 @@ Status RenderList::submit(
     const Mesh &mesh, const Camera &camera, const Transform &transform,
     const Viewport &viewport,
     const PrimitiveConfiguration &configuration) noexcept {
+    return submit_fogged(mesh, camera, transform, viewport, Fog{},
+                         configuration);
+}
+
+Status RenderList::submit_fogged(
+    const Mesh &mesh, const Camera &camera, const Transform &transform,
+    const Viewport &viewport, const Fog &fog,
+    const PrimitiveConfiguration &configuration) noexcept {
     if(!active_ || owner_ == nullptr || owner_->owner_ == nullptr ||
        owner_->active_list_ != this)
         return Status::RenderListNotActive;
@@ -559,14 +569,18 @@ Status RenderList::submit(
         return Status::MeshInvalidData;
     if(!camera.valid())
         return Status::InvalidCamera;
+    if(!fog.valid())
+        return Status::InvalidFog;
 
     for(const std::uint16_t index : mesh.indices) {
         if(index >= mesh.vertices.size())
             return Status::MeshInvalidData;
     }
 
-    const Mat4 model_view_projection =
-        view_projection_matrix(camera) * transform_matrix(transform);
+    const Mat4 model = transform_matrix(transform);
+    const Mat4 view = view_matrix(camera);
+    const Mat4 model_view = view * model;
+    const Mat4 model_view_projection = projection_matrix(camera) * model_view;
 
     for(std::size_t index = 0; index < mesh.indices.size(); index += 3) {
         const MeshVertex *source_vertices[] = {
@@ -574,13 +588,18 @@ Status RenderList::submit(
             &mesh.vertices[mesh.indices[index + 1]],
             &mesh.vertices[mesh.indices[index + 2]],
         };
+        const Vec4 view_positions[3] = {
+            model_view * to_vec4(source_vertices[0]->position),
+            model_view * to_vec4(source_vertices[1]->position),
+            model_view * to_vec4(source_vertices[2]->position),
+        };
         const ClipVertex input[3] = {
             {model_view_projection * to_vec4(source_vertices[0]->position),
-             source_vertices[0]->color},
+             fog.apply(source_vertices[0]->color, -view_positions[0].z)},
             {model_view_projection * to_vec4(source_vertices[1]->position),
-             source_vertices[1]->color},
+             fog.apply(source_vertices[1]->color, -view_positions[1].z)},
             {model_view_projection * to_vec4(source_vertices[2]->position),
-             source_vertices[2]->color},
+             fog.apply(source_vertices[2]->color, -view_positions[2].z)},
         };
 
         std::array<ClipVertex, 12> polygon{};

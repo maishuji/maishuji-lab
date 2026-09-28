@@ -29,13 +29,13 @@ submission call. Every three indices form one triangle. An empty mesh,
 non-triangular index count, out-of-range index, or invalid viewport returns
 MeshInvalidData.
 
-Each vertex is transformed by model, view, and perspective matrices. Positive
-clip w is required. The normalized device result maps to the existing PVR
-screen convention: x increases right, y increases down, and depth maps from
-NDC [-1, 1] to the positive [0, 1] range used by the current examples.
-Points outside the viewport are still submitted; the PVR remains responsible
-for its normal raster clipping. Geometry behind the camera returns
-MeshProjectionFailed.
+Each vertex is transformed by model, view, and perspective matrices.
+Camera validity is checked before any submission. The resulting triangle is
+then clipped against all six homogeneous clip planes. A fully outside or
+behind-camera triangle is discarded; a partially visible triangle is
+triangulated after clipping. The normalized device result maps to the existing
+PVR screen convention: x increases right, y increases down, and depth maps
+from NDC [-1, 1] to the positive [0, 1] range used by the current examples.
 
 ## Cost and boundary
 
@@ -46,10 +46,12 @@ or heap allocation. Each projected triangle then uses the same aligned KOS
 packet path as RenderList::submit(Triangle): one polygon header and three
 vertex packets.
 
-A failed backend submission can occur after earlier triangles in the same mesh
-have already been submitted. Callers that need all-or-nothing batching should
-validate their mesh and use a separate recording or command-building layer;
-this API does not pretend to provide transactional submission.
+A failed backend submission can occur after earlier triangles in the same
+mesh have already been submitted. Camera and index validation happen before
+triangle submission, but the backend is still allowed to fail part-way through
+a clipped mesh. Callers that need all-or-nothing batching should validate their
+mesh and use a separate recording or command-building layer; this API does not
+pretend to provide transactional submission.
 
 ## KOS mapping
 

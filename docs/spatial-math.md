@@ -11,10 +11,16 @@ the last column. Transform composes scale, XYZ Euler rotation, and translation
 in that order.
 
 Camera uses a right-handed view: the camera looks from position toward target,
-and visible points have positive clip w after projection. projection_matrix()
-produces the usual perspective clip range. ProjectedPoint::normalized_device
-is normalized device coordinates (NDC), where x and y are normally in [-1, 1]
-for visible geometry and z carries the depth relation.
+and visible points have positive clip w after projection. Camera::valid()
+rejects non-finite values, a zero-length view direction or up vector, a
+view/up pair without a side axis, an invalid field of view or aspect ratio, and
+a non-positive or reversed near/far range. The projection_matrix() and
+view_matrix() helpers return identity for an invalid camera so accidental
+standalone use does not manufacture NaNs.
+
+The ProjectedPoint::normalized_device value is normalized device coordinates
+(NDC), where x and y are normally in [-1, 1] for visible geometry and z
+carries the depth relation.
 
 The math layer does not clip triangles or map NDC to pixels. Those policies
 belong at the mesh submission boundary, where the viewport and PVR depth

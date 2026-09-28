@@ -205,9 +205,34 @@ struct Camera {
     float aspect_ratio = 4.0f / 3.0f;
     float near_plane = 0.1f;
     float far_plane = 100.0f;
+
+    inline bool valid() const noexcept {
+        constexpr float pi = 3.14159265f;
+        const Vec3 forward = target - position;
+        const Vec3 side = cross(forward, up);
+        const float forward_length = dot(forward, forward);
+        const float up_length = dot(up, up);
+        const float side_length = dot(side, side);
+
+        return std::isfinite(position.x) && std::isfinite(position.y) &&
+               std::isfinite(position.z) && std::isfinite(target.x) &&
+               std::isfinite(target.y) && std::isfinite(target.z) &&
+               std::isfinite(up.x) && std::isfinite(up.y) &&
+               std::isfinite(up.z) &&
+               forward_length > 0.000001f && up_length > 0.000001f &&
+               side_length > 0.000001f &&
+               std::isfinite(vertical_fov_radians) &&
+               vertical_fov_radians > 0.0f && vertical_fov_radians < pi &&
+               std::isfinite(aspect_ratio) && aspect_ratio > 0.0f &&
+               std::isfinite(near_plane) && near_plane > 0.0f &&
+               std::isfinite(far_plane) && far_plane > near_plane;
+    }
 };
 
 inline Mat4 view_matrix(const Camera &camera) noexcept {
+    if(!camera.valid())
+        return Mat4::identity();
+
     const Vec3 forward = normalize(camera.target - camera.position);
     const Vec3 right = normalize(cross(forward, camera.up));
     const Vec3 corrected_up = cross(right, forward);
@@ -229,6 +254,9 @@ inline Mat4 view_matrix(const Camera &camera) noexcept {
 }
 
 inline Mat4 projection_matrix(const Camera &camera) noexcept {
+    if(!camera.valid())
+        return Mat4::identity();
+
     const float tangent = std::tan(camera.vertical_fov_radians * 0.5f);
     const float focal_length = 1.0f / tangent;
     const float depth_range = camera.near_plane - camera.far_plane;
@@ -245,6 +273,8 @@ inline Mat4 projection_matrix(const Camera &camera) noexcept {
 }
 
 inline Mat4 view_projection_matrix(const Camera &camera) noexcept {
+    if(!camera.valid())
+        return Mat4::identity();
     return projection_matrix(camera) * view_matrix(camera);
 }
 

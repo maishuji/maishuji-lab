@@ -109,6 +109,7 @@ enum class Status : std::uint8_t {
     RenderListFinishFailed,
     PrimitiveSubmissionFailed,
     MeshInvalidData,
+    InvalidCamera,
     MeshProjectionFailed,
     TextureAlreadyAllocated,
     TextureNotAllocated,

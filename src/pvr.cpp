@@ -3,6 +3,8 @@
 
 #include "detail/backend.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <limits>
@@ -65,6 +67,139 @@ std::size_t texture_bytes(std::uint16_t width,
            static_cast<std::size_t>(height) * sizeof(std::uint16_t);
 }
 
+struct ClipVertex {
+    Vec4 position{};
+    Color color{};
+};
+
+constexpr float clip_epsilon = 0.000001f;
+
+float clip_distance(const ClipVertex &vertex, int plane) noexcept {
+    switch(plane) {
+    case 0:
+        return vertex.position.x + vertex.position.w;
+    case 1:
+        return vertex.position.w - vertex.position.x;
+    case 2:
+        return vertex.position.y + vertex.position.w;
+    case 3:
+        return vertex.position.w - vertex.position.y;
+    case 4:
+        return vertex.position.z + vertex.position.w;
+    case 5:
+        return vertex.position.w - vertex.position.z;
+    }
+
+    return -1.0f;
+}
+
+std::uint8_t interpolate_channel(std::uint8_t first, std::uint8_t second,
+                                  float amount) noexcept {
+    const float value =
+        static_cast<float>(first) +
+        (static_cast<float>(second) - static_cast<float>(first)) * amount;
+    return static_cast<std::uint8_t>(
+        std::clamp(value, 0.0f, 255.0f));
+}
+
+ClipVertex interpolate_clip_vertex(const ClipVertex &first,
+                                   const ClipVertex &second,
+                                   float amount) noexcept {
+    return {
+        {
+            first.position.x +
+                (second.position.x - first.position.x) * amount,
+            first.position.y +
+                (second.position.y - first.position.y) * amount,
+            first.position.z +
+                (second.position.z - first.position.z) * amount,
+            first.position.w +
+                (second.position.w - first.position.w) * amount,
+        },
+        {
+            interpolate_channel(first.color.red, second.color.red, amount),
+            interpolate_channel(first.color.green, second.color.green, amount),
+            interpolate_channel(first.color.blue, second.color.blue, amount),
+            interpolate_channel(first.color.alpha, second.color.alpha, amount),
+        },
+    };
+}
+
+bool clip_triangle(const ClipVertex input[3],
+                   std::array<ClipVertex, 12> &polygon,
+                   std::size_t &polygon_count) noexcept {
+    std::array<ClipVertex, 12> current{};
+    std::array<ClipVertex, 12> next{};
+    current[0] = input[0];
+    current[1] = input[1];
+    current[2] = input[2];
+    polygon_count = 3;
+
+    for(int plane = 0; plane < 6; ++plane) {
+        std::size_t next_count = 0;
+        ClipVertex previous = current[polygon_count - 1];
+        float previous_distance = clip_distance(previous, plane);
+        bool previous_inside = previous_distance >= 0.0f;
+
+        for(std::size_t index = 0; index < polygon_count; ++index) {
+            const ClipVertex current_vertex = current[index];
+            const float current_distance =
+                clip_distance(current_vertex, plane);
+            const bool current_inside = current_distance >= 0.0f;
+
+            if(current_inside != previous_inside) {
+                const float denominator = previous_distance - current_distance;
+                if(std::fabs(denominator) <= clip_epsilon ||
+                   next_count >= next.size())
+                    return false;
+
+                next[next_count++] = interpolate_clip_vertex(
+                    previous, current_vertex,
+                    previous_distance / denominator);
+            }
+            if(current_inside) {
+                if(next_count >= next.size())
+                    return false;
+                next[next_count++] = current_vertex;
+            }
+
+            previous = current_vertex;
+            previous_distance = current_distance;
+            previous_inside = current_inside;
+        }
+
+        current = next;
+        polygon_count = next_count;
+        if(polygon_count == 0)
+            break;
+    }
+
+    polygon = current;
+    return true;
+}
+
+bool to_screen_vertex(const ClipVertex &source, const Viewport &viewport,
+                      Vertex &destination) noexcept {
+    if(source.position.w <= clip_epsilon)
+        return false;
+
+    const float inverse_w = 1.0f / source.position.w;
+    const float normalized_x = source.position.x * inverse_w;
+    const float normalized_y = source.position.y * inverse_w;
+    const float normalized_z = source.position.z * inverse_w;
+    if(!std::isfinite(normalized_x) || !std::isfinite(normalized_y) ||
+       !std::isfinite(normalized_z))
+        return false;
+
+    destination = {
+        (normalized_x + 1.0f) * 0.5f * viewport.width,
+        (1.0f - normalized_y) * 0.5f * viewport.height,
+        (normalized_z + 1.0f) * 0.5f,
+        source.color,
+    };
+    return true;
+}
+
 } // namespace
 
 const char *status_name(Status status) noexcept {
@@ -115,6 +250,8 @@ const char *status_name(Status status) noexcept {
         return "PVR primitive submission failed";
     case Status::MeshInvalidData:
         return "mesh data or viewport is invalid";
+    case Status::InvalidCamera:
+        return "camera parameters are invalid";
     case Status::MeshProjectionFailed:
         return "mesh vertex cannot be projected";
     case Status::TextureAlreadyAllocated:
@@ -420,50 +557,58 @@ Status RenderList::submit(
        !std::isfinite(viewport.width) || !std::isfinite(viewport.height) ||
        viewport.width <= 0.0f || viewport.height <= 0.0f)
         return Status::MeshInvalidData;
+    if(!camera.valid())
+        return Status::InvalidCamera;
+
+    for(const std::uint16_t index : mesh.indices) {
+        if(index >= mesh.vertices.size())
+            return Status::MeshInvalidData;
+    }
 
     const Mat4 model_view_projection =
         view_projection_matrix(camera) * transform_matrix(transform);
 
     for(std::size_t index = 0; index < mesh.indices.size(); index += 3) {
-        const std::uint16_t first_index = mesh.indices[index];
-        const std::uint16_t second_index = mesh.indices[index + 1];
-        const std::uint16_t third_index = mesh.indices[index + 2];
-        if(first_index >= mesh.vertices.size() ||
-           second_index >= mesh.vertices.size() ||
-           third_index >= mesh.vertices.size())
-            return Status::MeshInvalidData;
-
         const MeshVertex *source_vertices[] = {
-            &mesh.vertices[first_index],
-            &mesh.vertices[second_index],
-            &mesh.vertices[third_index],
+            &mesh.vertices[mesh.indices[index]],
+            &mesh.vertices[mesh.indices[index + 1]],
+            &mesh.vertices[mesh.indices[index + 2]],
         };
-        Vertex projected[3]{};
-        for(int vertex_index = 0; vertex_index < 3; ++vertex_index) {
-            const ProjectedPoint point = project_point(
-                model_view_projection,
-                source_vertices[vertex_index]->position);
-            if(!point.valid || !std::isfinite(point.normalized_device.x) ||
-               !std::isfinite(point.normalized_device.y) ||
-               !std::isfinite(point.normalized_device.z))
+        const ClipVertex input[3] = {
+            {model_view_projection * to_vec4(source_vertices[0]->position),
+             source_vertices[0]->color},
+            {model_view_projection * to_vec4(source_vertices[1]->position),
+             source_vertices[1]->color},
+            {model_view_projection * to_vec4(source_vertices[2]->position),
+             source_vertices[2]->color},
+        };
+
+        std::array<ClipVertex, 12> polygon{};
+        std::size_t polygon_count = 0;
+        if(!clip_triangle(input, polygon, polygon_count))
+            return Status::MeshProjectionFailed;
+        if(polygon_count < 3)
+            continue;
+
+        for(std::size_t vertex_index = 1; vertex_index + 1 < polygon_count;
+            ++vertex_index) {
+            Vertex projected[3]{};
+            if(!to_screen_vertex(polygon[0], viewport, projected[0]) ||
+               !to_screen_vertex(polygon[vertex_index], viewport,
+                                 projected[1]) ||
+               !to_screen_vertex(polygon[vertex_index + 1], viewport,
+                                 projected[2]))
                 return Status::MeshProjectionFailed;
 
-            projected[vertex_index] = {
-                (point.normalized_device.x + 1.0f) * 0.5f * viewport.width,
-                (1.0f - point.normalized_device.y) * 0.5f * viewport.height,
-                (point.normalized_device.z + 1.0f) * 0.5f,
-                source_vertices[vertex_index]->color,
+            const Triangle triangle{
+                projected[0],
+                projected[1],
+                projected[2],
             };
+            if(!owner_->owner_->backend_->submit_triangle(
+                   list_type_, triangle, configuration))
+                return Status::PrimitiveSubmissionFailed;
         }
-
-        const Triangle triangle{
-            projected[0],
-            projected[1],
-            projected[2],
-        };
-        if(!owner_->owner_->backend_->submit_triangle(
-               list_type_, triangle, configuration))
-            return Status::PrimitiveSubmissionFailed;
     }
 
     return Status::Success;

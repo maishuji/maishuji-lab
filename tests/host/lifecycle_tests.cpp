@@ -653,17 +653,57 @@ void test_mesh_submission() {
     expect_equal(test::recording().triangle_submit_calls, 2,
                  "invalid mesh does not submit a partial triangle");
 
+    Camera invalid_camera = camera;
+    invalid_camera.aspect_ratio = 0.0f;
+    expect_status(list.submit(mesh, invalid_camera, transform, viewport),
+                  Status::InvalidCamera, "reject invalid camera");
+    expect_equal(test::recording().triangle_submit_calls, 2,
+                 "invalid camera does not submit geometry");
+
+    const std::array<MeshVertex, 3> clipped_vertices{
+        MeshVertex{{-0.4f, -0.4f, 0.0f}, {255, 64, 64, 255}},
+        MeshVertex{{4.0f, -0.4f, 0.0f}, {64, 255, 64, 255}},
+        MeshVertex{{0.0f, 0.7f, 0.0f}, {64, 128, 255, 255}},
+    };
+    const std::array<std::uint16_t, 3> clipped_indices{0, 1, 2};
+    const std::size_t before_clipped_mesh =
+        test::recording().triangle_submit_calls;
+    expect_status(list.submit(
+                      Mesh{clipped_vertices, clipped_indices}, camera, transform,
+                      viewport),
+                  Status::Success, "clip partially visible mesh triangle");
+    expect_true(test::recording().triangle_submit_calls > before_clipped_mesh,
+                "partial mesh clipping still submits visible triangles");
+
+    const std::array<MeshVertex, 3> outside_vertices{
+        MeshVertex{{4.0f, -0.4f, 0.0f}, {}},
+        MeshVertex{{5.0f, -0.4f, 0.0f}, {}},
+        MeshVertex{{4.0f, 0.7f, 0.0f}, {}},
+    };
+    const std::array<std::uint16_t, 3> outside_indices{0, 1, 2};
+    const std::size_t before_outside_mesh =
+        test::recording().triangle_submit_calls;
+    expect_status(list.submit(
+                      Mesh{outside_vertices, outside_indices}, camera, transform,
+                      viewport),
+                  Status::Success, "discard fully outside mesh triangle");
+    expect_equal(test::recording().triangle_submit_calls, before_outside_mesh,
+                 "fully outside mesh submits no triangles");
+
     const std::array<MeshVertex, 3> behind_vertices{
         MeshVertex{{0.0f, 0.0f, 4.0f}, {}},
         MeshVertex{{1.0f, 0.0f, 4.0f}, {}},
         MeshVertex{{0.0f, 1.0f, 4.0f}, {}},
     };
     const std::array<std::uint16_t, 3> behind_indices{0, 1, 2};
+    const std::size_t before_behind_mesh =
+        test::recording().triangle_submit_calls;
     expect_status(list.submit(
                       Mesh{behind_vertices, behind_indices}, camera, transform,
                       viewport),
-                  Status::MeshProjectionFailed,
-                  "reject mesh behind camera");
+                  Status::Success, "discard mesh behind camera");
+    expect_equal(test::recording().triangle_submit_calls, before_behind_mesh,
+                 "behind-camera mesh submits no triangles");
 
     expect_status(list.finish(), Status::Success, "finish mesh list");
     expect_status(frame.finish(), Status::Success, "finish mesh frame");

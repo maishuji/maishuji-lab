@@ -108,6 +108,8 @@ enum class Status : std::uint8_t {
     RenderListBeginFailed,
     RenderListFinishFailed,
     PrimitiveSubmissionFailed,
+    MeshInvalidData,
+    MeshProjectionFailed,
     TextureAlreadyAllocated,
     TextureNotAllocated,
     TextureInvalidDimensions,
@@ -130,6 +132,10 @@ const char *status_name(Status status) noexcept;
 class Frame;
 class RenderList;
 class Texture;
+struct Mesh;
+struct Camera;
+struct Transform;
+struct Viewport;
 
 namespace detail {
 struct Backend;
@@ -257,6 +263,9 @@ public:
     Status submit(const Quad &quad,
                   const PrimitiveConfiguration &configuration = {}) noexcept;
     Status submit(const Texture &texture, const TexturedQuad &quad,
+                  const PrimitiveConfiguration &configuration = {}) noexcept;
+    Status submit(const Mesh &mesh, const Camera &camera,
+                  const Transform &transform, const Viewport &viewport,
                   const PrimitiveConfiguration &configuration = {}) noexcept;
 
     bool active() const noexcept {

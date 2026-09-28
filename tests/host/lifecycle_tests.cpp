@@ -1,6 +1,7 @@
 #include "recording_backend.hpp"
 
 #include "maishuji/math.hpp"
+#include "maishuji/mesh.hpp"
 #include "maishuji/pixel.hpp"
 #include "maishuji/pvr.hpp"
 #include "maishuji/sprite.hpp"
@@ -602,6 +603,73 @@ void test_texture_repeated_cycles() {
                  "repeated texture render-wait count");
 }
 
+void test_mesh_submission() {
+    using namespace maishuji;
+
+    test::reset_recording();
+
+    const std::array<MeshVertex, 4> vertices{
+        MeshVertex{{-0.8f, -0.8f, 0.0f}, {255, 64, 64, 255}},
+        MeshVertex{{0.8f, -0.8f, 0.0f}, {64, 255, 64, 255}},
+        MeshVertex{{0.8f, 0.8f, 0.0f}, {64, 128, 255, 255}},
+        MeshVertex{{-0.8f, 0.8f, 0.0f}, {255, 255, 255, 255}},
+    };
+    const std::array<std::uint16_t, 6> indices{0, 1, 2, 0, 2, 3};
+    const Mesh mesh{vertices, indices};
+    const Camera camera{};
+    const Transform transform{};
+    const Viewport viewport{640.0f, 480.0f};
+
+    Pvr pvr;
+    Frame frame;
+    RenderList list;
+    expect_status(list.submit(mesh, camera, transform, viewport),
+                  Status::RenderListNotActive,
+                  "reject mesh outside list");
+    expect_status(pvr.initialize(), Status::Success, "initialize mesh test");
+    expect_status(pvr.begin_frame(frame), Status::Success,
+                  "begin mesh frame");
+    expect_status(frame.begin_list(list, List::Opaque), Status::Success,
+                  "begin mesh list");
+    expect_status(list.submit(mesh, camera, transform, viewport),
+                  Status::Success, "submit indexed mesh");
+    expect_equal(test::recording().triangle_submit_calls, 2,
+                 "mesh submits one triangle per index triplet");
+    expect_true(test::recording().last_triangle.first.x > 0.0f &&
+                    test::recording().last_triangle.first.x < viewport.width,
+                "mesh projects x into viewport");
+    expect_true(test::recording().last_triangle.first.y > 0.0f &&
+                    test::recording().last_triangle.first.y < viewport.height,
+                "mesh projects y into viewport");
+    expect_true(test::recording().last_triangle.first.z > 0.0f &&
+                    test::recording().last_triangle.first.z < 1.0f,
+                "mesh maps depth into positive PVR range");
+
+    const std::array<std::uint16_t, 3> invalid_indices{0, 1, 9};
+    expect_status(list.submit(
+                      Mesh{vertices, invalid_indices}, camera, transform,
+                      viewport),
+                  Status::MeshInvalidData, "reject out-of-range mesh index");
+    expect_equal(test::recording().triangle_submit_calls, 2,
+                 "invalid mesh does not submit a partial triangle");
+
+    const std::array<MeshVertex, 3> behind_vertices{
+        MeshVertex{{0.0f, 0.0f, 4.0f}, {}},
+        MeshVertex{{1.0f, 0.0f, 4.0f}, {}},
+        MeshVertex{{0.0f, 1.0f, 4.0f}, {}},
+    };
+    const std::array<std::uint16_t, 3> behind_indices{0, 1, 2};
+    expect_status(list.submit(
+                      Mesh{behind_vertices, behind_indices}, camera, transform,
+                      viewport),
+                  Status::MeshProjectionFailed,
+                  "reject mesh behind camera");
+
+    expect_status(list.finish(), Status::Success, "finish mesh list");
+    expect_status(frame.finish(), Status::Success, "finish mesh frame");
+    expect_status(pvr.shutdown(), Status::Success, "shutdown mesh PVR");
+}
+
 void test_colored_primitives() {
     using namespace maishuji;
 
@@ -658,6 +726,7 @@ void test_colored_primitives() {
 
 int main() {
     test_spatial_math();
+    test_mesh_submission();
     test_pixel_grid();
     test_sprite_quad();
     test_basic_lifecycle();

@@ -1,8 +1,10 @@
 #include "maishuji/pvr.hpp"
+#include "maishuji/mesh.hpp"
 
 #include "detail/backend.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <limits>
 
 namespace maishuji {
@@ -111,6 +113,10 @@ const char *status_name(Status status) noexcept {
         return "PVR render-list finish failed";
     case Status::PrimitiveSubmissionFailed:
         return "PVR primitive submission failed";
+    case Status::MeshInvalidData:
+        return "mesh data or viewport is invalid";
+    case Status::MeshProjectionFailed:
+        return "mesh vertex cannot be projected";
     case Status::TextureAlreadyAllocated:
         return "texture already allocated";
     case Status::TextureNotAllocated:
@@ -400,6 +406,67 @@ Status RenderList::submit(
                texture.width_, texture.height_, quad, configuration)
                ? Status::Success
                : Status::PrimitiveSubmissionFailed;
+}
+
+Status RenderList::submit(
+    const Mesh &mesh, const Camera &camera, const Transform &transform,
+    const Viewport &viewport,
+    const PrimitiveConfiguration &configuration) noexcept {
+    if(!active_ || owner_ == nullptr || owner_->owner_ == nullptr ||
+       owner_->active_list_ != this)
+        return Status::RenderListNotActive;
+    if(mesh.vertices.empty() || mesh.indices.empty() ||
+       mesh.indices.size() % 3 != 0 ||
+       !std::isfinite(viewport.width) || !std::isfinite(viewport.height) ||
+       viewport.width <= 0.0f || viewport.height <= 0.0f)
+        return Status::MeshInvalidData;
+
+    const Mat4 model_view_projection =
+        view_projection_matrix(camera) * transform_matrix(transform);
+
+    for(std::size_t index = 0; index < mesh.indices.size(); index += 3) {
+        const std::uint16_t first_index = mesh.indices[index];
+        const std::uint16_t second_index = mesh.indices[index + 1];
+        const std::uint16_t third_index = mesh.indices[index + 2];
+        if(first_index >= mesh.vertices.size() ||
+           second_index >= mesh.vertices.size() ||
+           third_index >= mesh.vertices.size())
+            return Status::MeshInvalidData;
+
+        const MeshVertex *source_vertices[] = {
+            &mesh.vertices[first_index],
+            &mesh.vertices[second_index],
+            &mesh.vertices[third_index],
+        };
+        Vertex projected[3]{};
+        for(int vertex_index = 0; vertex_index < 3; ++vertex_index) {
+            const ProjectedPoint point = project_point(
+                model_view_projection,
+                source_vertices[vertex_index]->position);
+            if(!point.valid || !std::isfinite(point.normalized_device.x) ||
+               !std::isfinite(point.normalized_device.y) ||
+               !std::isfinite(point.normalized_device.z))
+                return Status::MeshProjectionFailed;
+
+            projected[vertex_index] = {
+                (point.normalized_device.x + 1.0f) * 0.5f * viewport.width,
+                (1.0f - point.normalized_device.y) * 0.5f * viewport.height,
+                (point.normalized_device.z + 1.0f) * 0.5f,
+                source_vertices[vertex_index]->color,
+            };
+        }
+
+        const Triangle triangle{
+            projected[0],
+            projected[1],
+            projected[2],
+        };
+        if(!owner_->owner_->backend_->submit_triangle(
+               list_type_, triangle, configuration))
+            return Status::PrimitiveSubmissionFailed;
+    }
+
+    return Status::Success;
 }
 
 Status RenderList::finish() noexcept {

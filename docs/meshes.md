@@ -36,6 +36,9 @@ behind-camera triangle is discarded; a partially visible triangle is
 triangulated after clipping. The normalized device result maps to the existing
 PVR screen convention: x increases right, y increases down, and depth maps
 from NDC [-1, 1] to the positive [0, 1] range used by the current examples.
+The mapping is reversed for PVR depth ordering: nearer geometry receives the
+larger submitted value, farther geometry the smaller value, matching the
+default DepthCompare::Greater policy.
 
 ## Cost and boundary
 

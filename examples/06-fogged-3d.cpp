@@ -49,14 +49,14 @@ maishuji::Status run_frame(maishuji::Pvr &pvr, const maishuji::Mesh &mesh,
 
 int main() {
     const std::array<maishuji::MeshVertex, 8> vertices{
-        maishuji::MeshVertex{{-0.9f, -0.9f, -0.9f}, {255, 64, 64, 255}},
-        maishuji::MeshVertex{{0.9f, -0.9f, -0.9f}, {64, 255, 64, 255}},
-        maishuji::MeshVertex{{0.9f, 0.9f, -0.9f}, {64, 128, 255, 255}},
-        maishuji::MeshVertex{{-0.9f, 0.9f, -0.9f}, {255, 255, 64, 255}},
-        maishuji::MeshVertex{{-0.9f, -0.9f, 0.9f}, {255, 64, 255, 255}},
-        maishuji::MeshVertex{{0.9f, -0.9f, 0.9f}, {64, 255, 255, 255}},
-        maishuji::MeshVertex{{0.9f, 0.9f, 0.9f}, {64, 255, 128, 255}},
-        maishuji::MeshVertex{{-0.9f, 0.9f, 0.9f}, {255, 128, 255, 255}},
+        maishuji::MeshVertex{{-0.9f, -0.9f, -0.9f}, {255, 32, 40, 255}},
+        maishuji::MeshVertex{{0.9f, -0.9f, -0.9f}, {255, 32, 40, 255}},
+        maishuji::MeshVertex{{0.9f, 0.9f, -0.9f}, {255, 32, 40, 255}},
+        maishuji::MeshVertex{{-0.9f, 0.9f, -0.9f}, {255, 32, 40, 255}},
+        maishuji::MeshVertex{{-0.9f, -0.9f, 0.9f}, {24, 80, 255, 255}},
+        maishuji::MeshVertex{{0.9f, -0.9f, 0.9f}, {24, 80, 255, 255}},
+        maishuji::MeshVertex{{0.9f, 0.9f, 0.9f}, {24, 80, 255, 255}},
+        maishuji::MeshVertex{{-0.9f, 0.9f, 0.9f}, {24, 80, 255, 255}},
     };
     const std::array<std::uint16_t, 36> indices{
         0, 1, 2, 0, 2, 3,
@@ -101,7 +101,7 @@ int main() {
            "maishuji: fogged 3D passed (%d frames; camera-space linear fog)\n",
            frame_count);
     for(int frame = 0; frame < capture_hold_frames; ++frame) {
-        status = run_frame(pvr, mesh, camera, fog, frame_count + frame);
+        status = run_frame(pvr, mesh, camera, fog, 0);
         if(maishuji::failed(status)) {
             dbglog(DBG_ERROR,
                    "maishuji: fogged 3D capture hold frame %d failed: %s\n",

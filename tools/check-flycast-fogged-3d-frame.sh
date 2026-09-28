@@ -53,16 +53,16 @@ read -r right_r right_g right_b <<<"$right"
 read -r bottom_r bottom_g bottom_b <<<"$bottom"
 
 awk -v center_r="$center_r" -v center_g="$center_g" -v center_b="$center_b" -v top_r="$top_r" -v top_g="$top_g" -v top_b="$top_b" -v left_r="$left_r" -v left_g="$left_g" -v left_b="$left_b" -v right_r="$right_r" -v right_g="$right_g" -v right_b="$right_b" -v bottom_r="$bottom_r" -v bottom_g="$bottom_g" -v bottom_b="$bottom_b" 'BEGIN {
-    center_ok = center_r + center_g + center_b > 0.20 &&
-                center_b > center_r * 1.05 &&
-                center_b > center_g * 1.02
+    center_ok = center_r + center_g + center_b > 0.30 &&
+                center_b > center_r * 1.40 &&
+                center_b > center_g * 1.15
     background_ok = top_r < 0.08 && top_g < 0.08 && top_b < 0.08 &&
                     left_r < 0.08 && left_g < 0.08 && left_b < 0.08 &&
                     right_r < 0.08 && right_g < 0.08 && right_b < 0.08 &&
                     bottom_r < 0.08 && bottom_g < 0.08 && bottom_b < 0.08
 
     if(!center_ok || !background_ok) {
-        print "FAIL: expected a blue-tinted fogged mesh on a dark background."
+        print "FAIL: expected the near blue cube face to occlude the far red face."
         printf "  mesh center: %.3f %.3f %.3f\n", center_r, center_g, center_b
         printf "  above mesh:  %.3f %.3f %.3f\n", top_r, top_g, top_b
         printf "  left mesh:   %.3f %.3f %.3f\n", left_r, left_g, left_b
@@ -71,7 +71,7 @@ awk -v center_r="$center_r" -v center_g="$center_g" -v center_b="$center_b" -v t
         exit 1
     }
 
-    print "PASS: Flycast rendered the fogged 3D mesh."
+    print "PASS: Flycast rendered the fogged 3D mesh with near-face depth ordering."
     printf "  mesh center: %.3f %.3f %.3f\n", center_r, center_g, center_b
     printf "  above mesh:  %.3f %.3f %.3f\n", top_r, top_g, top_b
     printf "  left mesh:   %.3f %.3f %.3f\n", left_r, left_g, left_b

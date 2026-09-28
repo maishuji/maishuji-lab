@@ -662,10 +662,34 @@ void test_mesh_submission() {
                     !test::recording().last_primitive_configuration.depth_write,
                 "mesh forwards explicit culling and depth policy");
 
+    const std::array<MeshVertex, 3> near_vertices{
+        MeshVertex{{-0.3f, -0.3f, 0.9f}, {255, 255, 255, 255}},
+        MeshVertex{{0.3f, -0.3f, 0.9f}, {255, 255, 255, 255}},
+        MeshVertex{{0.0f, 0.3f, 0.9f}, {255, 255, 255, 255}},
+    };
+    const std::array<MeshVertex, 3> far_vertices{
+        MeshVertex{{-0.3f, -0.3f, -0.9f}, {255, 255, 255, 255}},
+        MeshVertex{{0.3f, -0.3f, -0.9f}, {255, 255, 255, 255}},
+        MeshVertex{{0.0f, 0.3f, -0.9f}, {255, 255, 255, 255}},
+    };
+    const std::array<std::uint16_t, 3> overlap_indices{0, 1, 2};
+    expect_status(list.submit(
+                      Mesh{near_vertices, overlap_indices}, camera, transform,
+                      viewport),
+                  Status::Success, "submit near depth-ordering triangle");
+    const float near_depth = test::recording().last_triangle.first.z;
+    expect_status(list.submit(
+                      Mesh{far_vertices, overlap_indices}, camera, transform,
+                      viewport),
+                  Status::Success, "submit far depth-ordering triangle");
+    const float far_depth = test::recording().last_triangle.first.z;
+    expect_true(near_depth > far_depth,
+                "near mesh maps to a larger PVR depth than far mesh");
+
     const Fog fog{{8, 16, 32, 255}, 0.0f, 1.0f, true};
     expect_status(list.submit_fogged(mesh, camera, transform, viewport, fog),
                   Status::Success, "submit mesh with linear fog");
-    expect_equal(test::recording().triangle_submit_calls, 6,
+    expect_equal(test::recording().triangle_submit_calls, 8,
                  "fogged mesh submits the same triangle count");
     expect_true(test::recording().last_triangle.first.color.red == fog.color.red &&
                     test::recording().last_triangle.first.color.green ==
@@ -679,7 +703,7 @@ void test_mesh_submission() {
     expect_status(list.submit_fogged(
                       mesh, camera, transform, viewport, invalid_fog),
                   Status::InvalidFog, "reject invalid fog range");
-    expect_equal(test::recording().triangle_submit_calls, 6,
+    expect_equal(test::recording().triangle_submit_calls, 8,
                  "invalid fog does not submit geometry");
 
     const std::array<std::uint16_t, 3> invalid_indices{0, 1, 9};
@@ -687,14 +711,14 @@ void test_mesh_submission() {
                       Mesh{vertices, invalid_indices}, camera, transform,
                       viewport),
                   Status::MeshInvalidData, "reject out-of-range mesh index");
-    expect_equal(test::recording().triangle_submit_calls, 6,
+    expect_equal(test::recording().triangle_submit_calls, 8,
                  "invalid mesh does not submit a partial triangle");
 
     Camera invalid_camera = camera;
     invalid_camera.aspect_ratio = 0.0f;
     expect_status(list.submit(mesh, invalid_camera, transform, viewport),
                   Status::InvalidCamera, "reject invalid camera");
-    expect_equal(test::recording().triangle_submit_calls, 6,
+    expect_equal(test::recording().triangle_submit_calls, 8,
                  "invalid camera does not submit geometry");
 
     const std::array<MeshVertex, 3> clipped_vertices{

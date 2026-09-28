@@ -61,7 +61,7 @@ bool list_finish() noexcept {
 
 bool submit_triangle(List list, const Triangle &triangle,
                      const PrimitiveConfiguration &configuration) noexcept {
-    (void)triangle;
+    state.last_triangle = triangle;
     (void)configuration;
     ++state.triangle_submit_calls;
     state.last_primitive_list = list;

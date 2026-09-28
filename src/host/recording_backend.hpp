@@ -31,6 +31,7 @@ struct Recording {
     std::size_t list_begin_calls = 0;
     std::size_t list_finish_calls = 0;
     std::size_t triangle_submit_calls = 0;
+    Triangle last_triangle{};
     std::size_t quad_submit_calls = 0;
     std::size_t texture_allocate_calls = 0;
     std::size_t texture_upload_calls = 0;

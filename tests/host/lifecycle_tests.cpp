@@ -1,5 +1,6 @@
 #include "recording_backend.hpp"
 
+#include "maishuji/math.hpp"
 #include "maishuji/pixel.hpp"
 #include "maishuji/pvr.hpp"
 #include "maishuji/sprite.hpp"
@@ -48,6 +49,49 @@ void expect_float(float actual, float expected, const char *label) {
                  label, static_cast<double>(expected),
                  static_cast<double>(actual));
     ++failures;
+}
+
+void test_spatial_math() {
+    using namespace maishuji;
+
+    constexpr Vec3 point{1.0f, 2.0f, 3.0f};
+    static_assert(dot(point, {2.0f, 3.0f, 4.0f}) == 20.0f);
+    static_assert(cross({1.0f, 0.0f, 0.0f},
+                        {0.0f, 1.0f, 0.0f}).z == 1.0f);
+
+    constexpr Mat4 translated = make_translation({4.0f, -2.0f, 1.0f});
+    constexpr Vec4 translated_point = translated * to_vec4(point);
+    static_assert(translated_point.x == 5.0f);
+    static_assert(translated_point.y == 0.0f);
+    static_assert(translated_point.z == 4.0f);
+    static_assert(translated_point.w == 1.0f);
+
+    const Transform transform{
+        {1.0f, 2.0f, 3.0f},
+        {},
+        {2.0f, 2.0f, 2.0f},
+    };
+    const Vec4 scaled_point =
+        transform_matrix(transform) * to_vec4({1.0f, 1.0f, 1.0f});
+    expect_float(scaled_point.x, 3.0f, "transform scales then translates x");
+    expect_float(scaled_point.y, 4.0f, "transform scales then translates y");
+    expect_float(scaled_point.z, 5.0f, "transform scales then translates z");
+
+    const Camera camera{};
+    const Mat4 view = view_matrix(camera);
+    const Vec4 view_origin = view * to_vec4({});
+    expect_float(view_origin.z, -3.0f, "camera view places target in front");
+
+    const ProjectedPoint center =
+        project_point(view_projection_matrix(camera), {});
+    expect_true(center.valid, "camera projects target point");
+    expect_float(center.normalized_device.x, 0.0f,
+                 "camera center projects to NDC x");
+    expect_float(center.normalized_device.y, 0.0f,
+                 "camera center projects to NDC y");
+    expect_true(center.normalized_device.z > -1.0f &&
+                    center.normalized_device.z < 1.0f,
+                "camera center depth is inside NDC range");
 }
 
 void test_pixel_grid() {
@@ -613,6 +657,7 @@ void test_colored_primitives() {
 } // namespace
 
 int main() {
+    test_spatial_math();
     test_pixel_grid();
     test_sprite_quad();
     test_basic_lifecycle();

@@ -38,8 +38,10 @@ currently open KOS list.
 
 The default video mode is 640x480 RGB565. The origin is the upper-left of the
 screen, so x increases to the right and y increases downward. The z value is
-passed to the PVR unchanged; keep it positive and use smaller values for
-geometry intended to be in front when using the default depth comparison.
+passed to the PVR unchanged; keep it positive. The default
+DepthCompare::Greater matches the pinned KOS polygon context, so larger
+submitted values pass. The projected mesh path maps nearer geometry to larger
+values and farther geometry to smaller values.
 
 A quad is ordered as top-left, bottom-left, top-right, bottom-right. This is a
 triangle strip: the first three vertices form one triangle and the fourth

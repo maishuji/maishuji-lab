@@ -41,7 +41,8 @@ make dreamcast-fogged-3d-cdi
 make flycast-fogged-3d
 ~~~
 
-The runtime marker reports 180 frames and the checker expects a blue-tinted
-mesh against the dark background. This validates the target build and
-emulator-visible output; it does not claim timing measurements or physical
-console validation.
+The runtime marker reports 180 frames and the checker holds a static final
+cube pose whose near face is blue and far face is red. It expects the near blue
+face to remain visible at the center, so the check covers depth ordering as
+well as fogged output. This validates the target build and emulator-visible
+output; it does not claim timing measurements or physical console validation.

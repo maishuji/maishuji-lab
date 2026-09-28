@@ -194,7 +194,7 @@ bool to_screen_vertex(const ClipVertex &source, const Viewport &viewport,
     destination = {
         (normalized_x + 1.0f) * 0.5f * viewport.width,
         (1.0f - normalized_y) * 0.5f * viewport.height,
-        (normalized_z + 1.0f) * 0.5f,
+        1.0f - (normalized_z + 1.0f) * 0.5f,
         source.color,
     };
     return true;

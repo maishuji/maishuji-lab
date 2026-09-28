@@ -45,6 +45,12 @@ Gouraud(pvr):
 Culling(pvr):
 	Rejects polygons based on their winding before the PVR rasterizes them.
 
+Depth-compare(pvr):
+	Selects the depth comparison that decides whether a polygon passes.
+
+Depth-write(pvr):
+	Controls whether a passing polygon updates the PVR depth buffer.
+
 Triangle-strip(pvr):
 	Reuses each pair of recent vertices so a sequence of vertices describes connected triangles.
 

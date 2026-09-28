@@ -39,3 +39,32 @@ cache, no heap allocation, and no scene graph. This makes the CPU transform
 work and one-header-plus-three-vertices-per-triangle submission cost visible.
 Later batching work can measure or change those costs deliberately without
 changing the basic ownership boundary.
+
+## Validation record
+
+On 2026-09-28, the pinned Debug container build and CDI packaging completed
+with the locked KOS 2.2.2 toolchain. Flycast v2.7 then passed:
+
+~~~text
+PASS: Flycast rendered the projected basic-3D mesh.
+  mesh center: 0.976 0.472 0.648
+  above mesh:  0.020 0.020 0.000
+  left mesh:   0.020 0.020 0.000
+  right mesh:  0.020 0.020 0.000
+  below mesh:  0.020 0.020 0.000
+Stable frames: 2
+Runtime probes: render-gated
+Required runtime marker: passed
+~~~
+
+Reproduce the target artifact and gate with:
+
+~~~sh
+make dreamcast-basic-3d-cdi
+make flycast-basic-3d
+~~~
+
+When the workstation toolchain does not match tools/toolchain.lock, run those
+targets inside the pinned container described in docs/toolchain.md. The frame
+gate establishes projected output and completion of the finite example; it does
+not measure CPU timing or isolate matrix-function cost.

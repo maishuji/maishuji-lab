@@ -129,3 +129,9 @@ Packet-budget(pvr):
 
 Vertex-buffer(pvr):
 	Stores submitted PVR headers and vertices before the renderer consumes them; its high-water use is not inferred from packet counts alone.
+
+Glyph-atlas(texture):
+	Packs pre-rasterized character images into one texture so text can reuse one PVR allocation.
+
+UTF-8(api):
+	Encodes Unicode code points as variable-length bytes that a text path must decode before glyph lookup.

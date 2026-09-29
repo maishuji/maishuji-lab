@@ -61,6 +61,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     target_link_libraries(maishuji-pvr-budget PRIVATE maishuji)
     target_compile_options(maishuji-pvr-budget PRIVATE -fno-exceptions -fno-rtti)
 
+    add_executable(maishuji-advanced-multilingual-text
+        advanced_examples/01-multilingual-text.cpp)
+    target_link_libraries(maishuji-advanced-multilingual-text PRIVATE maishuji)
+    target_compile_options(maishuji-advanced-multilingual-text PRIVATE
+        -fno-exceptions -fno-rtti)
+
     function(maishuji_enable_link_map target)
         target_link_options(${target} PRIVATE
             "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${target}.map")
@@ -77,6 +83,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-pvr-text)
     maishuji_enable_link_map(maishuji-particle-batch)
     maishuji_enable_link_map(maishuji-pvr-budget)
+    maishuji_enable_link_map(maishuji-advanced-multilingual-text)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

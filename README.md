@@ -22,7 +22,7 @@ make host-run
 make host-test
 ```
 
-See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, [docs/pixel-art.md](docs/pixel-art.md) for logical pixel coordinates, [docs/spatial-math.md](docs/spatial-math.md) for transforms and cameras, [docs/meshes.md](docs/meshes.md) for indexed projection, [docs/basic-3d.md](docs/basic-3d.md) for the 3D example, [docs/fog.md](docs/fog.md) for camera-space linear fog, [docs/text.md](docs/text.md) for BIOS-font text as a PVR texture, [docs/particles.md](docs/particles.md) for repeated textured submissions and packet budgets, [docs/budgets.md](docs/budgets.md) for the mixed-list packet budget lesson, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
+See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, [docs/pixel-art.md](docs/pixel-art.md) for logical pixel coordinates, [docs/spatial-math.md](docs/spatial-math.md) for transforms and cameras, [docs/meshes.md](docs/meshes.md) for indexed projection, [docs/basic-3d.md](docs/basic-3d.md) for the 3D example, [docs/fog.md](docs/fog.md) for camera-space linear fog, [docs/text.md](docs/text.md) for BIOS-font text as a PVR texture, [docs/particles.md](docs/particles.md) for repeated textured submissions and packet budgets, [docs/budgets.md](docs/budgets.md) for the mixed-list packet budget lesson, [docs/advanced-text.md](docs/advanced-text.md) for the multilingual atlas example, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
 See [docs/lighting.md](docs/lighting.md) for the offset-color lighting lesson and its KOS polygon-header mapping.
 
 Build the PVR smoke example for Dreamcast:
@@ -33,8 +33,8 @@ make dreamcast-build DC_BUILD_TYPE=Release
 ```
 
 The raw reference output is build-dreamcast/maishuji-pvr-smoke.elf. The lifecycle example is build-dreamcast/maishuji-hello-pvr.elf; the colored primitive example is build-dreamcast/maishuji-colored-primitives.elf; the textured example is build-dreamcast/maishuji-textured-quad.elf; the pixel-sprite example is build-dreamcast/maishuji-pixel-sprites.elf; the basic-3D example is build-dreamcast/maishuji-basic-3d.elf; the fogged
-3D example is build-dreamcast/maishuji-fogged-3d.elf; the text example is build-dreamcast/maishuji-pvr-text.elf; the particle example is build-dreamcast/maishuji-particle-batch.elf; the packet-budget example is build-dreamcast/maishuji-pvr-budget.elf. The raw example initializes video and PVR, then displays a colored triangle. The pixel-sprite example compares logical-grid snapping with direct subpixel output coordinates using a deterministic two-cell texture atlas. The basic-3D example projects a colored indexed cube through a camera and model transform.
-The PVR lighting example compares ordinary Gouraud vertex colors with per-vertex additive offset colors. The PVR text example rasterizes the BIOS font into an ARGB4444 texture and submits it through the punch-through list. The particle example submits 24 moving textured quads through one punch-through list and documents the structural packet count. The packet-budget example submits a fixed mix through all three lists and reports its structural header, vertex, primitive-call, and packet-byte budget.
+3D example is build-dreamcast/maishuji-fogged-3d.elf; the text example is build-dreamcast/maishuji-pvr-text.elf; the particle example is build-dreamcast/maishuji-particle-batch.elf; the packet-budget example is build-dreamcast/maishuji-pvr-budget.elf; the advanced multilingual text example is build-dreamcast/maishuji-advanced-multilingual-text.elf. The raw example initializes video and PVR, then displays a colored triangle. The pixel-sprite example compares logical-grid snapping with direct subpixel output coordinates using a deterministic two-cell texture atlas. The basic-3D example projects a colored indexed cube through a camera and model transform.
+The PVR lighting example compares ordinary Gouraud vertex colors with per-vertex additive offset colors. The PVR text example rasterizes the BIOS font into an ARGB4444 texture and submits it through the punch-through list. The particle example submits 24 moving textured quads through one punch-through list and documents the structural packet count. The packet-budget example submits a fixed mix through all three lists and reports its structural header, vertex, primitive-call, and packet-byte budget. The advanced multilingual text example displays Japanese, Traditional Chinese, and English through a small open-source glyph atlas.
 
 To send the ELF to a Dreamcast running `dcload-ip` over a Broadband Adapter, replace the placeholder with the console's address:
 
@@ -142,5 +142,14 @@ make flycast-budget
 ~~~
 
 The example uses six submissions across opaque, punch-through, and translucent lists. Its 6 headers, 21 vertices, and 27 primitive calls are source-derived structural estimates; they do not measure timing, VRAM high-water, DMA, or real Dreamcast throughput.
+
+For the advanced multilingual text example:
+
+~~~sh
+make dreamcast-advanced-text-cdi
+make flycast-advanced-text
+~~~
+
+It uses an open-source Noto-derived ARGB4444 atlas and a deliberately narrow UTF-8 decoder; see [docs/advanced-text.md](docs/advanced-text.md) for the asset notice and limitations.
 
 CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each ELF with its linker map, size summary, toolchain lock, and build manifest. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.

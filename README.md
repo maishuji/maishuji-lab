@@ -22,7 +22,7 @@ make host-run
 make host-test
 ```
 
-See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, [docs/pixel-art.md](docs/pixel-art.md) for logical pixel coordinates, [docs/spatial-math.md](docs/spatial-math.md) for transforms and cameras, [docs/meshes.md](docs/meshes.md) for indexed projection, [docs/basic-3d.md](docs/basic-3d.md) for the 3D example, [docs/fog.md](docs/fog.md) for camera-space linear fog, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
+See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, [docs/pixel-art.md](docs/pixel-art.md) for logical pixel coordinates, [docs/spatial-math.md](docs/spatial-math.md) for transforms and cameras, [docs/meshes.md](docs/meshes.md) for indexed projection, [docs/basic-3d.md](docs/basic-3d.md) for the 3D example, [docs/fog.md](docs/fog.md) for camera-space linear fog, [docs/text.md](docs/text.md) for BIOS-font text as a PVR texture, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
 See [docs/lighting.md](docs/lighting.md) for the offset-color lighting lesson and its KOS polygon-header mapping.
 
 Build the PVR smoke example for Dreamcast:
@@ -33,8 +33,8 @@ make dreamcast-build DC_BUILD_TYPE=Release
 ```
 
 The raw reference output is build-dreamcast/maishuji-pvr-smoke.elf. The lifecycle example is build-dreamcast/maishuji-hello-pvr.elf; the colored primitive example is build-dreamcast/maishuji-colored-primitives.elf; the textured example is build-dreamcast/maishuji-textured-quad.elf; the pixel-sprite example is build-dreamcast/maishuji-pixel-sprites.elf; the basic-3D example is build-dreamcast/maishuji-basic-3d.elf; the fogged
-3D example is build-dreamcast/maishuji-fogged-3d.elf. The raw example initializes video and PVR, then displays a colored triangle. The pixel-sprite example compares logical-grid snapping with direct subpixel output coordinates using a deterministic two-cell texture atlas. The basic-3D example projects a colored indexed cube through a camera and model transform.
-The PVR lighting example compares ordinary Gouraud vertex colors with per-vertex additive offset colors.
+3D example is build-dreamcast/maishuji-fogged-3d.elf; the text example is build-dreamcast/maishuji-pvr-text.elf. The raw example initializes video and PVR, then displays a colored triangle. The pixel-sprite example compares logical-grid snapping with direct subpixel output coordinates using a deterministic two-cell texture atlas. The basic-3D example projects a colored indexed cube through a camera and model transform.
+The PVR lighting example compares ordinary Gouraud vertex colors with per-vertex additive offset colors. The PVR text example rasterizes the BIOS font into an ARGB4444 texture and submits it through the punch-through list.
 
 To send the ELF to a Dreamcast running `dcload-ip` over a Broadband Adapter, replace the placeholder with the console's address:
 
@@ -101,6 +101,19 @@ run its capability-specific Flycast check:
 make dreamcast-lighting-cdi
 make flycast-lighting
 ~~~
+
+For the PVR text example, package the CDI in the pinned container and run its
+capability-specific Flycast check:
+
+~~~sh
+make dreamcast-text-cdi
+make flycast-text
+~~~
+
+The example rasterizes two lines with KOS's BIOS font into a 256x64 ARGB4444
+texture, scales that texture 2x in the PVR, and uses the punch-through list so
+transparent texels do not cover the background. Emulator validation still does
+not replace real Dreamcast hardware validation.
 
 The example uses the smallest valid 8x8 ARGB4444 texture so its textured
 vertices carry KOS offset colors. The checker verifies that the base quad is

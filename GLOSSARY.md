@@ -114,3 +114,9 @@ Offset-color(pvr):
 
 Specular-lighting(pvr):
 	Enables PVR offset-color processing without defining a general light model.
+
+BFont(kos):
+	Provides the Dreamcast BIOS bitmap-font rasterization functions used to build text pixels.
+
+Text-texture(pvr):
+	Stores rasterized glyph pixels in PVR texture memory so text can be submitted as a textured quad.

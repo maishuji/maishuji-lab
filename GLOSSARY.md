@@ -1,5 +1,8 @@
 # Dreamcast glossary
 
+PT_ALPHA_REF(pvr):
+	Defines the global alpha threshold below which punch-through texels are discarded.
+
 DMA(pvr):
 	Represents direct memory access used to move data without a CPU copy for every word.
 

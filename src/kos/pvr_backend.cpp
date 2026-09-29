@@ -4,11 +4,16 @@
 #include <dc/pvr.h>
 
 #include <cstddef>
+#include <cstdint>
 
 KOS_INIT_FLAGS(INIT_DEFAULT);
 
 namespace maishuji::detail {
 namespace {
+
+constexpr std::uint32_t punch_through_alpha_reference = 0x80;
+// KOS 2.2.2 does not export the newer PVR_PT_ALPHA_REF name.
+constexpr std::uint32_t punch_through_alpha_register = 0x011c;
 
 int bin_size(bool enabled) noexcept {
     return enabled ? PVR_BINSIZE_16 : PVR_BINSIZE_0;
@@ -33,6 +38,7 @@ bool initialize(const Configuration &configuration) noexcept {
     if(pvr_init(&params) < 0)
         return false;
 
+    PVR_SET(punch_through_alpha_register, punch_through_alpha_reference);
     pvr_set_bg_color(0.02f, 0.02f, 0.06f);
     vid_set_enabled(1);
     return true;

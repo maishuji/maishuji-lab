@@ -49,5 +49,7 @@ VQ compression, palette formats, GBIX chunks, or rectangular textures.
 
 The controller example renders a full-screen opaque blue quad first, then draws
 the PVR on the punch-through list. Transparent texels therefore reveal the
-background and make an accidental opaque black rectangle visible in the
-Flycast check. Emulator validation is not hardware validation.
+the PVR's global `PT_ALPHA_REF` threshold to `0x80`, so fully transparent
+ARGB4444 texels are discarded while the controller remains visible. Transparent
+texels therefore reveal the background and make an accidental opaque black
+rectangle visible in the Flycast check. Emulator validation is not hardware validation.

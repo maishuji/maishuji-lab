@@ -232,7 +232,7 @@ int main() {
     }
 
     dbglog(DBG_NOTICE,
-           "maishuji: controller PVR passed (PVRT ARGB4444; 256x256)\n");
+           "maishuji: controller PVR passed (PVRT ARGB4444; 256x256; translucent alpha)\n");
 
     for(int frame = 0; frame < capture_hold_frames; ++frame) {
         status = run_frame(pvr, texture, background, controller);

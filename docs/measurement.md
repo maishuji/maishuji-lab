@@ -109,6 +109,17 @@ allocation alive and performs no per-frame heap allocation. These counts are
 structural estimates from the current backend; they are not SH-4 timing,
 cache, VRAM high-water, or frame-rate measurements.
 
+## Mixed-list packet-budget lesson
+
+The packet-budget example at [docs/budgets.md](budgets.md) submits three
+colored triangles, two colored quads, and one textured quad. Source inspection
+predicts 6 polygon headers, 21 vertex packets, and 27 `pvr_prim()` calls per
+frame, or 864 bytes at 32 bytes per packet. The example contains compile-time
+assertions for these arithmetic relationships and prints the values in its
+completion marker. This remains a structural estimate: it does not establish
+vertex-buffer high-water, list overhead, cache behavior, synchronization cost,
+DMA behavior, timing, or frame rate.
+
 ## Limits of this evidence
 
 This is a structural packet-count and binary-size comparison. It does not

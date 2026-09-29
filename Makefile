@@ -23,11 +23,13 @@ DC_TEXT_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-text.elf
 DC_TEXT_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-text.cdi
 DC_PARTICLES_ELF ?= $(DC_BUILD_DIR)/maishuji-particle-batch.elf
 DC_PARTICLES_CDI ?= $(DC_BUILD_DIR)/maishuji-particle-batch.cdi
+DC_BUDGET_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-budget.elf
+DC_BUDGET_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-budget.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -67,6 +69,9 @@ dreamcast-text-cdi: dreamcast-build
 
 dreamcast-particles-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_PARTICLES_ELF)" -o "$(DC_PARTICLES_CDI)" -n "maishuji-lab particle batch"
+
+dreamcast-budget-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_BUDGET_ELF)" -o "$(DC_BUDGET_CDI)" -n "maishuji-lab PVR packet budget"
 
 dreamcast-fogged-3d-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_FOGGED_3D_ELF)" -o "$(DC_FOGGED_3D_CDI)" -n "maishuji-lab fogged 3D"
@@ -115,6 +120,9 @@ flycast-text:
 
 flycast-particles:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-particles-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_PARTICLE_BATCH FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: particle batch passed" ./tools/test-flycast-render.sh "$(DC_PARTICLES_CDI)"
+
+flycast-budget:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-budget-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_BUDGET FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: PVR budget passed" ./tools/test-flycast-render.sh "$(DC_BUDGET_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

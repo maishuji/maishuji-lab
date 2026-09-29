@@ -120,3 +120,6 @@ BFont(kos):
 
 Text-texture(pvr):
 	Stores rasterized glyph pixels in PVR texture memory so text can be submitted as a textured quad.
+
+Particle-batch(api):
+	Groups CPU-defined particle quads into one render-list submission interval while keeping each PVR primitive explicit.

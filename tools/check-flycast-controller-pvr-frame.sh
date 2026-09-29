@@ -101,6 +101,7 @@ awk \
 
         print "PASS: Flycast rendered the transparent controller PVR asset."
         printf "  background:    %.3f %.3f %.3f\n", background_r, background_g, background_b
+        printf "  transparent corners: %.3f %.3f %.3f | %.3f %.3f %.3f | %.3f %.3f %.3f | %.3f %.3f %.3f\n", top_left_r, top_left_g, top_left_b, top_right_r, top_right_g, top_right_b, bottom_left_r, bottom_left_g, bottom_left_b, bottom_right_r, bottom_right_g, bottom_right_b
         printf "  yellow button: %.3f %.3f %.3f\n", yellow_r, yellow_g, yellow_b
         printf "  green button:  %.3f %.3f %.3f\n", green_r, green_g, green_b
         printf "  blue button:   %.3f %.3f %.3f\n", blue_r, blue_g, blue_b

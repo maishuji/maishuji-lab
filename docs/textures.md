@@ -54,6 +54,15 @@ selects PVR_TXRFMT_NONTWIDDLED. The KOS backend combines that flag with
 PVR_TXRFMT_ARGB4444 and uses PVR_FILTER_NEAREST when it compiles the polygon
 header.
 
+The backend explicitly sets `context.txr.alpha = false` after
+`pvr_poly_cxt_txr()`. Despite the field name, this clears the hardware
+`IgnoreTexA` bit and **enables** sampled texture alpha. The pinned KOS snapshot
+`0aa363a` accidentally sets it to `true`; the
+[upstream correction](https://github.com/KallistiOS/KallistiOS/commit/4d861ff3e3cff1c2211315e59f49fc6d8b959118)
+documents its inverted meaning. Selecting a translucent or punch-through list
+alone cannot restore transparency while this bit is set. The explicit setting
+also agrees with corrected KOS versions.
+
 The API deliberately does not accept mipmaps, VQ data, paletted data, stride
 textures, or a caller-selected filter yet. Those formats need their own size,
 packing, and lifetime contracts.

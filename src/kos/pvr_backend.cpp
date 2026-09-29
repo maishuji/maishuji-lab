@@ -224,6 +224,9 @@ bool submit_textured_quad(
         PVR_TXRFMT_ARGB4444 | PVR_TXRFMT_NONTWIDDLED,
         static_cast<int>(width), static_cast<int>(height),
         reinterpret_cast<pvr_ptr_t>(handle), PVR_FILTER_NEAREST);
+    // This field encodes IgnoreTexA: false enables texture alpha. The pinned
+    // KOS snapshot sets it incorrectly (upstream fix: 4d861ff3e3cff1c2211315e).
+    context.txr.alpha = false;
     context.gen.shading = PVR_SHADE_GOURAUD;
     context.gen.culling = to_kos_culling(configuration.culling);
     context.gen.specular = configuration.enable_offset_color;

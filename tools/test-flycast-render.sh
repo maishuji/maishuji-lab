@@ -164,6 +164,8 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 cdi_dir=$(dirname "$cdi_path")
+# Keep a 4:3 client area even when the user's last Flycast session was maximized.
+# SDL may scale both dimensions for HiDPI; the pixel checkers normalize the size.
 flatpak run \
     --filesystem="$cdi_dir:ro" \
     --filesystem="$work_dir:rw" \
@@ -174,6 +176,10 @@ flatpak run \
     "$app_id" \
     -config "config:Debug.SerialConsoleEnabled=yes" \
     -config "window:title=$window_title" \
+    -config "window:width=640" \
+    -config "window:height=480" \
+    -config "window:maximized=no" \
+    -config "window:fullscreen=no" \
     "$cdi_path" 3>"$instance_id_file" >"$log_file" 2>&1 &
 launcher_pid=$!
 
@@ -235,7 +241,9 @@ while (( SECONDS < render_deadline )); do
         complete_success
     fi
 
-    if ! timeout "$capture_timeout" "${image_import[@]}" -window "$window_id" "$capture_path"; then
+    # Read the visible OpenGL frame and discard desktop-relative PNG offsets.
+    # The test window must remain visible and unobscured during capture.
+    if ! timeout "$capture_timeout" "${image_import[@]}" -screen -window "$window_id" +repage "$capture_path"; then
         if [[ -f "$capture_path" ]] &&
            last_check_output=$("$frame_checker" "$capture_path" 2>&1); then
             ((stable_count += 1))

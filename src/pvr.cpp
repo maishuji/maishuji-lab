@@ -70,6 +70,7 @@ std::size_t texture_bytes(std::uint16_t width,
 struct ClipVertex {
     Vec4 position{};
     Color color{};
+    Color offset_color{0, 0, 0, 0};
 };
 
 constexpr float clip_epsilon = 0.000001f;
@@ -121,6 +122,12 @@ ClipVertex interpolate_clip_vertex(const ClipVertex &first,
             interpolate_channel(first.color.green, second.color.green, amount),
             interpolate_channel(first.color.blue, second.color.blue, amount),
             interpolate_channel(first.color.alpha, second.color.alpha, amount),
+        },
+        {
+            interpolate_channel(first.offset_color.red, second.offset_color.red, amount),
+            interpolate_channel(first.offset_color.green, second.offset_color.green, amount),
+            interpolate_channel(first.offset_color.blue, second.offset_color.blue, amount),
+            interpolate_channel(first.offset_color.alpha, second.offset_color.alpha, amount),
         },
     };
 }
@@ -196,6 +203,7 @@ bool to_screen_vertex(const ClipVertex &source, const Viewport &viewport,
         (1.0f - normalized_y) * 0.5f * viewport.height,
         1.0f - (normalized_z + 1.0f) * 0.5f,
         source.color,
+        source.offset_color,
     };
     return true;
 }
@@ -595,11 +603,14 @@ Status RenderList::submit_fogged(
         };
         const ClipVertex input[3] = {
             {model_view_projection * to_vec4(source_vertices[0]->position),
-             fog.apply(source_vertices[0]->color, -view_positions[0].z)},
+             fog.apply(source_vertices[0]->color, -view_positions[0].z),
+             source_vertices[0]->offset_color},
             {model_view_projection * to_vec4(source_vertices[1]->position),
-             fog.apply(source_vertices[1]->color, -view_positions[1].z)},
+             fog.apply(source_vertices[1]->color, -view_positions[1].z),
+             source_vertices[1]->offset_color},
             {model_view_projection * to_vec4(source_vertices[2]->position),
-             fog.apply(source_vertices[2]->color, -view_positions[2].z)},
+             fog.apply(source_vertices[2]->color, -view_positions[2].z),
+             source_vertices[2]->offset_color},
         };
 
         std::array<ClipVertex, 12> polygon{};

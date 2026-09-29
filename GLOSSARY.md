@@ -123,3 +123,9 @@ Text-texture(pvr):
 
 Particle-batch(api):
 	Groups CPU-defined particle quads into one render-list submission interval while keeping each PVR primitive explicit.
+
+Packet-budget(pvr):
+	Counts polygon headers, vertex packets, and primitive calls in a source-derived submission workload.
+
+Vertex-buffer(pvr):
+	Stores submitted PVR headers and vertices before the renderer consumes them; its high-water use is not inferred from packet counts alone.

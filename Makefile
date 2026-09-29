@@ -19,11 +19,13 @@ DC_FOGGED_3D_ELF ?= $(DC_BUILD_DIR)/maishuji-fogged-3d.elf
 DC_FOGGED_3D_CDI ?= $(DC_BUILD_DIR)/maishuji-fogged-3d.cdi
 DC_LIGHTING_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-lighting.elf
 DC_LIGHTING_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-lighting.cdi
+DC_TEXT_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-text.elf
+DC_TEXT_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-text.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -57,6 +59,9 @@ dreamcast-basic-3d-cdi: dreamcast-build
 
 dreamcast-lighting-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_LIGHTING_ELF)" -o "$(DC_LIGHTING_CDI)" -n "maishuji-lab PVR offset-color lighting"
+
+dreamcast-text-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXT_ELF)" -o "$(DC_TEXT_CDI)" -n "maishuji-lab PVR text"
 
 dreamcast-fogged-3d-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_FOGGED_3D_ELF)" -o "$(DC_FOGGED_3D_CDI)" -n "maishuji-lab fogged 3D"
@@ -99,6 +104,9 @@ flycast-fogged-3d:
 
 flycast-lighting:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-lighting-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_LIGHTING FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: PVR offset-color lighting passed" ./tools/test-flycast-render.sh "$(DC_LIGHTING_CDI)"
+
+flycast-text:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-text-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_TEXT FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: PVR text passed" ./tools/test-flycast-render.sh "$(DC_TEXT_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

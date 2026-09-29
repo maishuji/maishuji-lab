@@ -23,7 +23,7 @@ KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -96,6 +96,9 @@ flycast-basic-3d:
 
 flycast-fogged-3d:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-fogged-3d-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_FOGGED_3D FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: fogged 3D passed (180 frames; camera-space linear fog)" ./tools/test-flycast-render.sh "$(DC_FOGGED_3D_CDI)"
+
+flycast-lighting:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-lighting-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_LIGHTING FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: PVR offset-color lighting passed" ./tools/test-flycast-render.sh "$(DC_LIGHTING_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

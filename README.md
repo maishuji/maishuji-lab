@@ -94,17 +94,19 @@ make flycast-basic-3d
 make dreamcast-fogged-3d-cdi
 make flycast-fogged-3d
 ~~~
-For the PVR lighting example, package the CDI in the pinned container:
+For the PVR lighting example, package the CDI in the pinned container and
+run its capability-specific Flycast check:
 
 ~~~sh
 make dreamcast-lighting-cdi
+make flycast-lighting
 ~~~
 
-This check samples broad regions around the moving sprites, so it verifies the
-two atlas cells and their left/right color roles without depending on one exact
-animation frame. The example exits after its finite 96-frame sequence, so the
-target requires one passing capture rather than the three consecutive captures
-used by the long-running smoke example. Emulator validation still does not
-replace real Dreamcast hardware validation.
+The example uses the smallest valid 8x8 ARGB4444 texture so its textured
+vertices carry KOS offset colors. The checker verifies that the base quad is
+visible, the lit quad is brighter, and its four corners retain the expected
+red, green, blue, and purple offset roles. It also requires the exact guest
+completion marker. Emulator validation still does not replace real Dreamcast
+hardware validation.
 
 CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each ELF with its linker map, size summary, toolchain lock, and build manifest. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.

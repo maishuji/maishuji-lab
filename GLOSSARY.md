@@ -1,5 +1,8 @@
 # Dreamcast glossary
 
+IgnoreTexA(pvr):
+	Forces sampled texture alpha to opaque when set; KOS exposes this inverted flag as txr.alpha.
+
 PT_ALPHA_REF(pvr):
 	Defines the global alpha threshold below which punch-through texels are discarded.
 

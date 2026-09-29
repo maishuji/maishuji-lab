@@ -138,7 +138,7 @@ flycast-advanced-text:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-advanced-text-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_ADVANCED_TEXT FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: advanced multilingual text passed" ./tools/test-flycast-render.sh "$(DC_ADVANCED_TEXT_CDI)"
 
 flycast-controller-pvr:
-	FLYCAST_FRAME_CHECKER=tools/check-flycast-controller-pvr-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_CONTROLLER_PVR FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: controller PVR passed (PVRT ARGB4444; 256x256; translucent alpha)" ./tools/test-flycast-render.sh "$(DC_CONTROLLER_PVR_CDI)"
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-controller-pvr-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_CONTROLLER_PVR FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: controller PVR passed (PVRT ARGB4444; 256x256; translucent alpha)" ./tools/test-flycast-render.sh "$(DC_CONTROLLER_PVR_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

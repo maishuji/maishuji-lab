@@ -52,3 +52,48 @@ the PVR on the translucent list. ARGB4444 texels with zero alpha therefore
 blend nothing into the blue background, while opaque controller texels remain
 visible. The backend also sets the global `PT_ALPHA_REF` threshold to `0x80` for
 other punch-through primitives. Emulator validation is not hardware validation.
+
+## Expected output and transparency regression
+
+![Controller PVR in Flycast with transparent pixels showing the blue background](assets/controller-pvr-flycast.png)
+
+This is an actual Flycast v2.7 capture of the Debug controller lesson, built
+with the pinned KOS `2.2.2` snapshot `0aa363a` on 2026-09-30. The source PNG
+also has transparent areas inside the controller, including its screen; those
+correctly show the background too.
+
+The black rectangle was caused by a KOS context-helper regression, not missing
+alpha in the asset. `txr.alpha` encodes **IgnoreTexA**, so `true` forces texture
+alpha to opaque. The backend now sets it explicitly to `false`, matching
+[upstream fix 4d861ff3e](https://github.com/KallistiOS/KallistiOS/commit/4d861ff3e3cff1c2211315e59f49fc6d8b959118).
+Changing the list or punch-through threshold alone did not fix that flag.
+This correction works with the locked toolchain; a KOS upgrade is not required.
+
+To reproduce, build in the pinned development container, then run Flycast on
+the Linux host:
+
+~~~sh
+# In the container:
+make dreamcast-controller-pvr-cdi DC_BUILD_TYPE=Debug
+# On the host, after packaging completes:
+make flycast-controller-pvr
+~~~
+
+The test requires at least three consecutive valid captures and the guest
+completion marker. It checks all four transparent corners against the blue
+background and verifies the four colored buttons. The reproduced pre-fix
+frame failed this same pixel check; the fixed run passed eight consecutive
+captures and the runtime marker. A successful build or guest log alone does
+not establish transparency. The saved frame is
+`build-dreamcast/maishuji-controller-pvr-flycast.png`.
+
+The capture helper now requests an unmaximized 4:3 window, reads its visible
+screen contents and clears desktop-relative PNG offsets. The observed HiDPI
+capture is 960x720. Keep the Flycast window unobscured during the test; the old
+3840x2292 captures showed the IDE and were not valid rendering evidence.
+No real Dreamcast hardware test was performed.
+
+Host lifecycle tests and all Debug/Release target builds also passed. The
+Release `03-textured-quad` lesson passed its Flycast check for opaque,
+punch-through and translucent lists (three stable captures), using a separate
+`build-dreamcast-alpha-release` directory.

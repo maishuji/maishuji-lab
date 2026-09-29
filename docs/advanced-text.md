@@ -54,8 +54,11 @@ background produced by the lesson, plus the exact guest marker
 replace real Dreamcast hardware validation.
 
 On 2026-09-29, the pinned KOS 2.2.2 / GCC 15.2.1 container built and packaged
-both Debug and Release CDIs successfully. `make host-test` passed, and
-`make flycast-advanced-text` passed with eight stable frames and the required
-runtime marker. The checked capture was 960x720 and measured Japanese,
-Traditional Chinese, and English text regions. No real Dreamcast hardware was
-available for this validation.
+both Debug and Release CDIs successfully, and `make host-test` passed. A
+follow-up visual audit found that the original Flycast checker was a false
+positive: it compared average colors and accepted solid colored quads. The
+checker now also requires intra-line pixel variation. Against the current CDI,
+`make flycast-advanced-text` exits 2; Japanese and Traditional Chinese
+variation measured only `0.004/0.009` and `0.011/0.009`, proving that the
+runtime marker was reached without proving glyph-shaped text. No real Dreamcast
+hardware was available for this validation.

@@ -99,6 +99,16 @@ The basic-3D example is 9,916 bytes larger in total, all in text for this
 build. The difference includes the example, math, mesh projection, and linked
 code paths; it is not an isolated cost for one matrix function.
 
+## Particle-batch structural estimate
+
+The particle lesson at [docs/particles.md](particles.md) submits 24 textured
+quads through one punch-through list. Source inspection therefore predicts 24
+polygon headers, 96 textured vertex packets, and 120 primitive packet calls
+per frame, plus list/scene control. The example keeps one 512-byte texture
+allocation alive and performs no per-frame heap allocation. These counts are
+structural estimates from the current backend; they are not SH-4 timing,
+cache, VRAM high-water, or frame-rate measurements.
+
 ## Limits of this evidence
 
 This is a structural packet-count and binary-size comparison. It does not

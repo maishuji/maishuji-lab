@@ -58,7 +58,10 @@ both Debug and Release CDIs successfully, and `make host-test` passed. A
 follow-up visual audit found that the original Flycast checker was a false
 positive: it compared average colors and accepted solid colored quads. The
 checker now also requires intra-line pixel variation. Against the current CDI,
-`make flycast-advanced-text` exits 2; Japanese and Traditional Chinese
-variation measured only `0.004/0.009` and `0.011/0.009`, proving that the
-runtime marker was reached without proving glyph-shaped text. No real Dreamcast
-hardware was available for this validation.
+the underlying cause was that transparent atlas texels retained white RGB bits
+(`0x0fff`) even though their alpha nibble was zero; the generator now emits
+canonical `0x0000` transparent texels. After regenerating the atlas and
+rebuilding the Release CDI, `make flycast-advanced-text` passed seven stable
+frames with Japanese variation `0.139/0.318/0.367`, Traditional Chinese
+variation `0.423/0.365/0.159`, and English variation `0.144/0.227/0.388`.
+No real Dreamcast hardware was available for this validation.

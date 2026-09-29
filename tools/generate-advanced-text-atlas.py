@@ -91,8 +91,9 @@ def render_glyph(convert: str, glyph: GlyphSpec) -> bytes:
 def to_argb4444(rgba: bytes) -> list[int]:
     pixels: list[int] = []
     for index in range(0, len(rgba), 4):
+        # Keep transparent texels fully zeroed for the KOS punch-through path.
         alpha = (rgba[index + 3] * 15 + 127) // 255
-        pixels.append((alpha << 12) | 0x0FFF)
+        pixels.append(0 if alpha == 0 else (alpha << 12) | 0x0FFF)
     return pixels
 
 

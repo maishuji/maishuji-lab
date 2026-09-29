@@ -70,6 +70,12 @@ ARGB4444(texture):
 Twiddling(pvr):
 	Reorders texture addresses for PVR locality; the supported texture path uses non-twiddled row-major data.
 
+PVRT(pvr):
+	Stores a PowerVR texture container header and its encoded texel payload.
+
+Morton-order(pvr):
+	Maps two-dimensional texture coordinates into the interleaved address order used by a twiddled texture.
+
 Pixel-snapping(api):
 	Rounds a coordinate to the nearest logical pixel before pixel-art scaling or submission.
 

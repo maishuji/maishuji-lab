@@ -105,3 +105,12 @@ Viewport(api):
 
 Mesh(api):
 	Describes span-backed indexed vertices that become submitted PVR triangles.
+
+OARGB(pvr):
+	Stores the packed per-vertex offset color used by the PVR polygon packet.
+
+Offset-color(pvr):
+	Represents an additive per-vertex color used by PVR polygon shading.
+
+Specular-lighting(pvr):
+	Enables PVR offset-color processing without defining a general light model.

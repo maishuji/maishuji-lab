@@ -82,3 +82,18 @@ later render wait remains the resource-idle boundary.
 For texture-backed geometry, see [textures.md](textures.md). It keeps texture
 VRAM ownership, ARGB4444 upload data, sampling, and release synchronization
 separate from the colored primitive packet path.
+
+## Offset-color lighting
+
+For the narrow PVR lighting lesson, each vertex can carry an additive
+offset_color and PrimitiveConfiguration can enable offset-color processing:
+
+~~~cpp
+maishuji::PrimitiveConfiguration lighting{};
+lighting.enable_offset_color = true;
+list.submit(lit_quad, lighting);
+~~~
+
+This maps to the KOS polygon-header specular bit and the pvr_vertex_t oargb
+field. It is an additive fixed-function effect, not a normal-based light
+model. See [lighting.md](lighting.md) for the packet mapping and cost note.

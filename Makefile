@@ -17,11 +17,13 @@ DC_BASIC_3D_ELF ?= $(DC_BUILD_DIR)/maishuji-basic-3d.elf
 DC_BASIC_3D_CDI ?= $(DC_BUILD_DIR)/maishuji-basic-3d.cdi
 DC_FOGGED_3D_ELF ?= $(DC_BUILD_DIR)/maishuji-fogged-3d.elf
 DC_FOGGED_3D_CDI ?= $(DC_BUILD_DIR)/maishuji-fogged-3d.cdi
+DC_LIGHTING_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-lighting.elf
+DC_LIGHTING_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-lighting.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -52,6 +54,9 @@ dreamcast-lifecycle-cdi: dreamcast-build
 
 dreamcast-basic-3d-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_BASIC_3D_ELF)" -o "$(DC_BASIC_3D_CDI)" -n "maishuji-lab basic 3D"
+
+dreamcast-lighting-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_LIGHTING_ELF)" -o "$(DC_LIGHTING_CDI)" -n "maishuji-lab PVR offset-color lighting"
 
 dreamcast-fogged-3d-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_FOGGED_3D_ELF)" -o "$(DC_FOGGED_3D_CDI)" -n "maishuji-lab fogged 3D"

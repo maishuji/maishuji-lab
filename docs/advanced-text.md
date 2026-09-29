@@ -9,6 +9,14 @@ scripts:
 The cake is a lie.
 ~~~
 
+## Expected output
+
+![Flycast capture of the advanced multilingual text example](assets/advanced-text-flycast.png)
+
+This scaled Flycast capture shows the intended Japanese, Traditional Chinese,
+and English output. Window scaling, filtering, and exact colors can differ
+between Flycast, a real Dreamcast, and documentation viewers.
+
 The first two lines cannot use the Dreamcast BIOS font from the earlier text
 lesson. That API is an ISO-8859-1 bitmap-font path, so this lesson uses a small
 pre-rasterized glyph atlas instead.

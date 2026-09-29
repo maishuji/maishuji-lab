@@ -48,8 +48,7 @@ The current implementation intentionally does not claim support for mipmaps,
 VQ compression, palette formats, GBIX chunks, or rectangular textures.
 
 The controller example renders a full-screen opaque blue quad first, then draws
-the PVR on the punch-through list. Transparent texels therefore reveal the
-the PVR's global `PT_ALPHA_REF` threshold to `0x80`, so fully transparent
-ARGB4444 texels are discarded while the controller remains visible. Transparent
-texels therefore reveal the background and make an accidental opaque black
-rectangle visible in the Flycast check. Emulator validation is not hardware validation.
+the PVR on the translucent list. ARGB4444 texels with zero alpha therefore
+blend nothing into the blue background, while opaque controller texels remain
+visible. The backend also sets the global `PT_ALPHA_REF` threshold to `0x80` for
+other punch-through primitives. Emulator validation is not hardware validation.

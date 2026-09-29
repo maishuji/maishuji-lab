@@ -157,14 +157,14 @@ maishuji::Status run_frame(
     if(maishuji::failed(status))
         return status;
 
-    maishuji::RenderList punch_through;
-    status = frame.begin_list(punch_through, maishuji::List::PunchThrough);
+    maishuji::RenderList translucent;
+    status = frame.begin_list(translucent, maishuji::List::Translucent);
     if(maishuji::failed(status))
         return status;
-    status = punch_through.submit(texture, controller);
+    status = translucent.submit(texture, controller);
     if(maishuji::failed(status))
         return status;
-    status = punch_through.finish();
+    status = translucent.finish();
     if(maishuji::failed(status))
         return status;
 

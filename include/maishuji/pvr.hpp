@@ -45,6 +45,7 @@ struct Vertex {
     float y = 0.0f;
     float z = 1.0f;
     Color color{};
+    Color offset_color{0, 0, 0, 0};
 };
 
 struct Triangle {
@@ -64,6 +65,7 @@ struct PrimitiveConfiguration {
     Culling culling = Culling::None;
     DepthCompare depth_compare = DepthCompare::Greater;
     bool depth_write = true;
+    bool enable_offset_color = false;
 };
 
 struct TexturedVertex {
@@ -73,6 +75,7 @@ struct TexturedVertex {
     float u = 0.0f;
     float v = 0.0f;
     Color color{};
+    Color offset_color{0, 0, 0, 0};
 };
 
 struct TexturedQuad {

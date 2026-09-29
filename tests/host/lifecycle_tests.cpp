@@ -788,6 +788,12 @@ void test_colored_primitives() {
         {300.0f, 300.0f, 1.0f, {255, 64, 192, 255}},
     };
 
+    const Triangle lit_triangle{
+        {360.0f, 120.0f, 1.0f, {32, 32, 48, 255}, {128, 32, 0, 255}},
+        {520.0f, 360.0f, 1.0f, {32, 48, 32, 255}, {0, 128, 32, 255}},
+        {200.0f, 360.0f, 1.0f, {32, 48, 48, 255}, {32, 32, 128, 255}},
+    };
+
     Pvr pvr;
     Frame frame;
     RenderList opaque;
@@ -816,6 +822,14 @@ void test_colored_primitives() {
                     !test::recording().last_primitive_configuration.depth_write,
                 "primitive forwards explicit culling and depth policy");
 
+    PrimitiveConfiguration lighting_policy{};
+    lighting_policy.enable_offset_color = true;
+    expect_status(opaque.submit(lit_triangle, lighting_policy), Status::Success,
+                  "submit primitive with offset-color lighting");
+    expect_true(test::recording().last_primitive_configuration.enable_offset_color &&
+                    test::recording().last_triangle.first.offset_color.red == 128,
+                "primitive forwards offset-color lighting data");
+
     test::fail_next(test::FailurePoint::PrimitiveSubmit);
     expect_status(opaque.submit(triangle), Status::PrimitiveSubmissionFailed,
                   "propagate primitive failure");
@@ -826,7 +840,7 @@ void test_colored_primitives() {
                   "finish primitive frame");
     expect_status(pvr.shutdown(), Status::Success,
                   "shutdown primitive PVR");
-    expect_equal(test::recording().triangle_submit_calls, 3,
+    expect_equal(test::recording().triangle_submit_calls, 4,
                  "triangle submission call count");
     expect_equal(test::recording().quad_submit_calls, 1,
                  "quad submission call count");

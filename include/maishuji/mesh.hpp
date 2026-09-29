@@ -18,6 +18,7 @@ struct Viewport {
 struct MeshVertex {
     Vec3 position{};
     Color color{};
+    Color offset_color{0, 0, 0, 0};
 };
 
 struct Fog {

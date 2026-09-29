@@ -117,7 +117,7 @@ void fill_vertex(pvr_vertex_t &destination, std::uint32_t flags,
     destination.u = 0.0f;
     destination.v = 0.0f;
     destination.argb = source.color.argb();
-    destination.oargb = 0;
+    destination.oargb = source.offset_color.argb();
 }
 
 bool submit_colored(List list, const Vertex *vertices, std::size_t count,
@@ -132,6 +132,7 @@ bool submit_colored(List list, const Vertex *vertices, std::size_t count,
     pvr_poly_cxt_col(&context, to_kos_list(list));
     context.gen.shading = PVR_SHADE_GOURAUD;
     context.gen.culling = to_kos_culling(configuration.culling);
+    context.gen.specular = configuration.enable_offset_color;
     apply_depth_policy(context, configuration);
     pvr_poly_compile(&header, &context);
 
@@ -182,7 +183,7 @@ void fill_textured_vertex(pvr_vertex_t &destination, std::uint32_t flags,
     destination.u = source.u;
     destination.v = source.v;
     destination.argb = source.color.argb();
-    destination.oargb = 0;
+    destination.oargb = source.offset_color.argb();
 }
 
 bool texture_allocate(std::size_t bytes, TextureHandle &handle) noexcept {
@@ -219,6 +220,7 @@ bool submit_textured_quad(
         reinterpret_cast<pvr_ptr_t>(handle), PVR_FILTER_NEAREST);
     context.gen.shading = PVR_SHADE_GOURAUD;
     context.gen.culling = to_kos_culling(configuration.culling);
+    context.gen.specular = configuration.enable_offset_color;
     apply_depth_policy(context, configuration);
     pvr_poly_compile(&header, &context);
 

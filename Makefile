@@ -43,24 +43,39 @@ KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cm
 
 .PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture run-dc
 
+# Verify the pinned Dreamcast/KOS toolchain and image versions.
+# Use this first when a Dreamcast build fails or after entering the container.
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
 
+# Generate the host CMake build directory in Debug mode.
+# Usually invoked automatically by host-build, host-run, and host-test.
 host-configure:
 	cmake -S . -B $(HOST_BUILD_DIR) -G $(HOST_CMAKE_GENERATOR) -DCMAKE_BUILD_TYPE=Debug
 
+# Compile the host library, smoke program, and test executable.
+# Use this for fast development checks that do not require Dreamcast headers.
 host-build: host-configure
 	cmake --build $(HOST_BUILD_DIR) --verbose
 
+# Build and run the small host smoke program.
+# Use this to confirm the basic host backend can initialize and shut down.
 host-run: host-build
 	./$(HOST_BUILD_DIR)/maishuji-host-smoke
 
+# Build and run the host lifecycle and API regression tests.
+# Use this after changing framework code or before committing.
 host-test: host-build
 	./$(HOST_BUILD_DIR)/$(HOST_TEST_EXE)
 
+# Configure the Dreamcast cross-build with the pinned KOS toolchain.
+# Use this when changing CMake/toolchain settings; dreamcast-build calls it automatically.
 dreamcast-configure: check-toolchain
 	./tools/with-kos.sh cmake -S . -B $(DC_BUILD_DIR) -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=$(DC_BUILD_TYPE) -DCMAKE_TOOLCHAIN_FILE=$(KOS_TOOLCHAIN_FILE)
 
+# Compile every Dreamcast ELF target in DC_BUILD_DIR.
+# Use DC_BUILD_TYPE=Debug for emulator diagnosis or Release for optimized output;
+# CDI, Flycast, and hardware-loader targets depend on this build.
 dreamcast-build: dreamcast-configure
 	./tools/with-kos.sh cmake --build $(DC_BUILD_DIR) --verbose
 

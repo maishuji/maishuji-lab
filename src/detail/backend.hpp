@@ -27,6 +27,10 @@ struct Backend {
         List list, TextureHandle handle, std::uint16_t width,
         std::uint16_t height, const TexturedQuad &quad,
         const PrimitiveConfiguration &configuration) noexcept;
+    bool (*submit_textured_triangle)(
+        List list, TextureHandle handle, std::uint16_t width,
+        std::uint16_t height, const TexturedTriangle &triangle,
+        const PrimitiveConfiguration &configuration) noexcept;
     bool (*wait_render_done)() noexcept;
     bool (*shutdown)() noexcept;
 };

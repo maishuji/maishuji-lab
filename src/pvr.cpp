@@ -71,6 +71,8 @@ struct ClipVertex {
     Vec4 position{};
     Color color{};
     Color offset_color{0, 0, 0, 0};
+    float u = 0.0f;
+    float v = 0.0f;
 };
 
 constexpr float clip_epsilon = 0.000001f;
@@ -129,6 +131,8 @@ ClipVertex interpolate_clip_vertex(const ClipVertex &first,
             interpolate_channel(first.offset_color.blue, second.offset_color.blue, amount),
             interpolate_channel(first.offset_color.alpha, second.offset_color.alpha, amount),
         },
+        first.u + (second.u - first.u) * amount,
+        first.v + (second.v - first.v) * amount,
     };
 }
 
@@ -204,6 +208,22 @@ bool to_screen_vertex(const ClipVertex &source, const Viewport &viewport,
         1.0f - (normalized_z + 1.0f) * 0.5f,
         source.color,
         source.offset_color,
+    };
+    return true;
+}
+
+bool to_screen_vertex(const ClipVertex &source, const Viewport &viewport,
+                      TexturedVertex &destination) noexcept {
+    if(!std::isfinite(source.u) || !std::isfinite(source.v))
+        return false;
+
+    Vertex projected{};
+    if(!to_screen_vertex(source, viewport, projected))
+        return false;
+
+    destination = {
+        projected.x, projected.y, projected.z, source.u, source.v,
+        projected.color, projected.offset_color,
     };
     return true;
 }
@@ -553,6 +573,88 @@ Status RenderList::submit(
                texture.width_, texture.height_, quad, configuration)
                ? Status::Success
                : Status::PrimitiveSubmissionFailed;
+}
+
+Status RenderList::submit(
+    const Texture &texture, const TexturedMesh &mesh, const Camera &camera,
+    const Transform &transform, const Viewport &viewport,
+    const PrimitiveConfiguration &configuration) noexcept {
+    if(!active_ || owner_ == nullptr || owner_->owner_ == nullptr ||
+       owner_->active_list_ != this)
+        return Status::RenderListNotActive;
+    if(!texture.allocated_ || texture.owner_ == nullptr)
+        return Status::TextureNotAllocated;
+    if(texture.owner_ != owner_->owner_)
+        return Status::TextureContextMismatch;
+    if(mesh.vertices.empty() || mesh.indices.empty() ||
+       mesh.indices.size() % 3 != 0 ||
+       !std::isfinite(viewport.width) || !std::isfinite(viewport.height) ||
+       viewport.width <= 0.0f || viewport.height <= 0.0f)
+        return Status::MeshInvalidData;
+    if(!camera.valid())
+        return Status::InvalidCamera;
+
+    for(const std::uint16_t index : mesh.indices) {
+        if(index >= mesh.vertices.size())
+            return Status::MeshInvalidData;
+        const TexturedMeshVertex &vertex = mesh.vertices[index];
+        if(!std::isfinite(vertex.u) || !std::isfinite(vertex.v))
+            return Status::MeshInvalidData;
+    }
+
+    const Mat4 model = transform_matrix(transform);
+    const Mat4 view = view_matrix(camera);
+    const Mat4 model_view = view * model;
+    const Mat4 model_view_projection = projection_matrix(camera) * model_view;
+
+    for(std::size_t index = 0; index < mesh.indices.size(); index += 3) {
+        const TexturedMeshVertex *source_vertices[] = {
+            &mesh.vertices[mesh.indices[index]],
+            &mesh.vertices[mesh.indices[index + 1]],
+            &mesh.vertices[mesh.indices[index + 2]],
+        };
+        const ClipVertex input[3] = {
+            {model_view_projection * to_vec4(source_vertices[0]->position),
+             source_vertices[0]->color, source_vertices[0]->offset_color,
+             source_vertices[0]->u, source_vertices[0]->v},
+            {model_view_projection * to_vec4(source_vertices[1]->position),
+             source_vertices[1]->color, source_vertices[1]->offset_color,
+             source_vertices[1]->u, source_vertices[1]->v},
+            {model_view_projection * to_vec4(source_vertices[2]->position),
+             source_vertices[2]->color, source_vertices[2]->offset_color,
+             source_vertices[2]->u, source_vertices[2]->v},
+        };
+
+        std::array<ClipVertex, 12> polygon{};
+        std::size_t polygon_count = 0;
+        if(!clip_triangle(input, polygon, polygon_count))
+            return Status::MeshProjectionFailed;
+        if(polygon_count < 3)
+            continue;
+
+        for(std::size_t vertex_index = 1;
+            vertex_index + 1 < polygon_count; ++vertex_index) {
+            TexturedVertex projected[3]{};
+            if(!to_screen_vertex(polygon[0], viewport, projected[0]) ||
+               !to_screen_vertex(polygon[vertex_index], viewport,
+                                 projected[1]) ||
+               !to_screen_vertex(polygon[vertex_index + 1], viewport,
+                                 projected[2]))
+                return Status::MeshProjectionFailed;
+
+            const TexturedTriangle triangle{
+                projected[0],
+                projected[1],
+                projected[2],
+            };
+            if(!owner_->owner_->backend_->submit_textured_triangle(
+                   list_type_, static_cast<detail::TextureHandle>(texture.handle_),
+                   texture.width_, texture.height_, triangle, configuration))
+                return Status::PrimitiveSubmissionFailed;
+        }
+    }
+
+    return Status::Success;
 }
 
 Status RenderList::submit(

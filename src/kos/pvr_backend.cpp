@@ -211,10 +211,13 @@ void texture_free(TextureHandle handle) noexcept {
     pvr_mem_free(reinterpret_cast<pvr_ptr_t>(handle));
 }
 
-bool submit_textured_quad(
+bool submit_textured(
     List list, TextureHandle handle, std::uint16_t width,
-    std::uint16_t height, const TexturedQuad &quad,
+    std::uint16_t height, const TexturedVertex *vertices, std::size_t count,
     const PrimitiveConfiguration &configuration) noexcept {
+    if(vertices == nullptr || count == 0 || count > 4)
+        return false;
+
     alignas(32) pvr_poly_hdr_t header;
     alignas(32) pvr_vertex_t packet[4];
 
@@ -233,27 +236,48 @@ bool submit_textured_quad(
     apply_depth_policy(context, configuration);
     pvr_poly_compile(&header, &context);
 
-    const TexturedVertex vertices[4] = {
-        quad.top_left,
-        quad.bottom_left,
-        quad.top_right,
-        quad.bottom_right,
-    };
-    for(std::size_t index = 0; index < 4; ++index) {
+    for(std::size_t index = 0; index < count; ++index) {
         const std::uint32_t flags =
-            index + 1 == 4 ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
+            index + 1 == count ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
         fill_textured_vertex(packet[index], flags, vertices[index]);
     }
 
     if(pvr_prim(&header, sizeof(header)) < 0)
         return false;
 
-    for(const pvr_vertex_t &vertex : packet) {
-        if(pvr_prim(&vertex, sizeof(vertex)) < 0)
+    for(std::size_t index = 0; index < count; ++index) {
+        if(pvr_prim(&packet[index], sizeof(packet[index])) < 0)
             return false;
     }
 
     return true;
+}
+
+bool submit_textured_triangle(
+    List list, TextureHandle handle, std::uint16_t width,
+    std::uint16_t height, const TexturedTriangle &triangle,
+    const PrimitiveConfiguration &configuration) noexcept {
+    const TexturedVertex vertices[3] = {
+        triangle.first,
+        triangle.second,
+        triangle.third,
+    };
+    return submit_textured(list, handle, width, height, vertices, 3,
+                           configuration);
+}
+
+bool submit_textured_quad(
+    List list, TextureHandle handle, std::uint16_t width,
+    std::uint16_t height, const TexturedQuad &quad,
+    const PrimitiveConfiguration &configuration) noexcept {
+    const TexturedVertex vertices[4] = {
+        quad.top_left,
+        quad.bottom_left,
+        quad.top_right,
+        quad.bottom_right,
+    };
+    return submit_textured(list, handle, width, height, vertices, 4,
+                           configuration);
 }
 
 bool wait_render_done() noexcept {
@@ -282,6 +306,7 @@ const Backend &default_backend() noexcept {
         texture_upload,
         texture_free,
         submit_textured_quad,
+        submit_textured_triangle,
         wait_render_done,
         shutdown,
     };

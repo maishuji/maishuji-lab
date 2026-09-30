@@ -109,6 +109,20 @@ void texture_free(detail::TextureHandle handle) noexcept {
         --state.live_texture_allocations;
 }
 
+bool submit_textured_triangle(
+    List list, detail::TextureHandle handle, std::uint16_t width,
+    std::uint16_t height, const TexturedTriangle &triangle,
+    const PrimitiveConfiguration &configuration) noexcept {
+    (void)handle;
+    (void)width;
+    (void)height;
+    state.last_primitive_configuration = configuration;
+    state.last_textured_triangle = triangle;
+    ++state.textured_triangle_submit_calls;
+    state.last_primitive_list = list;
+    return consume_failure(FailurePoint::TexturedSubmit);
+}
+
 bool submit_textured_quad(
     List list, detail::TextureHandle handle, std::uint16_t width,
     std::uint16_t height, const TexturedQuad &quad,
@@ -167,6 +181,7 @@ const Backend &default_backend() noexcept {
         maishuji::test::texture_upload,
         maishuji::test::texture_free,
         maishuji::test::submit_textured_quad,
+        maishuji::test::submit_textured_triangle,
         maishuji::test::wait_render_done,
         maishuji::test::shutdown,
     };

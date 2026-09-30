@@ -85,6 +85,12 @@ struct TexturedQuad {
     TexturedVertex bottom_right{};
 };
 
+struct TexturedTriangle {
+    TexturedVertex first{};
+    TexturedVertex second{};
+    TexturedVertex third{};
+};
+
 struct Configuration {
     bool enable_opaque = true;
     bool enable_punch_through = true;
@@ -148,6 +154,7 @@ class Frame;
 class RenderList;
 class Texture;
 struct Mesh;
+struct TexturedMesh;
 struct Camera;
 struct Transform;
 struct Viewport;
@@ -279,6 +286,10 @@ public:
     Status submit(const Quad &quad,
                   const PrimitiveConfiguration &configuration = {}) noexcept;
     Status submit(const Texture &texture, const TexturedQuad &quad,
+                  const PrimitiveConfiguration &configuration = {}) noexcept;
+    Status submit(const Texture &texture, const TexturedMesh &mesh,
+                  const Camera &camera, const Transform &transform,
+                  const Viewport &viewport,
                   const PrimitiveConfiguration &configuration = {}) noexcept;
     Status submit(const Mesh &mesh, const Camera &camera,
                   const Transform &transform, const Viewport &viewport,

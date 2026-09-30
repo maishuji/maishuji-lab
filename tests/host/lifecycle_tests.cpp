@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstdio>
+#include <limits>
 #include <utility>
 
 namespace {
@@ -771,6 +772,80 @@ void test_mesh_submission() {
     expect_status(pvr.shutdown(), Status::Success, "shutdown mesh PVR");
 }
 
+void test_textured_mesh_submission() {
+    using namespace maishuji;
+
+    test::reset_recording();
+
+    const std::array<TexturedMeshVertex, 4> vertices{
+        TexturedMeshVertex{{-0.8f, -0.8f, 0.0f}, 0.0f, 1.0f,
+                           {255, 255, 255, 255}},
+        TexturedMeshVertex{{0.8f, -0.8f, 0.0f}, 1.0f, 1.0f,
+                           {255, 255, 255, 255}},
+        TexturedMeshVertex{{0.8f, 0.8f, 0.0f}, 1.0f, 0.0f,
+                           {255, 255, 255, 255}},
+        TexturedMeshVertex{{-0.8f, 0.8f, 0.0f}, 0.0f, 0.0f,
+                           {255, 255, 255, 255}},
+    };
+    const std::array<std::uint16_t, 6> indices{0, 1, 2, 0, 2, 3};
+    const TexturedMesh mesh{vertices, indices};
+    const Camera camera{};
+    const Transform transform{};
+    const Viewport viewport{640.0f, 480.0f};
+    const std::array<std::uint16_t, 64> pixels{};
+
+    Pvr pvr;
+    Texture texture;
+    Frame frame;
+    RenderList list;
+    expect_status(list.submit(texture, mesh, camera, transform, viewport),
+                  Status::RenderListNotActive,
+                  "reject textured mesh outside list");
+    expect_status(pvr.initialize(), Status::Success,
+                  "initialize textured mesh test");
+    expect_status(texture.allocate(pvr, 8, 8), Status::Success,
+                  "allocate textured mesh texture");
+    expect_status(texture.upload(pixels), Status::Success,
+                  "upload textured mesh texture");
+    expect_status(pvr.begin_frame(frame), Status::Success,
+                  "begin textured mesh frame");
+    expect_status(frame.begin_list(list, List::PunchThrough), Status::Success,
+                  "begin textured mesh list");
+    expect_status(list.submit(texture, mesh, camera, transform, viewport),
+                  Status::Success, "submit textured indexed mesh");
+    expect_equal(test::recording().textured_triangle_submit_calls, 2,
+                 "textured mesh submits one triangle per index triplet");
+    expect_true(test::recording().last_textured_triangle.first.x > 0.0f &&
+                    test::recording().last_textured_triangle.first.x <
+                        viewport.width,
+                "textured mesh projects x into viewport");
+    expect_true(test::recording().last_textured_triangle.first.u >= 0.0f &&
+                    test::recording().last_textured_triangle.first.u <= 1.0f &&
+                    test::recording().last_textured_triangle.first.v >= 0.0f &&
+                    test::recording().last_textured_triangle.first.v <= 1.0f,
+                "textured mesh forwards UV coordinates");
+    expect_true(test::recording().last_primitive_list == List::PunchThrough,
+                "textured mesh uses the active list");
+
+    auto invalid_vertices = vertices;
+    invalid_vertices[0].u = std::numeric_limits<float>::quiet_NaN();
+    expect_status(list.submit(texture, TexturedMesh{invalid_vertices, indices},
+                               camera, transform, viewport),
+                  Status::MeshInvalidData,
+                  "reject non-finite textured mesh UV");
+    expect_equal(test::recording().textured_triangle_submit_calls, 2,
+                 "invalid textured mesh does not submit geometry");
+
+    expect_status(list.finish(), Status::Success,
+                  "finish textured mesh list");
+    expect_status(frame.finish(), Status::Success,
+                  "finish textured mesh frame");
+    expect_status(texture.release(), Status::Success,
+                  "release textured mesh texture");
+    expect_status(pvr.shutdown(), Status::Success,
+                  "shutdown textured mesh PVR");
+}
+
 void test_colored_primitives() {
     using namespace maishuji;
 
@@ -853,6 +928,7 @@ void test_colored_primitives() {
 int main() {
     test_spatial_math();
     test_mesh_submission();
+    test_textured_mesh_submission();
     test_pixel_grid();
     test_sprite_quad();
     test_basic_lifecycle();

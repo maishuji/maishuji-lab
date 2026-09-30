@@ -15,3 +15,10 @@ See the upstream source and license:
 
 The atlas generator records the selected font family names and can recreate the
 tracked header with ImageMagick. Keep this notice with the generated asset.
+
+## Terrain rock texture
+
+`terrain-rock.png` is a generated bitmap created for the heightmapped terrain
+lesson in this repository. It has no third-party source file or font dependency.
+`terrain-rock.pvr` and `terrain_asset.hpp` are derived ARGB4444 and embedded
+representations produced with the pinned KOS `pvrtex` utility.

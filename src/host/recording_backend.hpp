@@ -44,6 +44,7 @@ struct Recording {
     TexturedQuad last_textured_quad{};
     std::size_t textured_triangle_submit_calls = 0;
     TexturedTriangle last_textured_triangle{};
+    TextureSampling last_texture_sampling{};
     std::size_t last_texture_upload_bytes = 0;
     std::size_t render_wait_calls = 0;
     std::size_t shutdown_calls = 0;

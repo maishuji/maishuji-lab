@@ -22,3 +22,10 @@ tracked header with ImageMagick. Keep this notice with the generated asset.
 lesson in this repository. It has no third-party source file or font dependency.
 `terrain-rock.pvr` and `terrain_asset.hpp` are derived ARGB4444 and embedded
 representations produced with the pinned KOS `pvrtex` utility.
+
+## Mipmap checker texture
+
+`mipmap-checker.png` is a generated black-and-white checkerboard used to make
+base-level and mipmapped filtering differences visible. `mipmap-checker.pvr`
+and `mipmap_asset.hpp` are derived ARGB4444 mipmapped and embedded
+representations produced with the pinned KOS `pvrtex` utility using `-m`.

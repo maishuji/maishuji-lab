@@ -26,6 +26,16 @@ enum class DepthCompare : std::uint8_t {
     Always,
 };
 
+enum class TextureFilter : std::uint8_t {
+    Nearest,
+    Bilinear,
+};
+
+struct TextureSampling {
+    TextureFilter filter = TextureFilter::Nearest;
+    bool mipmaps = false;
+};
+
 struct Color {
     std::uint8_t red = 255;
     std::uint8_t green = 255;
@@ -137,6 +147,8 @@ enum class Status : std::uint8_t {
     TextureAllocationFailed,
     TextureInvalidData,
     TextureUploadFailed,
+    TextureMipmapped,
+    TextureNotMipmapped,
     TextureContextMismatch,
 };
 
@@ -211,7 +223,10 @@ public:
 
     Status allocate(Pvr &pvr, std::uint16_t width,
                     std::uint16_t height) noexcept;
+    Status allocate_mipmapped(Pvr &pvr, std::uint16_t width,
+                              std::uint16_t height) noexcept;
     Status upload(std::span<const std::uint16_t> pixels) noexcept;
+    Status upload_mip_chain(std::span<const std::uint8_t> data) noexcept;
     Status release() noexcept;
 
     bool allocated() const noexcept {
@@ -226,6 +241,18 @@ public:
         return height_;
     }
 
+    std::size_t storage_bytes() const noexcept {
+        return storage_bytes_;
+    }
+
+    std::size_t mip_level_count() const noexcept {
+        return mip_level_count_;
+    }
+
+    bool mipmapped() const noexcept {
+        return mipmapped_;
+    }
+
 private:
     friend class RenderList;
 
@@ -233,6 +260,9 @@ private:
     std::uintptr_t handle_ = 0;
     std::uint16_t width_ = 0;
     std::uint16_t height_ = 0;
+    std::size_t storage_bytes_ = 0;
+    std::size_t mip_level_count_ = 0;
+    bool mipmapped_ = false;
     bool allocated_ = false;
 };
 
@@ -287,9 +317,16 @@ public:
                   const PrimitiveConfiguration &configuration = {}) noexcept;
     Status submit(const Texture &texture, const TexturedQuad &quad,
                   const PrimitiveConfiguration &configuration = {}) noexcept;
+    Status submit(const Texture &texture, const TexturedQuad &quad,
+                  const TextureSampling &sampling,
+                  const PrimitiveConfiguration &configuration = {}) noexcept;
     Status submit(const Texture &texture, const TexturedMesh &mesh,
                   const Camera &camera, const Transform &transform,
                   const Viewport &viewport,
+                  const PrimitiveConfiguration &configuration = {}) noexcept;
+    Status submit(const Texture &texture, const TexturedMesh &mesh,
+                  const Camera &camera, const Transform &transform,
+                  const Viewport &viewport, const TextureSampling &sampling,
                   const PrimitiveConfiguration &configuration = {}) noexcept;
     Status submit(const Mesh &mesh, const Camera &camera,
                   const Transform &transform, const Viewport &viewport,

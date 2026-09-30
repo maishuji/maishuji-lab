@@ -35,11 +35,13 @@ DC_HEIGHTMAPPED_TERRAIN_ELF ?= $(DC_BUILD_DIR)/maishuji-heightmapped-terrain.elf
 DC_HEIGHTMAPPED_TERRAIN_CDI ?= $(DC_BUILD_DIR)/maishuji-heightmapped-terrain.cdi
 DC_TERRAIN_WALK_ELF ?= $(DC_BUILD_DIR)/maishuji-terrain-walk.elf
 DC_TERRAIN_WALK_CDI ?= $(DC_BUILD_DIR)/maishuji-terrain-walk.cdi
+DC_MIPMAP_TEXTURE_ELF ?= $(DC_BUILD_DIR)/maishuji-mipmap-texture.elf
+DC_MIPMAP_TEXTURE_CDI ?= $(DC_BUILD_DIR)/maishuji-mipmap-texture.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -97,6 +99,9 @@ dreamcast-heightmapped-terrain-cdi: dreamcast-build
 
 dreamcast-terrain-walk-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TERRAIN_WALK_ELF)" -o "$(DC_TERRAIN_WALK_CDI)" -n "maishuji-lab terrain walk"
+
+dreamcast-mipmap-texture-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_MIPMAP_TEXTURE_ELF)" -o "$(DC_MIPMAP_TEXTURE_CDI)" -n "maishuji-lab mipmap texture"
 
 dreamcast-fogged-3d-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_FOGGED_3D_ELF)" -o "$(DC_FOGGED_3D_CDI)" -n "maishuji-lab fogged 3D"
@@ -163,6 +168,9 @@ flycast-heightmapped-terrain:
 
 flycast-terrain-walk:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-terrain-walk-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_TERRAIN_WALK FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: terrain walk passed (controller movement; height sampling; 81 vertices; 128 triangles)" ./tools/test-flycast-render.sh "$(DC_TERRAIN_WALK_CDI)"
+
+flycast-mipmap-texture:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-mipmap-texture-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MIPMAP_TEXTURE FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: mipmap texture passed (9 levels; 174768 bytes; bilinear filtering)" ./tools/test-flycast-render.sh "$(DC_MIPMAP_TEXTURE_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

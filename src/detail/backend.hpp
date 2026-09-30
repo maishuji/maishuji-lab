@@ -20,16 +20,18 @@ struct Backend {
     bool (*texture_allocate)(std::size_t bytes,
                              TextureHandle &handle) noexcept;
     bool (*texture_upload)(TextureHandle handle,
-                           const std::uint16_t *pixels,
+                           const void *pixels,
                            std::size_t bytes) noexcept;
     void (*texture_free)(TextureHandle handle) noexcept;
     bool (*submit_textured_quad)(
         List list, TextureHandle handle, std::uint16_t width,
         std::uint16_t height, const TexturedQuad &quad,
+        bool mipmapped, const TextureSampling &sampling,
         const PrimitiveConfiguration &configuration) noexcept;
     bool (*submit_textured_triangle)(
         List list, TextureHandle handle, std::uint16_t width,
         std::uint16_t height, const TexturedTriangle &triangle,
+        bool mipmapped, const TextureSampling &sampling,
         const PrimitiveConfiguration &configuration) noexcept;
     bool (*wait_render_done)() noexcept;
     bool (*shutdown)() noexcept;

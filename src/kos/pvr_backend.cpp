@@ -91,6 +91,17 @@ pvr_cull_mode_t to_kos_culling(Culling culling) noexcept {
     return PVR_CULLING_NONE;
 }
 
+pvr_filter_mode_t to_kos_texture_filter(TextureFilter filter) noexcept {
+    switch(filter) {
+    case TextureFilter::Nearest:
+        return PVR_FILTER_NEAREST;
+    case TextureFilter::Bilinear:
+        return PVR_FILTER_BILINEAR;
+    }
+
+    return PVR_FILTER_NEAREST;
+}
+
 pvr_depthcmp_mode_t to_kos_depth_compare(DepthCompare comparison) noexcept {
     switch(comparison) {
     case DepthCompare::Less:
@@ -201,7 +212,7 @@ bool texture_allocate(std::size_t bytes, TextureHandle &handle) noexcept {
     return true;
 }
 
-bool texture_upload(TextureHandle handle, const std::uint16_t *pixels,
+bool texture_upload(TextureHandle handle, const void *pixels,
                     std::size_t bytes) noexcept {
     pvr_txr_load(pixels, reinterpret_cast<pvr_ptr_t>(handle), bytes);
     return true;
@@ -214,6 +225,7 @@ void texture_free(TextureHandle handle) noexcept {
 bool submit_textured(
     List list, TextureHandle handle, std::uint16_t width,
     std::uint16_t height, const TexturedVertex *vertices, std::size_t count,
+    bool mipmapped, const TextureSampling &sampling,
     const PrimitiveConfiguration &configuration) noexcept {
     if(vertices == nullptr || count == 0 || count > 4)
         return false;
@@ -224,9 +236,12 @@ bool submit_textured(
     pvr_poly_cxt_t context;
     pvr_poly_cxt_txr(
         &context, to_kos_list(list),
-        PVR_TXRFMT_ARGB4444 | PVR_TXRFMT_NONTWIDDLED,
+        PVR_TXRFMT_ARGB4444 |
+            (mipmapped ? PVR_TXRFMT_TWIDDLED : PVR_TXRFMT_NONTWIDDLED),
         static_cast<int>(width), static_cast<int>(height),
-        reinterpret_cast<pvr_ptr_t>(handle), PVR_FILTER_NEAREST);
+        reinterpret_cast<pvr_ptr_t>(handle), to_kos_texture_filter(sampling.filter));
+    context.txr.mipmap = mipmapped && sampling.mipmaps;
+    context.txr.mipmap_bias = PVR_MIPBIAS_NORMAL;
     // This field encodes IgnoreTexA: false enables texture alpha. The pinned
     // KOS snapshot sets it incorrectly (upstream fix: 4d861ff3e3cff1c2211315e).
     context.txr.alpha = false;
@@ -256,6 +271,7 @@ bool submit_textured(
 bool submit_textured_triangle(
     List list, TextureHandle handle, std::uint16_t width,
     std::uint16_t height, const TexturedTriangle &triangle,
+    bool mipmapped, const TextureSampling &sampling,
     const PrimitiveConfiguration &configuration) noexcept {
     const TexturedVertex vertices[3] = {
         triangle.first,
@@ -263,12 +279,13 @@ bool submit_textured_triangle(
         triangle.third,
     };
     return submit_textured(list, handle, width, height, vertices, 3,
-                           configuration);
+                           mipmapped, sampling, configuration);
 }
 
 bool submit_textured_quad(
     List list, TextureHandle handle, std::uint16_t width,
     std::uint16_t height, const TexturedQuad &quad,
+    bool mipmapped, const TextureSampling &sampling,
     const PrimitiveConfiguration &configuration) noexcept {
     const TexturedVertex vertices[4] = {
         quad.top_left,
@@ -277,7 +294,7 @@ bool submit_textured_quad(
         quad.bottom_right,
     };
     return submit_textured(list, handle, width, height, vertices, 4,
-                           configuration);
+                           mipmapped, sampling, configuration);
 }
 
 bool wait_render_done() noexcept {

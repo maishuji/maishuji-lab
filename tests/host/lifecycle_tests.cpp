@@ -508,6 +508,85 @@ void test_texture_ownership() {
                  "recording keeps submitted sprite bounds");
 }
 
+void test_mipmap_texture() {
+    using namespace maishuji;
+
+    test::reset_recording();
+
+    Pvr pvr;
+    Texture mipmapped;
+    Texture base;
+    expect_status(pvr.initialize(), Status::Success,
+                  "initialize mipmap texture test PVR");
+    expect_status(mipmapped.allocate_mipmapped(pvr, 8, 4),
+                  Status::TextureInvalidDimensions,
+                  "reject rectangular mipmapped texture");
+    expect_status(mipmapped.allocate_mipmapped(pvr, 8, 8), Status::Success,
+                  "allocate mipmapped texture");
+    expect_true(mipmapped.mipmapped(), "mark mipmapped texture");
+    expect_equal(mipmapped.mip_level_count(), 4,
+                 "calculate mipmap level count");
+    expect_equal(mipmapped.storage_bytes(), 176,
+                 "calculate mipmap storage bytes");
+
+    std::array<std::uint8_t, 176> mip_chain{};
+    std::array<std::uint16_t, 64> base_pixels{};
+    expect_status(mipmapped.upload(base_pixels), Status::TextureMipmapped,
+                  "reject base upload for mipmapped texture");
+    expect_status(mipmapped.upload_mip_chain(
+                      std::span<const std::uint8_t>{mip_chain}),
+                  Status::Success, "upload mipmap chain");
+    std::array<std::uint8_t, 175> short_chain{};
+    expect_status(mipmapped.upload_mip_chain(
+                      std::span<const std::uint8_t>{short_chain}),
+                  Status::TextureInvalidData,
+                  "reject short mipmap chain");
+    expect_status(base.allocate(pvr, 8, 8), Status::Success,
+                  "allocate base-level texture");
+    expect_status(base.upload_mip_chain(
+                      std::span<const std::uint8_t>{mip_chain}),
+                  Status::TextureNotMipmapped,
+                  "reject mipmap upload for base texture");
+
+    constexpr TexturedQuad quad{
+        {80.0f, 100.0f, 0.9f, 0.0f, 0.0f},
+        {80.0f, 220.0f, 0.9f, 0.0f, 4.0f},
+        {560.0f, 100.0f, 0.9f, 4.0f, 0.0f},
+        {560.0f, 220.0f, 0.9f, 4.0f, 4.0f},
+    };
+    Frame frame;
+    RenderList list;
+    expect_status(pvr.begin_frame(frame), Status::Success,
+                  "begin mipmap texture frame");
+    expect_status(frame.begin_list(list, List::Opaque), Status::Success,
+                  "begin mipmap texture list");
+    const TextureSampling sampling{TextureFilter::Bilinear, true};
+    expect_status(list.submit(mipmapped, quad, sampling), Status::Success,
+                  "submit mipmapped texture with bilinear filtering");
+    expect_true(test::recording().last_texture_sampling.filter ==
+                    TextureFilter::Bilinear &&
+                    test::recording().last_texture_sampling.mipmaps,
+                "record texture sampling policy");
+    expect_status(list.submit(base, quad, sampling),
+                  Status::TextureNotMipmapped,
+                  "reject mipmap sampling for base texture");
+    expect_status(list.finish(), Status::Success,
+                  "finish mipmap texture list");
+    expect_status(frame.finish(), Status::Success,
+                  "finish mipmap texture frame");
+    expect_status(mipmapped.release(), Status::Success,
+                  "release mipmapped texture");
+    expect_status(base.release(), Status::Success,
+                  "release base-level texture");
+    expect_status(pvr.shutdown(), Status::Success,
+                  "shutdown mipmap texture PVR");
+
+    expect_equal(test::recording().last_texture_allocate_bytes, 128,
+                 "record final base texture allocation bytes");
+    expect_equal(test::recording().last_texture_upload_bytes, 176,
+                 "record mipmap upload bytes");
+}
+
 void test_multiple_texture_shutdown_guard() {
     using namespace maishuji;
 
@@ -937,6 +1016,7 @@ int main() {
     test_scope_cleanup();
     test_colored_primitives();
     test_texture_ownership();
+    test_mipmap_texture();
     test_multiple_texture_shutdown_guard();
     test_texture_repeated_cycles();
 

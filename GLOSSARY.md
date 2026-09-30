@@ -118,6 +118,9 @@ Viewport(api):
 Mesh(api):
 	Describes span-backed indexed vertices that become submitted PVR triangles.
 
+Textured-mesh(api):
+	Represents an indexed mesh whose vertices carry UV coordinates for textured PVR triangles.
+
 OARGB(pvr):
 	Stores the packed per-vertex offset color used by the PVR polygon packet.
 

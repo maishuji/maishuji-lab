@@ -21,6 +21,14 @@ struct MeshVertex {
     Color offset_color{0, 0, 0, 0};
 };
 
+struct TexturedMeshVertex {
+    Vec3 position{};
+    float u = 0.0f;
+    float v = 0.0f;
+    Color color{};
+    Color offset_color{0, 0, 0, 0};
+};
+
 struct Fog {
     Color color{8, 8, 24, 255};
     float start = 2.0f;
@@ -60,6 +68,11 @@ struct Fog {
 
 struct Mesh {
     std::span<const MeshVertex> vertices{};
+    std::span<const std::uint16_t> indices{};
+};
+
+struct TexturedMesh {
+    std::span<const TexturedMeshVertex> vertices{};
     std::span<const std::uint16_t> indices{};
 };
 

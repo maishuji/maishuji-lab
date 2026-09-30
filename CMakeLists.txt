@@ -73,6 +73,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     target_compile_options(maishuji-pvr-asset PRIVATE
         -fno-exceptions -fno-rtti)
 
+    add_executable(maishuji-textured-3d
+        advanced_examples/03-textured-3d.cpp)
+    target_link_libraries(maishuji-textured-3d PRIVATE maishuji)
+    target_compile_options(maishuji-textured-3d PRIVATE
+        -fno-exceptions -fno-rtti)
+
     function(maishuji_enable_link_map target)
         target_link_options(${target} PRIVATE
             "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${target}.map")
@@ -91,6 +97,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-pvr-budget)
     maishuji_enable_link_map(maishuji-advanced-multilingual-text)
     maishuji_enable_link_map(maishuji-pvr-asset)
+    maishuji_enable_link_map(maishuji-textured-3d)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

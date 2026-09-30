@@ -5,7 +5,10 @@ HOST_TEST_EXE ?= maishuji-host-tests
 DC_BUILD_DIR ?= build-dreamcast
 DC_BUILD_TYPE ?= Release
 DC_IP ?=
+# Default lesson image used by `run-dc`; override DC_ELF to run another lesson.
 DC_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.elf
+# Default self-booting image produced by `dreamcast-smoke-cdi`.
+# Override DC_CDI when packaging a different ELF.
 DC_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.cdi
 DC_TEXTURED_ELF ?= $(DC_BUILD_DIR)/maishuji-textured-quad.elf
 DC_TEXTURED_CDI ?= $(DC_BUILD_DIR)/maishuji-textured-quad.cdi
@@ -41,7 +44,7 @@ KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture run-dc
 
 # Verify the pinned Dreamcast/KOS toolchain and image versions.
 # Use this first when a Dreamcast build fails or after entering the container.
@@ -79,7 +82,9 @@ dreamcast-configure: check-toolchain
 dreamcast-build: dreamcast-configure
 	./tools/with-kos.sh cmake --build $(DC_BUILD_DIR) --verbose
 
-dreamcast-cdi: dreamcast-build
+# Package the default PVR smoke ELF as a self-booting CDI.
+# Override DC_ELF and DC_CDI to package a different program.
+dreamcast-smoke-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_ELF)" -o "$(DC_CDI)" -n "maishuji-lab PVR smoke"
 
 dreamcast-lifecycle-cdi: dreamcast-build

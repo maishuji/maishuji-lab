@@ -50,10 +50,10 @@ For the Flycast serial-console and KOS `dbgio` findings, including the
 limitations of guest log capture in the tested Flatpak setup, see
 [`docs/flycast-serial-logs.md`](docs/flycast-serial-logs.md).
 
-To create an optional self-booting CDI, use the pinned container for packaging. If Flycast is installed as a Flatpak, launch it with read-only access to the build output:
+To create the default PVR smoke self-booting CDI, use the pinned container for packaging. If Flycast is installed as a Flatpak, launch it with read-only access to the build output:
 
 ```sh
-make dreamcast-cdi
+make dreamcast-smoke-cdi
 flatpak run --filesystem="$PWD/build-dreamcast:ro" org.flycast.Flycast \
   "$PWD/build-dreamcast/maishuji-pvr-smoke.cdi"
 ```
@@ -61,7 +61,7 @@ flatpak run --filesystem="$PWD/build-dreamcast:ro" org.flycast.Flycast \
 To check the rendered triangle automatically, first create the CDI in the pinned development container, then run the Flycast pixel test from the Linux host. It requires the Flycast Flatpak, an X11/XWayland display, `xdotool`, `xwininfo` (usually provided by `x11-utils`), and ImageMagick 6 or 7. Close any existing Flycast instance before the test. The test waits up to 30 seconds for three consecutive passing captures by default, checking averaged color regions inside and outside the triangle. The raw smoke gates rendering on its target runtime probes before submitting the triangle. It writes a screenshot beside the CDI, leaving the passing frame or last render-timeout frame for inspection. The launcher enables Flycast serial-console forwarding; set `FLYCAST_STABLE_SAMPLES` to adjust the required number of consecutive captures, and set `FLYCAST_REQUIRE_RUNTIME_MARKERS=1` to require the KOS log markers too.
 
 ```sh
-make dreamcast-cdi
+make dreamcast-smoke-cdi
 make flycast-smoke
 ```
 

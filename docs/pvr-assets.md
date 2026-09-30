@@ -44,8 +44,7 @@ for the one format used by the lesson, not a general PVR reader.
 If the PNG changes, rerun the converter, regenerate the byte-array header from
 the resulting `.pvr` with any binary-to-C++ dumper, and rebuild. The `.PVR`
 file remains the source asset; the header is only the embedding representation.
-The current implementation intentionally does not claim support for mipmaps,
-VQ compression, palette formats, GBIX chunks, or rectangular textures.
+The PVR asset example intentionally does not claim support for mipmaps, VQ compression, palette formats, GBIX chunks, or rectangular textures; the separate [mipmap texture lesson](mipmap-texture.md) demonstrates the supported uncompressed mipmap path.
 
 The PVR asset example renders a full-screen opaque blue quad first, then draws
 the PVR on the translucent list. ARGB4444 texels with zero alpha therefore

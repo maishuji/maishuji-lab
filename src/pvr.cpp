@@ -67,6 +67,32 @@ std::size_t texture_bytes(std::uint16_t width,
            static_cast<std::size_t>(height) * sizeof(std::uint16_t);
 }
 
+std::size_t mipmap_level_count(std::uint16_t width,
+                               std::uint16_t height) noexcept {
+    std::size_t count = 1;
+    while(width > 1 || height > 1) {
+        width = std::max<std::uint16_t>(1, width / 2);
+        height = std::max<std::uint16_t>(1, height / 2);
+        ++count;
+    }
+    return count;
+}
+
+std::size_t mipmap_texture_bytes(std::uint16_t width,
+                                 std::uint16_t height) noexcept {
+    // Uncompressed PVR mipmap storage begins with six bytes of alignment
+    // padding before the 1x1 level and then packs levels from small to large.
+    std::size_t bytes = 6;
+    while(true) {
+        bytes += texture_bytes(width, height);
+        if(width == 1 && height == 1)
+            break;
+        width = std::max<std::uint16_t>(1, width / 2);
+        height = std::max<std::uint16_t>(1, height / 2);
+    }
+    return bytes;
+}
+
 struct ClipVertex {
     Vec4 position{};
     Color color{};
@@ -296,6 +322,10 @@ const char *status_name(Status status) noexcept {
         return "texture upload data has the wrong size";
     case Status::TextureUploadFailed:
         return "texture upload failed";
+    case Status::TextureMipmapped:
+        return "texture uses a mipmap chain";
+    case Status::TextureNotMipmapped:
+        return "texture has no mipmap chain";
     case Status::TextureContextMismatch:
         return "texture belongs to a different PVR context";
     }
@@ -320,11 +350,17 @@ Texture::Texture(Texture &&other) noexcept
       handle_(other.handle_),
       width_(other.width_),
       height_(other.height_),
+      storage_bytes_(other.storage_bytes_),
+      mip_level_count_(other.mip_level_count_),
+      mipmapped_(other.mipmapped_),
       allocated_(other.allocated_) {
     other.owner_ = nullptr;
     other.handle_ = 0;
     other.width_ = 0;
     other.height_ = 0;
+    other.storage_bytes_ = 0;
+    other.mip_level_count_ = 0;
+    other.mipmapped_ = false;
     other.allocated_ = false;
 }
 
@@ -337,12 +373,18 @@ Texture &Texture::operator=(Texture &&other) noexcept {
     handle_ = other.handle_;
     width_ = other.width_;
     height_ = other.height_;
+    storage_bytes_ = other.storage_bytes_;
+    mip_level_count_ = other.mip_level_count_;
+    mipmapped_ = other.mipmapped_;
     allocated_ = other.allocated_;
 
     other.owner_ = nullptr;
     other.handle_ = 0;
     other.width_ = 0;
     other.height_ = 0;
+    other.storage_bytes_ = 0;
+    other.mip_level_count_ = 0;
+    other.mipmapped_ = false;
     other.allocated_ = false;
     return *this;
 }
@@ -364,6 +406,35 @@ Status Texture::allocate(Pvr &pvr, std::uint16_t width,
     handle_ = handle;
     width_ = width;
     height_ = height;
+    storage_bytes_ = texture_bytes(width, height);
+    mip_level_count_ = 1;
+    mipmapped_ = false;
+    allocated_ = true;
+    ++pvr.active_texture_count_;
+    return Status::Success;
+}
+
+Status Texture::allocate_mipmapped(Pvr &pvr, std::uint16_t width,
+                                    std::uint16_t height) noexcept {
+    if(allocated_)
+        return Status::TextureAlreadyAllocated;
+    if(!pvr.initialized_)
+        return Status::NotInitialized;
+    if(!valid_texture_dimensions(width, height) || width != height)
+        return Status::TextureInvalidDimensions;
+
+    detail::TextureHandle handle = 0;
+    const std::size_t bytes = mipmap_texture_bytes(width, height);
+    if(!pvr.backend_->texture_allocate(bytes, handle))
+        return Status::TextureAllocationFailed;
+
+    owner_ = &pvr;
+    handle_ = handle;
+    width_ = width;
+    height_ = height;
+    storage_bytes_ = bytes;
+    mip_level_count_ = mipmap_level_count(width, height);
+    mipmapped_ = true;
     allocated_ = true;
     ++pvr.active_texture_count_;
     return Status::Success;
@@ -372,6 +443,8 @@ Status Texture::allocate(Pvr &pvr, std::uint16_t width,
 Status Texture::upload(std::span<const std::uint16_t> pixels) noexcept {
     if(!allocated_ || owner_ == nullptr)
         return Status::TextureNotAllocated;
+    if(mipmapped_)
+        return Status::TextureMipmapped;
 
     const std::size_t expected_pixels =
         static_cast<std::size_t>(width_) * static_cast<std::size_t>(height_);
@@ -381,6 +454,22 @@ Status Texture::upload(std::span<const std::uint16_t> pixels) noexcept {
     if(!owner_->backend_->texture_upload(
            static_cast<detail::TextureHandle>(handle_), pixels.data(),
            texture_bytes(width_, height_)))
+        return Status::TextureUploadFailed;
+
+    return Status::Success;
+}
+
+Status Texture::upload_mip_chain(std::span<const std::uint8_t> data) noexcept {
+    if(!allocated_ || owner_ == nullptr)
+        return Status::TextureNotAllocated;
+    if(!mipmapped_)
+        return Status::TextureNotMipmapped;
+    if(data.size() != storage_bytes_)
+        return Status::TextureInvalidData;
+
+    if(!owner_->backend_->texture_upload(
+           static_cast<detail::TextureHandle>(handle_), data.data(),
+           storage_bytes_))
         return Status::TextureUploadFailed;
 
     return Status::Success;
@@ -404,6 +493,9 @@ Status Texture::release() noexcept {
     handle_ = 0;
     width_ = 0;
     height_ = 0;
+    storage_bytes_ = 0;
+    mip_level_count_ = 0;
+    mipmapped_ = false;
     allocated_ = false;
     return Status::Success;
 }
@@ -556,8 +648,14 @@ Status RenderList::submit(
 }
 
 Status RenderList::submit(
-    const Texture &texture,
-    const TexturedQuad &quad,
+    const Texture &texture, const TexturedQuad &quad,
+    const PrimitiveConfiguration &configuration) noexcept {
+    return submit(texture, quad, TextureSampling{}, configuration);
+}
+
+Status RenderList::submit(
+    const Texture &texture, const TexturedQuad &quad,
+    const TextureSampling &sampling,
     const PrimitiveConfiguration &configuration) noexcept {
     if(!active_ || owner_ == nullptr || owner_->owner_ == nullptr ||
        owner_->active_list_ != this)
@@ -566,11 +664,14 @@ Status RenderList::submit(
         return Status::TextureNotAllocated;
     if(texture.owner_ != owner_->owner_)
         return Status::TextureContextMismatch;
+    if(sampling.mipmaps && !texture.mipmapped_)
+        return Status::TextureNotMipmapped;
 
     return owner_->owner_->backend_->submit_textured_quad(
                list_type_,
                static_cast<detail::TextureHandle>(texture.handle_),
-               texture.width_, texture.height_, quad, configuration)
+               texture.width_, texture.height_, quad, texture.mipmapped_,
+               sampling, configuration)
                ? Status::Success
                : Status::PrimitiveSubmissionFailed;
 }
@@ -579,6 +680,15 @@ Status RenderList::submit(
     const Texture &texture, const TexturedMesh &mesh, const Camera &camera,
     const Transform &transform, const Viewport &viewport,
     const PrimitiveConfiguration &configuration) noexcept {
+    return submit(texture, mesh, camera, transform, viewport,
+                  TextureSampling{}, configuration);
+}
+
+Status RenderList::submit(
+    const Texture &texture, const TexturedMesh &mesh, const Camera &camera,
+    const Transform &transform, const Viewport &viewport,
+    const TextureSampling &sampling,
+    const PrimitiveConfiguration &configuration) noexcept {
     if(!active_ || owner_ == nullptr || owner_->owner_ == nullptr ||
        owner_->active_list_ != this)
         return Status::RenderListNotActive;
@@ -586,6 +696,8 @@ Status RenderList::submit(
         return Status::TextureNotAllocated;
     if(texture.owner_ != owner_->owner_)
         return Status::TextureContextMismatch;
+    if(sampling.mipmaps && !texture.mipmapped_)
+        return Status::TextureNotMipmapped;
     if(mesh.vertices.empty() || mesh.indices.empty() ||
        mesh.indices.size() % 3 != 0 ||
        !std::isfinite(viewport.width) || !std::isfinite(viewport.height) ||
@@ -649,7 +761,8 @@ Status RenderList::submit(
             };
             if(!owner_->owner_->backend_->submit_textured_triangle(
                    list_type_, static_cast<detail::TextureHandle>(texture.handle_),
-                   texture.width_, texture.height_, triangle, configuration))
+                   texture.width_, texture.height_, triangle, texture.mipmapped_,
+                   sampling, configuration))
                 return Status::PrimitiveSubmissionFailed;
         }
     }

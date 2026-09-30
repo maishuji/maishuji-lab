@@ -91,6 +91,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     target_compile_options(maishuji-terrain-walk PRIVATE
         -fno-exceptions -fno-rtti)
 
+    add_executable(maishuji-mipmap-texture
+        advanced_examples/06-mipmap-texture.cpp)
+    target_link_libraries(maishuji-mipmap-texture PRIVATE maishuji)
+    target_compile_options(maishuji-mipmap-texture PRIVATE
+        -fno-exceptions -fno-rtti)
+
     function(maishuji_enable_link_map target)
         target_link_options(${target} PRIVATE
             "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${target}.map")
@@ -112,6 +118,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-textured-3d)
     maishuji_enable_link_map(maishuji-heightmapped-terrain)
     maishuji_enable_link_map(maishuji-terrain-walk)
+    maishuji_enable_link_map(maishuji-mipmap-texture)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

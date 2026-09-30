@@ -93,7 +93,7 @@ bool texture_allocate(std::size_t bytes, detail::TextureHandle &handle) noexcept
     return true;
 }
 
-bool texture_upload(detail::TextureHandle handle, const std::uint16_t *pixels,
+bool texture_upload(detail::TextureHandle handle, const void *pixels,
                     std::size_t bytes) noexcept {
     (void)handle;
     (void)pixels;
@@ -112,10 +112,13 @@ void texture_free(detail::TextureHandle handle) noexcept {
 bool submit_textured_triangle(
     List list, detail::TextureHandle handle, std::uint16_t width,
     std::uint16_t height, const TexturedTriangle &triangle,
+    bool mipmapped, const TextureSampling &sampling,
     const PrimitiveConfiguration &configuration) noexcept {
     (void)handle;
     (void)width;
     (void)height;
+    (void)mipmapped;
+    state.last_texture_sampling = sampling;
     state.last_primitive_configuration = configuration;
     state.last_textured_triangle = triangle;
     ++state.textured_triangle_submit_calls;
@@ -126,10 +129,13 @@ bool submit_textured_triangle(
 bool submit_textured_quad(
     List list, detail::TextureHandle handle, std::uint16_t width,
     std::uint16_t height, const TexturedQuad &quad,
+    bool mipmapped, const TextureSampling &sampling,
     const PrimitiveConfiguration &configuration) noexcept {
     (void)handle;
     (void)width;
     (void)height;
+    (void)mipmapped;
+    state.last_texture_sampling = sampling;
     state.last_primitive_configuration = configuration;
     state.last_textured_quad = quad;
     ++state.textured_quad_submit_calls;

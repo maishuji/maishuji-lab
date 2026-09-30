@@ -130,6 +130,12 @@ Height-sampling(api):
 Maple-controller(kos):
 	Supplies Dreamcast controller buttons and joystick state through the Maple bus.
 
+Mipmap(texture):
+	Stores reduced-resolution texture levels selected for distant sampling.
+
+Texture-filter(pvr):
+	Selects nearest or bilinear sampling for a submitted textured polygon.
+
 UV-tiling(texture):
 	Repeats normalized texture coordinates across a mesh surface.
 

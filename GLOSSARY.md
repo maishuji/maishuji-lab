@@ -124,6 +124,12 @@ Textured-mesh(api):
 Heightmap(api):
 	Stores scalar elevation samples that become terrain vertex heights.
 
+Height-sampling(api):
+	Interpolates terrain elevation at a world-space position.
+
+Maple-controller(kos):
+	Supplies Dreamcast controller buttons and joystick state through the Maple bus.
+
 UV-tiling(texture):
 	Repeats normalized texture coordinates across a mesh surface.
 

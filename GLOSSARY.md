@@ -121,6 +121,12 @@ Mesh(api):
 Textured-mesh(api):
 	Represents an indexed mesh whose vertices carry UV coordinates for textured PVR triangles.
 
+Heightmap(api):
+	Stores scalar elevation samples that become terrain vertex heights.
+
+UV-tiling(texture):
+	Repeats normalized texture coordinates across a mesh surface.
+
 OARGB(pvr):
 	Stores the packed per-vertex offset color used by the PVR polygon packet.
 

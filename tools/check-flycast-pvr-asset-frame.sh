@@ -7,7 +7,7 @@ usage() {
 }
 
 fail() {
-    echo "Flycast controller-PVR frame check: $*" >&2
+    echo "Flycast PVR-asset frame check: $*" >&2
     exit 1
 }
 
@@ -89,7 +89,7 @@ awk \
         red_ok = red_r > 0.30 && red_g < 0.50 && red_b < 0.50
 
         if(!background_ok || !transparent_ok || !yellow_ok || !green_ok || !blue_ok || !red_ok) {
-            print "FAIL: expected the transparent controller PVR over the blue background."
+            print "FAIL: expected the transparent PVR asset over the blue background."
             printf "  background:       %.3f %.3f %.3f\n", background_r, background_g, background_b
             printf "  transparent corners: %.3f %.3f %.3f | %.3f %.3f %.3f | %.3f %.3f %.3f | %.3f %.3f %.3f\n", top_left_r, top_left_g, top_left_b, top_right_r, top_right_g, top_right_b, bottom_left_r, bottom_left_g, bottom_left_b, bottom_right_r, bottom_right_g, bottom_right_b
             printf "  yellow button:    %.3f %.3f %.3f\n", yellow_r, yellow_g, yellow_b
@@ -99,7 +99,7 @@ awk \
             exit 1
         }
 
-        print "PASS: Flycast rendered the transparent controller PVR asset."
+        print "PASS: Flycast rendered the transparent PVR asset."
         printf "  background:    %.3f %.3f %.3f\n", background_r, background_g, background_b
         printf "  transparent corners: %.3f %.3f %.3f | %.3f %.3f %.3f | %.3f %.3f %.3f | %.3f %.3f %.3f\n", top_left_r, top_left_g, top_left_b, top_right_r, top_right_g, top_right_b, bottom_left_r, bottom_left_g, bottom_left_b, bottom_right_r, bottom_right_g, bottom_right_b
         printf "  yellow button: %.3f %.3f %.3f\n", yellow_r, yellow_g, yellow_b

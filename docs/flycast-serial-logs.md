@@ -148,7 +148,7 @@ HiDPI scaling may produce a larger 4:3 capture. It uses ImageMagick's `-screen`
 capture and `+repage` to read visible OpenGL output without desktop-relative
 pixel offsets. Keep the test window unobscured. A guest completion marker is
 only one part of the result: the image must pass the lesson's pixel checker.
-The [controller alpha regression](pvr-assets.md#expected-output-and-transparency-regression)
+The [PVR asset alpha regression](pvr-assets.md#expected-output-and-transparency-regression)
 records a case where the marker passed while rendering was incorrect.
 
 The raw PVR smoke emits these markers:

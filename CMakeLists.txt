@@ -67,10 +67,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     target_compile_options(maishuji-advanced-multilingual-text PRIVATE
         -fno-exceptions -fno-rtti)
 
-    add_executable(maishuji-controller-pvr
-        advanced_examples/02-controller-pvr.cpp)
-    target_link_libraries(maishuji-controller-pvr PRIVATE maishuji)
-    target_compile_options(maishuji-controller-pvr PRIVATE
+    add_executable(maishuji-pvr-asset
+        advanced_examples/02-pvr-asset.cpp)
+    target_link_libraries(maishuji-pvr-asset PRIVATE maishuji)
+    target_compile_options(maishuji-pvr-asset PRIVATE
         -fno-exceptions -fno-rtti)
 
     function(maishuji_enable_link_map target)
@@ -90,7 +90,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-particle-batch)
     maishuji_enable_link_map(maishuji-pvr-budget)
     maishuji_enable_link_map(maishuji-advanced-multilingual-text)
-    maishuji_enable_link_map(maishuji-controller-pvr)
+    maishuji_enable_link_map(maishuji-pvr-asset)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

@@ -27,13 +27,13 @@ DC_BUDGET_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-budget.elf
 DC_BUDGET_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-budget.cdi
 DC_ADVANCED_TEXT_ELF ?= $(DC_BUILD_DIR)/maishuji-advanced-multilingual-text.elf
 DC_ADVANCED_TEXT_CDI ?= $(DC_BUILD_DIR)/maishuji-advanced-multilingual-text.cdi
-DC_CONTROLLER_PVR_ELF ?= $(DC_BUILD_DIR)/maishuji-controller-pvr.elf
-DC_CONTROLLER_PVR_CDI ?= $(DC_BUILD_DIR)/maishuji-controller-pvr.cdi
+DC_PVR_ASSET_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-asset.elf
+DC_PVR_ASSET_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-asset.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-controller-pvr-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-controller-pvr run-dc
+.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset run-dc
 
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
@@ -80,8 +80,8 @@ dreamcast-budget-cdi: dreamcast-build
 dreamcast-advanced-text-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_ADVANCED_TEXT_ELF)" -o "$(DC_ADVANCED_TEXT_CDI)" -n "maishuji-lab advanced multilingual text"
 
-dreamcast-controller-pvr-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_CONTROLLER_PVR_ELF)" -o "$(DC_CONTROLLER_PVR_CDI)" -n "maishuji-lab controller PVR asset"
+dreamcast-pvr-asset-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_PVR_ASSET_ELF)" -o "$(DC_PVR_ASSET_CDI)" -n "maishuji-lab PVR asset"
 
 dreamcast-fogged-3d-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_FOGGED_3D_ELF)" -o "$(DC_FOGGED_3D_CDI)" -n "maishuji-lab fogged 3D"
@@ -137,8 +137,8 @@ flycast-budget:
 flycast-advanced-text:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-advanced-text-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_ADVANCED_TEXT FLYCAST_STABLE_SAMPLES=1 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: advanced multilingual text passed" ./tools/test-flycast-render.sh "$(DC_ADVANCED_TEXT_CDI)"
 
-flycast-controller-pvr:
-	FLYCAST_FRAME_CHECKER=tools/check-flycast-controller-pvr-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_CONTROLLER_PVR FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: controller PVR passed (PVRT ARGB4444; 256x256; translucent alpha)" ./tools/test-flycast-render.sh "$(DC_CONTROLLER_PVR_CDI)"
+flycast-pvr-asset:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-pvr-asset-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_ASSET FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: PVR asset passed (PVRT ARGB4444; 256x256; translucent alpha)" ./tools/test-flycast-render.sh "$(DC_PVR_ASSET_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

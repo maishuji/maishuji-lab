@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdint>
 
-namespace maishuji::controller_pvr_asset {
+namespace maishuji::pvr_asset {
 
 inline constexpr std::uint16_t width = 256;
 inline constexpr std::uint16_t height = 256;
@@ -8203,4 +8203,4 @@ inline constexpr std::array<std::uint8_t, 131088> bytes{
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-} // namespace maishuji::controller_pvr_asset
+} // namespace maishuji::pvr_asset

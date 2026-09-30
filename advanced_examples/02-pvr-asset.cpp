@@ -1,6 +1,6 @@
 #include "maishuji/pvr.hpp"
 
-#include "assets/controller_pvr.hpp"
+#include "assets/pvr_asset.hpp"
 
 #include <array>
 #include <cstddef>
@@ -121,13 +121,13 @@ constexpr maishuji::Quad make_background() noexcept {
     };
 }
 
-constexpr maishuji::TexturedQuad make_controller_quad() noexcept {
+constexpr maishuji::TexturedQuad make_asset_quad() noexcept {
     constexpr float left = 192.0f;
     constexpr float top = 112.0f;
     constexpr float right = left +
-                            static_cast<float>(maishuji::controller_pvr_asset::width);
+                            static_cast<float>(maishuji::pvr_asset::width);
     constexpr float bottom = top +
-                             static_cast<float>(maishuji::controller_pvr_asset::height);
+                             static_cast<float>(maishuji::pvr_asset::height);
     constexpr maishuji::Color white{255, 255, 255, 255};
     return {
         {left, top, 1.0f, 0.0f, 0.0f, white},
@@ -140,7 +140,7 @@ constexpr maishuji::TexturedQuad make_controller_quad() noexcept {
 maishuji::Status run_frame(
     maishuji::Pvr &pvr, const maishuji::Texture &texture,
     const maishuji::Quad &background,
-    const maishuji::TexturedQuad &controller) noexcept {
+    const maishuji::TexturedQuad &asset) noexcept {
     maishuji::Frame frame;
     maishuji::Status status = pvr.begin_frame(frame);
     if(maishuji::failed(status))
@@ -161,7 +161,7 @@ maishuji::Status run_frame(
     status = frame.begin_list(translucent, maishuji::List::Translucent);
     if(maishuji::failed(status))
         return status;
-    status = translucent.submit(texture, controller);
+    status = translucent.submit(texture, asset);
     if(maishuji::failed(status))
         return status;
     status = translucent.finish();
@@ -174,20 +174,20 @@ maishuji::Status run_frame(
 } // namespace
 
 int main() {
-    static_assert(maishuji::controller_pvr_asset::bytes.size() == 131088);
+    static_assert(maishuji::pvr_asset::bytes.size() == 131088);
     alignas(32) static std::array<std::uint16_t,
-                                  maishuji::controller_pvr_asset::width *
-                                      maishuji::controller_pvr_asset::height>
+                                  maishuji::pvr_asset::width *
+                                      maishuji::pvr_asset::height>
         pixels{};
 
     PvrImage parsed_image{};
     const std::span<const std::uint8_t> file{
-        maishuji::controller_pvr_asset::bytes.data(),
-        maishuji::controller_pvr_asset::bytes.size()};
+        maishuji::pvr_asset::bytes.data(),
+        maishuji::pvr_asset::bytes.size()};
     if(!parse_pvr(file, parsed_image) ||
        !decode_pvr(parsed_image, std::span<std::uint16_t>{pixels})) {
         dbglog(DBG_ERROR,
-               "maishuji: controller PVR parse or Morton decode failed\n");
+               "maishuji: PVR asset parse or Morton decode failed\n");
         return 1;
     }
 
@@ -202,7 +202,7 @@ int main() {
     maishuji::Texture texture;
     status = texture.allocate(pvr, parsed_image.width, parsed_image.height);
     if(maishuji::failed(status)) {
-        dbglog(DBG_ERROR, "maishuji: controller texture allocation failed: %s\n",
+        dbglog(DBG_ERROR, "maishuji: PVR asset texture allocation failed: %s\n",
                maishuji::status_name(status));
         (void)pvr.shutdown();
         return 1;
@@ -210,7 +210,7 @@ int main() {
 
     status = texture.upload(std::span<const std::uint16_t>{pixels});
     if(maishuji::failed(status)) {
-        dbglog(DBG_ERROR, "maishuji: controller texture upload failed: %s\n",
+        dbglog(DBG_ERROR, "maishuji: PVR asset texture upload failed: %s\n",
                maishuji::status_name(status));
         (void)texture.release();
         (void)pvr.shutdown();
@@ -218,12 +218,12 @@ int main() {
     }
 
     constexpr maishuji::Quad background = make_background();
-    constexpr maishuji::TexturedQuad controller = make_controller_quad();
+    constexpr maishuji::TexturedQuad asset = make_asset_quad();
     for(int frame = 0; frame < frames; ++frame) {
-        status = run_frame(pvr, texture, background, controller);
+        status = run_frame(pvr, texture, background, asset);
         if(maishuji::failed(status)) {
             dbglog(DBG_ERROR,
-                   "maishuji: controller PVR frame %d failed: %s\n",
+                   "maishuji: PVR asset frame %d failed: %s\n",
                    frame, maishuji::status_name(status));
             (void)texture.release();
             (void)pvr.shutdown();
@@ -232,13 +232,13 @@ int main() {
     }
 
     dbglog(DBG_NOTICE,
-           "maishuji: controller PVR passed (PVRT ARGB4444; 256x256; translucent alpha)\n");
+           "maishuji: PVR asset passed (PVRT ARGB4444; 256x256; translucent alpha)\n");
 
     for(int frame = 0; frame < capture_hold_frames; ++frame) {
-        status = run_frame(pvr, texture, background, controller);
+        status = run_frame(pvr, texture, background, asset);
         if(maishuji::failed(status)) {
             dbglog(DBG_ERROR,
-                   "maishuji: controller capture hold frame %d failed: %s\n",
+                   "maishuji: PVR asset capture hold frame %d failed: %s\n",
                    frame, maishuji::status_name(status));
             (void)texture.release();
             (void)pvr.shutdown();
@@ -248,7 +248,7 @@ int main() {
 
     status = texture.release();
     if(maishuji::failed(status)) {
-        dbglog(DBG_ERROR, "maishuji: controller texture release failed: %s\n",
+        dbglog(DBG_ERROR, "maishuji: PVR asset texture release failed: %s\n",
                maishuji::status_name(status));
         (void)pvr.shutdown();
         return 1;

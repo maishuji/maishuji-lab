@@ -37,7 +37,7 @@ make dreamcast-build DC_BUILD_TYPE=Release
 The raw reference output is build-dreamcast/maishuji-pvr-smoke.elf. The lifecycle example is build-dreamcast/maishuji-hello-pvr.elf; the colored primitive example is build-dreamcast/maishuji-colored-primitives.elf; the textured example is build-dreamcast/maishuji-textured-quad.elf; the pixel-sprite example is build-dreamcast/maishuji-pixel-sprites.elf; the basic-3D example is build-dreamcast/maishuji-basic-3d.elf; the fogged
 3D example is build-dreamcast/maishuji-fogged-3d.elf; the text example is build-dreamcast/maishuji-pvr-text.elf; the particle example is build-dreamcast/maishuji-particle-batch.elf; the packet-budget example is build-dreamcast/maishuji-pvr-budget.elf; the advanced multilingual text example is build-dreamcast/maishuji-advanced-multilingual-text.elf. The raw example initializes video and PVR, then displays a colored triangle. The pixel-sprite example compares logical-grid snapping with direct subpixel output coordinates using a deterministic two-cell texture atlas. The basic-3D example projects a colored indexed cube through a camera and model transform.
 The PVR lighting example compares ordinary Gouraud vertex colors with per-vertex additive offset colors. The PVR text example rasterizes the BIOS font into an ARGB4444 texture and submits it through the punch-through list. The particle example submits 24 moving textured quads through one punch-through list and documents the structural packet count. The packet-budget example submits a fixed mix through all three lists and reports its structural header, vertex, primitive-call, and packet-byte budget. The advanced multilingual text example displays Japanese, Traditional Chinese, and English through a small open-source glyph atlas.
-The controller PVR asset example parses a generated square-twiddled PVRT file,
+The PVR asset example parses a generated square-twiddled PVRT file,
 detwiddles its ARGB4444 payload, uploads it through the texture API, and draws the transparent controller over a colored background.
 
 To send the ELF to a Dreamcast running `dcload-ip` over a Broadband Adapter, replace the placeholder with the console's address:
@@ -156,11 +156,11 @@ make flycast-advanced-text
 
 It uses an open-source Noto-derived ARGB4444 atlas and a deliberately narrow UTF-8 decoder; see [docs/advanced-text.md](docs/advanced-text.md) for the asset notice and limitations.
 
-For the controller PVR asset example:
+For the PVR asset example:
 
 ~~~sh
-make dreamcast-controller-pvr-cdi
-make flycast-controller-pvr
+make dreamcast-pvr-asset-cdi
+make flycast-pvr-asset
 ~~~
 
 The external conversion command and generated-file workflow are documented in [docs/pvr-assets.md](docs/pvr-assets.md). Emulator validation still does not replace real Dreamcast hardware validation.

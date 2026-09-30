@@ -39,11 +39,11 @@ Flycast's own emulator log.
 
 ## Basic Flycast command
 
-Build the self-booting image in the pinned development container, then launch
+Build the default PVR smoke self-booting image in the pinned development container, then launch
 it from the host. Put Flycast options before the CDI path:
 
 ```sh
-make dreamcast-cdi
+make dreamcast-smoke-cdi
 
 flatpak run \
   --filesystem="$PWD/build-dreamcast:ro" \
@@ -169,7 +169,7 @@ The Flycast test script captures Flycast output in a temporary log and can
 optionally require all three markers:
 
 ```sh
-make dreamcast-cdi
+make dreamcast-smoke-cdi
 FLYCAST_REQUIRE_RUNTIME_MARKERS=1 make flycast-smoke
 ```
 
@@ -184,7 +184,7 @@ KOS output into the captured Flycast log. In the tested Flatpak setup, the
 default is intentionally render-gated:
 
 ```sh
-make dreamcast-cdi
+make dreamcast-smoke-cdi
 make flycast-smoke
 ```
 

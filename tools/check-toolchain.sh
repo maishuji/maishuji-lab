@@ -6,8 +6,25 @@ repo_root="$(cd -- "$script_dir/.." && pwd)"
 # shellcheck source=toolchain.lock
 source "$script_dir/toolchain.lock"
 
+is_container_environment() {
+    [[ -f /.dockerenv || -f /run/.containerenv ||
+       -n "${REMOTE_CONTAINERS:-}" ||
+       -n "${DEV_CONTAINERS:-}" ||
+       -n "${CODESPACES:-}" ]]
+}
+
+warn_if_host_environment() {
+    if is_container_environment; then
+        return
+    fi
+
+    printf "Hint: no Docker or Dev Container marker was detected; this check is using host KOS at %s.\n" "${KOS_BASE:-unset}" >&2
+    printf "Hint: reopen this project in its pinned Dev Container, or intentionally align the local toolchain with tools/toolchain.lock.\n" >&2
+}
+
 fail() {
     printf 'Dreamcast toolchain check failed: %s\n' "$1" >&2
+    warn_if_host_environment
     exit 1
 }
 

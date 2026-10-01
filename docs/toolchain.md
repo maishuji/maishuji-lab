@@ -29,6 +29,8 @@ Open this checkout in VS Code and run **Dev Containers: Reopen in Container**. T
 
 The check validates KOS's version, the compiler, ABI, linker, Newlib, CMake, and Make against the lock file. It reports whether the optional packaging and hardware upload tools are available.
 
+When a mismatch is detected outside a Docker or Dev Container environment, the checker prints a host-toolchain hint. Local installations remain supported when every locked component matches; the hint is diagnostic rather than a prohibition.
+
 Docker users can explicitly fetch the locked environment with:
 
 ```sh

@@ -168,3 +168,24 @@ Glyph-atlas(texture):
 
 UTF-8(api):
 	Encodes Unicode code points as variable-length bytes that a text path must decode before glyph lookup.
+
+OBJ(asset):
+	Stores human-readable vertex, UV, and face records used as authoring input for the offline model converter.
+
+DCM1(asset):
+	Stores the versioned compact vertex-and-index blob decoded by the model-loader lesson.
+
+Q8.8(asset):
+	Represents a signed fixed-point model coordinate with eight integer and eight fractional bits.
+
+Q0.16(asset):
+	Represents a normalized unsigned fixed-point UV coordinate with sixteen fractional bits.
+
+Model-loader(api):
+	Loads a validated compact mesh asset into fixed arrays before submitting it through PVR.
+
+UV-seam(mesh):
+	Duplicates a position when adjacent faces need different texture coordinates.
+
+glTF(asset):
+	Describes scenes, buffers, materials, and resources in a richer interchange format that this lesson converts offline.

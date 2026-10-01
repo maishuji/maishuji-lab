@@ -198,3 +198,27 @@ make flycast-mipmap-texture
 The external conversion command and generated-file workflow are documented in [docs/pvr-assets.md](docs/pvr-assets.md). Emulator validation still does not replace real Dreamcast hardware validation.
 
 CI runs the host C++20 smoke check, builds Debug and Release Dreamcast ELFs in the pinned container, and publishes each ELF with its linker map, size summary, toolchain lock, and build manifest. Cross-compilation confirms the toolchain and linker setup; runtime results are recorded separately from build results.
+
+## Advanced model loader
+
+The model-loader lesson converts a readable Wavefront OBJ satellite into a
+compact DCM1 asset, validates it on the Dreamcast, expands it into the existing
+textured indexed-mesh API, and renders it with a generated 32x32 ARGB4444
+texture. It deliberately keeps scene graphs, materials, animation, and texture
+conversion out of the target loader; the study and format limits are recorded
+in [docs/model-loader.md](docs/model-loader.md).
+
+Regenerate the embedded model header after changing the source OBJ:
+
+~~~sh
+python3 tools/obj-to-dcmodel.py \
+  advanced_examples/assets/satellite.obj \
+  advanced_examples/assets/model_asset.hpp
+~~~
+
+Then package and check the lesson with:
+
+~~~sh
+make dreamcast-model-loader-cdi
+make flycast-model-loader
+~~~

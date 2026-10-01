@@ -22,6 +22,15 @@ make host-run
 make host-test
 ```
 
+Dreamcast cross-build and packaging targets use the pinned KOS container. From the host, dispatch them without opening a separate container terminal:
+
+```sh
+make in-container TARGET=dreamcast-model-loader-cdi
+make flycast-model-loader
+```
+
+You can forward Make variables to the container, for example `make in-container TARGET=dreamcast-build DC_BUILD_TYPE=Debug`. When already inside the Dev Container, the dispatcher runs the target directly. Flycast and native host targets remain local.
+
 See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, [docs/pixel-art.md](docs/pixel-art.md) for logical pixel coordinates, [docs/spatial-math.md](docs/spatial-math.md) for transforms and cameras, [docs/meshes.md](docs/meshes.md) for indexed projection, [docs/textured-3d.md](docs/textured-3d.md) for the textured 3D lesson, [docs/heightmapped-terrain.md](docs/heightmapped-terrain.md) for the heightmapped terrain lesson, [docs/terrain-walk.md](docs/terrain-walk.md) for controller movement and height sampling, [docs/mipmap-texture.md](docs/mipmap-texture.md) for mipmap allocation and filtering, [docs/basic-3d.md](docs/basic-3d.md) for the 3D example, [docs/fog.md](docs/fog.md) for camera-space linear fog, [docs/text.md](docs/text.md) for BIOS-font text as a PVR texture, [docs/particles.md](docs/particles.md) for repeated textured submissions and packet budgets, [docs/budgets.md](docs/budgets.md) for the mixed-list packet budget lesson, [docs/advanced-text.md](docs/advanced-text.md) for the multilingual atlas example, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
 See [docs/lighting.md](docs/lighting.md) for the offset-color lighting lesson and its KOS polygon-header mapping.
 
@@ -219,6 +228,6 @@ python3 tools/obj-to-dcmodel.py \
 Then package and check the lesson with:
 
 ~~~sh
-make dreamcast-model-loader-cdi
+make in-container TARGET=dreamcast-model-loader-cdi
 make flycast-model-loader
 ~~~

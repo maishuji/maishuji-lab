@@ -184,8 +184,4 @@ replace a physical-console performance run.
 
 ## Validation boundary
 
-The converter was checked on 2026-10-01 with Python 3 and produced the counts
-above. The target ELF and Flycast run must still be performed in the pinned
-KOS container; a successful host build does not establish that KOS headers,
-the SH-4 ABI, PVR texture allocation, or runtime rendering are correct. No
-physical Dreamcast run is claimed by this document.
+The converter was checked on 2026-10-01 with Python 3 and produced the counts above. The KOS 2.3.0 / GCC 16.2.0 image built the target and its model-loader CDI passed four stable Flycast captures. This validates the fixture in the tested emulator setup; a successful host build does not establish physical-console performance. No physical Dreamcast run is claimed by this document.

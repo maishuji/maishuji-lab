@@ -8,19 +8,19 @@ frame-rate results.
 ## Scope and reproduction
 
 The comparison uses the pinned maishuji/dc-kos-image digest
-sha256:21832edbd57c4eb91b316c61b61008a64344703f476197887601aea5422b9f3f
-(KallistiOS 2.2.2, GCC 15.2.1, -m4-single-only). From the repository root:
+sha256:f89d754629d003f842f8e3a37e5082669542ef965123380a5541157138064f3c
+(KallistiOS 2.3.0, GCC 16.2.0, -m4-single). From the repository root:
 
 ~~~sh
 make host-test
 make host-run
 docker run --rm --user 1000:1000 \
   -v "$PWD:/workspace" -w /workspace \
-  maishuji/dc-kos-image@sha256:21832edbd57c4eb91b316c61b61008a64344703f476197887601aea5422b9f3f \
+  maishuji/dc-kos-image@sha256:f89d754629d003f842f8e3a37e5082669542ef965123380a5541157138064f3c \
   make dreamcast-textured-cdi DC_BUILD_TYPE=Release
 docker run --rm --user 1000:1000 \
   -v "$PWD:/workspace" -w /workspace \
-  maishuji/dc-kos-image@sha256:21832edbd57c4eb91b316c61b61008a64344703f476197887601aea5422b9f3f \
+  maishuji/dc-kos-image@sha256:f89d754629d003f842f8e3a37e5082669542ef965123380a5541157138064f3c \
   ./tools/with-kos.sh sh-elf-size \
   build-dreamcast/maishuji-pvr-smoke.elf \
   build-dreamcast/maishuji-colored-primitives.elf \

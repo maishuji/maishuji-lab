@@ -2,9 +2,8 @@
 
 This document records the raw baseline used to define the maishuji-lab
 rendering abstractions. The target source of truth is the pinned KallistiOS
-environment in [`tools/toolchain.lock`](../tools/toolchain.lock): KOS 2.2.2,
-source snapshot `08FEB26`, commit
-`0aa363a145ead0c6549e77bc7f468dfd8e10134f`.
+environment in [`tools/toolchain.lock`](../tools/toolchain.lock): KOS 2.3.0, source snapshot
+`06SEP26`, commit `63702a858c17c915b564b378407b1576c78668ec`.
 
 The workstation KOS installation is not evidence for this baseline. Target
 builds must run in the pinned development container or CI image. The current
@@ -63,7 +62,7 @@ matters to the library:
 - exceptions and RTTI disabled for target code;
 - no LTO at link time;
 - KOS's `kos-c++` compiler/linker wrappers and startup objects;
-- `-m4-single-only` reapplied by `tools/with-kos.sh` after KOS environment
+- `-m4-single` reapplied by `tools/with-kos.sh` after KOS environment
   setup, for both compile and link flags.
 
 The pinned Debug CMake command additionally uses `-DFRAME_POINTERS` and
@@ -251,7 +250,7 @@ The pinned build and emulator provide the following evidence:
 The raw baseline adds the following evidence:
 
 - the explicit three-list, non-DMA `pvr_init_params_t` configuration builds in
-  both Debug and Release with the pinned KOS 2.2.2 image;
+  both Debug and Release with the pinned KOS 2.3.0 image;
 - both the CMake path and the minimal native KOS Makefile path build the raw
   reference ELF with the pinned compiler and linker wrappers;
 - the pinned Debug CDI boots in Flycast v2.7 and passes three consecutive

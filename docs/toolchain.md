@@ -2,17 +2,17 @@
 
 The supported initial build environment is the Linux/amd64 Dreamcast image pinned by digest in [`tools/toolchain.lock`](../tools/toolchain.lock). The same digest is used by the VS Code development container and CI. Do not combine KOS headers, static libraries, or SH-4 flags from different toolchain installations.
 
-The image is based on the tag `maishuji/dc-kos-image:15.2.1-dev-08feb26-gdb-kp08feb26`, whose inspected manifest digest is `sha256:21832edbd57c4eb91b316c61b61008a64344703f476197887601aea5422b9f3f`. Its verified configuration is:
+The image is based on the tag `maishuji/dc-kos-image:16.2.0-06sep26`, whose inspected manifest digest is `sha256:f89d754629d003f842f8e3a37e5082669542ef965123380a5541157138064f3c`. Its verified configuration is:
 
 | Component | Pinned value |
 | --- | --- |
 | Platform | `linux/amd64` |
-| KallistiOS | `2.2.2`, source snapshot `08FEB26`, commit `0aa363a145ead0c6549e77bc7f468dfd8e10134f` |
-| SH compiler | GCC `15.2.1` (20260214 build) |
-| Binutils | `2.45.1` |
+| KallistiOS | `2.3.0`, source snapshot `06SEP26`, commit `63702a858c17c915b564b378407b1576c78668ec` |
+| SH compiler | GCC `16.2.0` |
+| Binutils | `2.47.20260726` |
 | Newlib | `4.6.0` |
 | SH-4 sub-architecture | `pristine` |
-| SH-4 floating-point ABI | `-m4-single-only` |
+| SH-4 floating-point ABI | `-m4-single` |
 | CMake | `3.31.4` |
 | GNU Make | `4.4.1` |
 | Extra tools | `mkdcdisc` and `dc-tool-ip` |
@@ -32,14 +32,14 @@ The check validates KOS's version, the compiler, ABI, linker, Newlib, CMake, and
 Docker users can explicitly fetch the locked environment with:
 
 ```sh
-docker pull maishuji/dc-kos-image@sha256:21832edbd57c4eb91b316c61b61008a64344703f476197887601aea5422b9f3f
+docker pull maishuji/dc-kos-image@sha256:f89d754629d003f842f8e3a37e5082669542ef965123380a5541157138064f3c
 ```
 
-Dreamcast builds and CI use this container. A host's preinstalled KOS is not an interchangeable substitute: for example, the observed `/opt/toolchains/dc/kos` on the workstation reports KOS `2.3.0`, GCC `15.2.0`, and `-m4-single`. Host C++ builds use the native compiler and never link target KOS libraries.
+Dreamcast builds and CI use this container. The workstation KOS installation is not an interchangeable substitute: it reports KOS `2.3.0`, GCC `15.2.0`, and `-m4-single`, while the pinned image uses GCC `16.2.0` and the complete locked image stack. Host C++ builds use the native compiler and never link target KOS libraries.
 
-The installed template originally used different image tags for development and CI. This project pins the same manifest for both. The newer `16.2.0-06sep26-kp18jul26` image is available on the workstation, but its GCC 16.2.0 toolchain falls back to the `-m4-single-only` ABI. Keep the established environment fixed until a compiler and ABI upgrade has passed the same checks and a target smoke run.
+The installed template originally used different image tags for development and CI. This project pins the same KOS `2.3.0` manifest for both. The locked image uses GCC `16.2.0`, KOS snapshot `06SEP26`, and `-m4-single`; keep target builds inside this complete environment so the compiler, headers, libraries, and ABI remain aligned.
 
-KOS's environment script probes `-m4-single` and may choose it. This image's library ABI is locked to `-m4-single-only`, so the wrapper overrides the detected choice after the environment loads and removes any conflicting ABI option from compile and link flags. The lock check verifies both flags and rejects a conflicting `-m4-single` token. Keep target builds inside this image because the workstation's separate KOS installation uses a different ABI.
+KOS environment scripts probe `-m4-single`, which is also the ABI locked by this image. The wrapper removes both single-precision variants before reapplying the locked `-m4-single` flag to compile and link commands. The lock check rejects `-m4-single-only` as the conflicting ABI. Keep target builds inside this image because the workstation GCC and KOS versions differ from the pinned stack.
 
 The project minimum is CMake `3.13`, matching the minimum required by KOS's supplied CMake toolchain. The pinned image provides CMake `3.31.4`. Dreamcast builds use KOS's `kallistios.toolchain.cmake` file and Unix Makefiles; host builds use a separate build directory and native compiler.
 

@@ -12,7 +12,7 @@ namespace maishuji::detail {
 namespace {
 
 constexpr std::uint32_t punch_through_alpha_reference = 0x80;
-// KOS 2.2.2 does not export the newer PVR_PT_ALPHA_REF name.
+// Keep the raw register value explicit at the PVR boundary.
 constexpr std::uint32_t punch_through_alpha_register = 0x011c;
 
 int bin_size(bool enabled) noexcept {

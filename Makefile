@@ -45,13 +45,19 @@ DC_MODEL_LOADER_CDI ?= $(DC_BUILD_DIR)/maishuji-model-loader.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
+CONTAINER_RUNTIME ?= docker
 
-.PHONY: check-toolchain host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader run-dc
+.PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader run-dc
 
 # Verify the pinned Dreamcast/KOS toolchain and image versions.
 # Use this first when a Dreamcast build fails or after entering the container.
 check-toolchain:
 	./tools/with-kos.sh ./tools/check-toolchain.sh
+
+# Dispatch a Make target through the pinned KOS container when called from the host.
+# Flycast and native host targets stay on the workstation.
+in-container:
+	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" ./tools/in-container.sh "$(TARGET)" $(MAKEOVERRIDES)
 
 # Generate the host CMake build directory in Debug mode.
 # Usually invoked automatically by host-build, host-run, and host-test.

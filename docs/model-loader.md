@@ -11,7 +11,7 @@ Build and run the lesson with:
 python3 tools/obj-to-dcmodel.py \
   advanced_examples/assets/satellite.obj \
   advanced_examples/assets/model_asset.hpp
-make dreamcast-model-loader-cdi
+make in-container TARGET=dreamcast-model-loader-cdi
 make flycast-model-loader
 ~~~
 

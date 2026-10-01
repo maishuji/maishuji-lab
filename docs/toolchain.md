@@ -31,6 +31,19 @@ The check validates KOS's version, the compiler, ABI, linker, Newlib, CMake, and
 
 When a mismatch is detected outside a Docker or Dev Container environment, the checker prints a host-toolchain hint. Local installations remain supported when every locked component matches; the hint is diagnostic rather than a prohibition.
 
+## Run Dreamcast Make targets from the host
+
+Dreamcast build and packaging targets require the pinned KOS image. The generic `in-container` target dispatches a Make goal through that image when called from the host and runs the goal directly when already inside a Docker or Dev Container:
+
+```sh
+make in-container TARGET=dreamcast-build DC_BUILD_TYPE=Debug
+make in-container TARGET=dreamcast-model-loader-cdi
+```
+
+Additional Make variable assignments are forwarded to the inner Make process. The dispatcher mounts the repository at `/workspace`, uses the locked `linux/amd64` image, and maps the current user and group so generated artifacts remain writable by the host. Set `CONTAINER_RUNTIME=podman` when using a compatible Podman installation instead of Docker.
+
+The dispatcher rejects `flycast-*` and `host-*` goals because those require the workstation display, Flatpak, or native compiler. After producing a CDI, run its Flycast target directly on the host, for example `make flycast-model-loader`.
+
 Docker users can explicitly fetch the locked environment with:
 
 ```sh

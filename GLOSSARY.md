@@ -1,34 +1,40 @@
 # Dreamcast glossary
 
 IgnoreTexA(pvr):
-	Forces sampled texture alpha to opaque when set; KOS exposes this inverted flag as txr.alpha.
+	Means "Ignore Texture Alpha" and forces sampled texture alpha to opaque when set; KOS exposes this inverted flag as txr.alpha.
 
 PT_ALPHA_REF(pvr):
-	Defines the global alpha threshold below which punch-through texels are discarded.
+	Means "Punch-Through Alpha Reference" and defines the global alpha threshold below which punch-through texels are discarded.
 
 DMA(pvr):
-	Represents direct memory access used to move data without a CPU copy for every word.
+	Means "Direct Memory Access" and moves data without a CPU copy for every word.
 
 PVR(rendering):
-	Represents the Dreamcast's PowerVR2 hardware and its tile-based polygon pipeline.
+	Means "PowerVR" and represents the Dreamcast's PowerVR2 hardware and its tile-based polygon pipeline.
+
+Tile-coverage(pvr):
+	Counts the screen tiles touched by a submitted polygon's conservative bounds.
+
+Overdraw(pvr):
+	Represents repeated fragment work caused by multiple visible polygons covering the same pixels.
 
 KOS(platform):
-	Provides the public operating-system APIs, startup code, and device drivers used by the project.
+	Means "KallistiOS" and provides the public operating-system APIs, startup code, and device drivers used by the project.
 
 TA(pvr):
-	Receives submitted polygon data and builds the tile lists consumed by the PVR renderer.
+	Means "Tile Accelerator" and receives submitted polygon data and builds the tile lists consumed by the PVR renderer.
 
 VRAM(pvr):
-	Stores texture data and PVR-managed rendering buffers in the Dreamcast's video memory.
+	Means "Video RAM" and stores texture data and PVR-managed rendering buffers in the Dreamcast's video memory.
 
 OPB(pvr):
-	Stores per-tile references to opaque, punch-through, and translucent polygon data.
+	Means "Object Pointer Buffer" and stores per-tile references to opaque, punch-through, and translucent polygon data.
 
 G2(bus):
 	Connects the SH-4 system bus to Dreamcast peripherals such as the PVR and AICA.
 
 SH-4(cpu):
-	Executes the game and rendering code on the Dreamcast's 32-bit RISC processor.
+	Means "SuperH-4" and executes the game and rendering code on the Dreamcast's 32-bit RISC processor.
 
 RenderList(api):
 	Represents one active PVR polygon list within a frame and its submission lifetime.
@@ -37,13 +43,13 @@ Frame(api):
 	Owns one scene submission interval and coordinates its render-list lifetimes.
 
 ROMDISK(asset):
-	Embeds application data into the executable image for predictable Dreamcast access.
+	Means "ROM disk" and embeds application data into the executable image for predictable Dreamcast access.
 
 Flycast(emulator):
 	Emulates Dreamcast hardware for development checks when a physical console is unavailable.
 
 CDI(disc-image):
-	Packages a bootable Dreamcast program and its assets into an image accepted by emulators or optical-disc tools.
+	Means "DiscJuggler CD image" and packages a bootable Dreamcast program and its assets into an image accepted by emulators or optical-disc tools.
 
 Gouraud(pvr):
 	Interpolates vertex colors across a polygon so the PVR shades each pixel from the submitted vertices.
@@ -71,13 +77,13 @@ Polygon-header(pvr):
 
 
 ARGB4444(texture):
-	Stores four-bit alpha, red, green, and blue channels in one 16-bit PVR texel.
+	Means four-bit "Alpha, Red, Green, Blue" channels and stores them in one 16-bit PVR texel.
 
 Twiddling(pvr):
 	Reorders texture addresses for PVR locality; the supported texture path uses non-twiddled row-major data.
 
 PVRT(pvr):
-	Stores a PowerVR texture container header and its encoded texel payload.
+	Means "PowerVR Texture" and stores a PowerVR texture container header and its encoded texel payload.
 
 Morton-order(pvr):
 	Maps two-dimensional texture coordinates into the interleaved address order used by a twiddled texture.
@@ -89,7 +95,7 @@ Logical-grid(api):
 	Maps a smaller design resolution to a fixed output resolution while preserving integer pixel blocks.
 
 UV-coordinate(texture):
-	Selects a normalized position inside a texture for a submitted vertex.
+	Uses the U and V texture-coordinate axes to select a normalized position inside a texture for a submitted vertex.
 
 Sprite-region(api):
 	Defines the texture-space rectangle used to derive normalized UVs for a textured quad.
@@ -101,7 +107,7 @@ Subpixel-motion(api):
 	Preserves fractional output coordinates instead of snapping to the logical pixel grid.
 
 NDC(math):
-	Represents normalized device coordinates after perspective division and before viewport mapping.
+	Means "Normalized Device Coordinates" and represents coordinates after perspective division and before viewport mapping.
 
 View-matrix(math):
 	Converts world-space positions into coordinates relative to a camera.
@@ -137,10 +143,10 @@ Texture-filter(pvr):
 	Selects nearest or bilinear sampling for a submitted textured polygon.
 
 UV-tiling(texture):
-	Repeats normalized texture coordinates across a mesh surface.
+	Repeats normalized U and V texture coordinates across a mesh surface.
 
 OARGB(pvr):
-	Stores the packed per-vertex offset color used by the PVR polygon packet.
+	Means "Offset Alpha, Red, Green, Blue" and stores the packed per-vertex offset color used by the PVR polygon packet.
 
 Offset-color(pvr):
 	Represents an additive per-vertex color used by PVR polygon shading.
@@ -149,7 +155,7 @@ Specular-lighting(pvr):
 	Enables PVR offset-color processing without defining a general light model.
 
 BFont(kos):
-	Provides the Dreamcast BIOS bitmap-font rasterization functions used to build text pixels.
+	Means "BIOS font" and provides the Dreamcast BIOS bitmap-font rasterization functions used to build text pixels.
 
 Text-texture(pvr):
 	Stores rasterized glyph pixels in PVR texture memory so text can be submitted as a textured quad.
@@ -167,13 +173,13 @@ Glyph-atlas(texture):
 	Packs pre-rasterized character images into one texture so text can reuse one PVR allocation.
 
 UTF-8(api):
-	Encodes Unicode code points as variable-length bytes that a text path must decode before glyph lookup.
+	Means "Unicode Transformation Format—8-bit" and encodes Unicode code points as variable-length bytes that a text path must decode before glyph lookup.
 
 OBJ(asset):
-	Stores human-readable vertex, UV, and face records used as authoring input for the offline model converter.
+	Means "Object" in the Wavefront OBJ format and stores human-readable vertex, UV, and face records used as authoring input for the offline model converter.
 
 DCM1(asset):
-	Stores the versioned compact vertex-and-index blob decoded by the model-loader lesson.
+	Means "Dreamcast Compact Mesh version 1" and stores the versioned compact vertex-and-index blob decoded by the model-loader lesson.
 
 Q8.8(asset):
 	Represents a signed fixed-point model coordinate with eight integer and eight fractional bits.
@@ -188,4 +194,4 @@ UV-seam(mesh):
 	Duplicates a position when adjacent faces need different texture coordinates.
 
 glTF(asset):
-	Describes scenes, buffers, materials, and resources in a richer interchange format that this lesson converts offline.
+	Means "GL Transmission Format" and describes scenes, buffers, materials, and resources in a richer interchange format that this lesson converts offline.

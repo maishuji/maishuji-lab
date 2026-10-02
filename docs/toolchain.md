@@ -40,6 +40,10 @@ make in-container TARGET=dreamcast-build DC_BUILD_TYPE=Debug
 make in-container TARGET=dreamcast-model-loader-cdi
 ```
 
+CDI packaging targets pass `--allow-overwrite` to `mkdcdisc` by default because
+each target owns a deterministic output path and rebuilding it should refresh
+that image. Set `MKDCDISC_OPTIONS=` when an existing CDI must be preserved.
+
 Additional Make variable assignments are forwarded to the inner Make process. The dispatcher mounts the repository at `/workspace`, uses the locked `linux/amd64` image, and maps the current user and group so generated artifacts remain writable by the host. Set `CONTAINER_RUNTIME=podman` when using a compatible Podman installation instead of Docker.
 
 The dispatcher rejects `flycast-*` and `host-*` goals because those require the workstation display, Flatpak, or native compiler. After producing a CDI, run its Flycast target directly on the host, for example `make flycast-model-loader`.

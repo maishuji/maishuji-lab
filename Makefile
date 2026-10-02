@@ -10,12 +10,12 @@ DC_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.elf
 # Default self-booting image produced by `dreamcast-smoke-cdi`.
 # Override DC_CDI when packaging a different ELF.
 DC_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-smoke.cdi
+DC_LIFECYCLE_ELF ?= $(DC_BUILD_DIR)/maishuji-hello-pvr.elf
+DC_LIFECYCLE_CDI ?= $(DC_BUILD_DIR)/maishuji-hello-pvr.cdi
 DC_TEXTURED_ELF ?= $(DC_BUILD_DIR)/maishuji-textured-quad.elf
 DC_TEXTURED_CDI ?= $(DC_BUILD_DIR)/maishuji-textured-quad.cdi
 DC_PIXEL_SPRITES_ELF ?= $(DC_BUILD_DIR)/maishuji-pixel-sprites.elf
 DC_PIXEL_SPRITES_CDI ?= $(DC_BUILD_DIR)/maishuji-pixel-sprites.cdi
-DC_LIFECYCLE_ELF ?= $(DC_BUILD_DIR)/maishuji-hello-pvr.elf
-DC_LIFECYCLE_CDI ?= $(DC_BUILD_DIR)/maishuji-hello-pvr.cdi
 DC_BASIC_3D_ELF ?= $(DC_BUILD_DIR)/maishuji-basic-3d.elf
 DC_BASIC_3D_CDI ?= $(DC_BUILD_DIR)/maishuji-basic-3d.cdi
 DC_FOGGED_3D_ELF ?= $(DC_BUILD_DIR)/maishuji-fogged-3d.elf
@@ -42,12 +42,18 @@ DC_MIPMAP_TEXTURE_ELF ?= $(DC_BUILD_DIR)/maishuji-mipmap-texture.elf
 DC_MIPMAP_TEXTURE_CDI ?= $(DC_BUILD_DIR)/maishuji-mipmap-texture.cdi
 DC_MODEL_LOADER_ELF ?= $(DC_BUILD_DIR)/maishuji-model-loader.elf
 DC_MODEL_LOADER_CDI ?= $(DC_BUILD_DIR)/maishuji-model-loader.cdi
+DC_MULTI_TEXTURE_ELF ?= $(DC_BUILD_DIR)/maishuji-multi-texture.elf
+DC_MULTI_TEXTURE_CDI ?= $(DC_BUILD_DIR)/maishuji-multi-texture.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
+# CDI targets own their named output paths, so rebuilding a target replaces
+# the previous image by default. Set MKDCDISC_OPTIONS= to restore mkdcdisc's
+# refusal behavior when preserving an existing image is intentional.
+MKDCDISC_OPTIONS ?= --allow-overwrite
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 CONTAINER_RUNTIME ?= docker
 
-.PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-lifecycle-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-makefile-smoke flycast-smoke flycast-textured-quad flycast-pixel-sprites flycast-lifecycle flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader run-dc
+.PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-lifecycle-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-multi-texture-cdi dreamcast-makefile-smoke flycast-smoke flycast-lifecycle flycast-textured-quad flycast-pixel-sprites flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader flycast-multi-texture run-dc
 
 # Verify the pinned Dreamcast/KOS toolchain and image versions.
 # Use this first when a Dreamcast build fails or after entering the container.
@@ -93,52 +99,58 @@ dreamcast-build: dreamcast-configure
 # Package the default PVR smoke ELF as a self-booting CDI.
 # Override DC_ELF and DC_CDI to package a different program.
 dreamcast-smoke-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_ELF)" -o "$(DC_CDI)" -n "maishuji-lab PVR smoke"
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_ELF)" -o "$(DC_CDI)" -n "maishuji-lab PVR smoke"
 
 dreamcast-lifecycle-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_LIFECYCLE_ELF)" -o "$(DC_LIFECYCLE_CDI)" -n "maishuji-lab hello PVR lifecycle"
-
-dreamcast-basic-3d-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_BASIC_3D_ELF)" -o "$(DC_BASIC_3D_CDI)" -n "maishuji-lab basic 3D"
-
-dreamcast-lighting-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_LIGHTING_ELF)" -o "$(DC_LIGHTING_CDI)" -n "maishuji-lab PVR offset-color lighting"
-
-dreamcast-text-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXT_ELF)" -o "$(DC_TEXT_CDI)" -n "maishuji-lab PVR text"
-
-dreamcast-particles-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_PARTICLES_ELF)" -o "$(DC_PARTICLES_CDI)" -n "maishuji-lab particle batch"
-
-dreamcast-budget-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_BUDGET_ELF)" -o "$(DC_BUDGET_CDI)" -n "maishuji-lab PVR packet budget"
-
-dreamcast-advanced-text-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_ADVANCED_TEXT_ELF)" -o "$(DC_ADVANCED_TEXT_CDI)" -n "maishuji-lab advanced multilingual text"
-
-dreamcast-pvr-asset-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_PVR_ASSET_ELF)" -o "$(DC_PVR_ASSET_CDI)" -n "maishuji-lab PVR asset"
-
-dreamcast-textured-3d-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXTURED_3D_ELF)" -o "$(DC_TEXTURED_3D_CDI)" -n "maishuji-lab textured 3D"
-
-dreamcast-heightmapped-terrain-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_HEIGHTMAPPED_TERRAIN_ELF)" -o "$(DC_HEIGHTMAPPED_TERRAIN_CDI)" -n "maishuji-lab heightmapped terrain"
-
-dreamcast-terrain-walk-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TERRAIN_WALK_ELF)" -o "$(DC_TERRAIN_WALK_CDI)" -n "maishuji-lab terrain walk"
-
-dreamcast-mipmap-texture-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_MIPMAP_TEXTURE_ELF)" -o "$(DC_MIPMAP_TEXTURE_CDI)" -n "maishuji-lab mipmap texture"
-
-dreamcast-fogged-3d-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_FOGGED_3D_ELF)" -o "$(DC_FOGGED_3D_CDI)" -n "maishuji-lab fogged 3D"
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_LIFECYCLE_ELF)" -o "$(DC_LIFECYCLE_CDI)" -n "maishuji-lab hello PVR lifecycle"
 
 dreamcast-textured-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_TEXTURED_ELF)" -o "$(DC_TEXTURED_CDI)" -n "maishuji-lab textured quad"
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_TEXTURED_ELF)" -o "$(DC_TEXTURED_CDI)" -n "maishuji-lab textured quad"
 
 dreamcast-pixel-sprites-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_PIXEL_SPRITES_ELF)" -o "$(DC_PIXEL_SPRITES_CDI)" -n "maishuji-lab pixel sprites"
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_PIXEL_SPRITES_ELF)" -o "$(DC_PIXEL_SPRITES_CDI)" -n "maishuji-lab pixel sprites"
+
+dreamcast-basic-3d-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_BASIC_3D_ELF)" -o "$(DC_BASIC_3D_CDI)" -n "maishuji-lab basic 3D"
+
+dreamcast-fogged-3d-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_FOGGED_3D_ELF)" -o "$(DC_FOGGED_3D_CDI)" -n "maishuji-lab fogged 3D"
+
+dreamcast-lighting-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_LIGHTING_ELF)" -o "$(DC_LIGHTING_CDI)" -n "maishuji-lab PVR offset-color lighting"
+
+dreamcast-text-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_TEXT_ELF)" -o "$(DC_TEXT_CDI)" -n "maishuji-lab PVR text"
+
+dreamcast-particles-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_PARTICLES_ELF)" -o "$(DC_PARTICLES_CDI)" -n "maishuji-lab particle batch"
+
+dreamcast-budget-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_BUDGET_ELF)" -o "$(DC_BUDGET_CDI)" -n "maishuji-lab PVR packet budget"
+
+dreamcast-advanced-text-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_ADVANCED_TEXT_ELF)" -o "$(DC_ADVANCED_TEXT_CDI)" -n "maishuji-lab advanced multilingual text"
+
+dreamcast-pvr-asset-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_PVR_ASSET_ELF)" -o "$(DC_PVR_ASSET_CDI)" -n "maishuji-lab PVR asset"
+
+dreamcast-textured-3d-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_TEXTURED_3D_ELF)" -o "$(DC_TEXTURED_3D_CDI)" -n "maishuji-lab textured 3D"
+
+dreamcast-heightmapped-terrain-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_HEIGHTMAPPED_TERRAIN_ELF)" -o "$(DC_HEIGHTMAPPED_TERRAIN_CDI)" -n "maishuji-lab heightmapped terrain"
+
+dreamcast-terrain-walk-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_TERRAIN_WALK_ELF)" -o "$(DC_TERRAIN_WALK_CDI)" -n "maishuji-lab terrain walk"
+
+dreamcast-mipmap-texture-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_MIPMAP_TEXTURE_ELF)" -o "$(DC_MIPMAP_TEXTURE_CDI)" -n "maishuji-lab mipmap texture"
+
+dreamcast-model-loader-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_MODEL_LOADER_ELF)" -o "$(DC_MODEL_LOADER_CDI)" -n "maishuji-lab model loader"
+
+dreamcast-multi-texture-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_MULTI_TEXTURE_ELF)" -o "$(DC_MULTI_TEXTURE_CDI)" -n "maishuji-lab multi-texture"
 
 dreamcast-makefile-smoke: check-toolchain
 	./tools/with-kos.sh "$(MAKE)" -f tools/kos-makefile-smoke.mk BUILD_DIR="$(KOS_MAKEFILE_BUILD_DIR)"
@@ -200,12 +212,12 @@ flycast-terrain-walk:
 flycast-mipmap-texture:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-mipmap-texture-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MIPMAP_TEXTURE FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: mipmap texture passed (9 levels; 174768 bytes; bilinear filtering)" ./tools/test-flycast-render.sh "$(DC_MIPMAP_TEXTURE_CDI)"
 
+flycast-model-loader:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-model-loader-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MODEL_LOADER FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: model loader passed (DCM1;" ./tools/test-flycast-render.sh "$(DC_MODEL_LOADER_CDI)"
+
+flycast-multi-texture:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-multi-texture-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MULTI_TEXTURE FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: multi-texture passed (2 textures; satellite body;" ./tools/test-flycast-render.sh "$(DC_MULTI_TEXTURE_CDI)"
+
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)
 	./tools/with-kos.sh dc-tool-ip -t "$(DC_IP)" -x "$(DC_ELF)"
-
-dreamcast-model-loader-cdi: dreamcast-build
-	./tools/with-kos.sh "$(MKDCDISC)" -e "$(DC_MODEL_LOADER_ELF)" -o "$(DC_MODEL_LOADER_CDI)" -n "maishuji-lab model loader"
-
-flycast-model-loader:
-	FLYCAST_FRAME_CHECKER=tools/check-flycast-model-loader-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MODEL_LOADER FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: model loader passed (DCM1;" ./tools/test-flycast-render.sh "$(DC_MODEL_LOADER_CDI)"

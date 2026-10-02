@@ -32,7 +32,7 @@ make flycast-model-loader
 You can forward Make variables to the container, for example `make in-container TARGET=dreamcast-build DC_BUILD_TYPE=Debug`. When already inside the Dev Container, the dispatcher runs the target directly. Flycast and native host targets remain local.
 
 See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownership rules, [docs/primitives.md](docs/primitives.md) for colored geometry, [docs/textures.md](docs/textures.md) for texture memory and uploads, [docs/pixel-art.md](docs/pixel-art.md) for logical pixel coordinates, [docs/spatial-math.md](docs/spatial-math.md) for transforms and cameras, [docs/meshes.md](docs/meshes.md) for indexed projection, [docs/textured-3d.md](docs/textured-3d.md) for the textured 3D lesson, [docs/heightmapped-terrain.md](docs/heightmapped-terrain.md) for the heightmapped terrain lesson, [docs/terrain-walk.md](docs/terrain-walk.md) for controller movement and height sampling, [docs/mipmap-texture.md](docs/mipmap-texture.md) for mipmap allocation and filtering, [docs/basic-3d.md](docs/basic-3d.md) for the 3D example, [docs/fog.md](docs/fog.md) for camera-space linear fog, [docs/text.md](docs/text.md) for BIOS-font text as a PVR texture, [docs/particles.md](docs/particles.md) for repeated textured submissions and packet budgets, [docs/budgets.md](docs/budgets.md) for the mixed-list packet budget lesson, [docs/advanced-text.md](docs/advanced-text.md) for the multilingual atlas example, and [docs/measurement.md](docs/measurement.md) for the raw-versus-wrapper cost comparison.
-See [docs/multi-texture.md](docs/multi-texture.md) for the two-texture submission lesson.
+See [docs/multi-texture.md](docs/multi-texture.md) for the two-texture submission lesson and [docs/tile-workload.md](docs/tile-workload.md) for the PVR tile-coverage comparison.
 See [docs/lighting.md](docs/lighting.md) for the offset-color lighting lesson and its KOS polygon-header mapping.
 
 For PNG-to-PVR conversion and the generated asset workflow, see [docs/pvr-assets.md](docs/pvr-assets.md).
@@ -240,3 +240,17 @@ the dedicated Flycast checker:
 make dreamcast-multi-texture-cdi
 make flycast-multi-texture
 ~~~
+
+For the PVR tile-workload comparison, package the CDI and run the stable
+side-by-side coverage check:
+
+~~~sh
+make dreamcast-pvr-tile-workload-cdi
+make flycast-pvr-tile-workload
+~~~
+
+The tile-workload example compares six small, mostly non-overlapping quads
+with six nested quads. It estimates 32x32 tile references and maximum layer
+depth from the submitted screen-space bounds; these are explanatory counts,
+not hardware timing or PVR counter measurements. See
+[docs/tile-workload.md](docs/tile-workload.md).

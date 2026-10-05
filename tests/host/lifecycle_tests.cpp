@@ -1,6 +1,7 @@
 #include "recording_backend.hpp"
 
 #include "maishuji/math.hpp"
+#include "maishuji/frustum.hpp"
 #include "maishuji/mesh.hpp"
 #include "maishuji/pixel.hpp"
 #include "maishuji/pvr.hpp"
@@ -94,6 +95,52 @@ void test_spatial_math() {
     expect_true(center.normalized_device.z > -1.0f &&
                     center.normalized_device.z < 1.0f,
                 "camera center depth is inside NDC range");
+}
+
+void test_frustum_culling() {
+    using namespace maishuji;
+    Camera camera{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f},
+                  {0.0f, 1.0f, 0.0f}, 1.04719755f, 4.0f / 3.0f,
+                  0.1f, 20.0f};
+    const BoundingSphere sphere{{}, 0.5f};
+    auto at = [](float x, float y, float z) {
+        return Transform{{x, y, z}, {}, {1.0f, 1.0f, 1.0f}};
+    };
+    expect_true(classify_sphere(camera, at(0, 0, -4), sphere) ==
+                    FrustumVisibility::Inside, "sphere inside frustum");
+    expect_true(classify_sphere(camera, at(6, 0, -4), sphere) ==
+                    FrustumVisibility::Outside, "sphere outside side plane");
+    expect_true(classify_sphere(camera, at(3.0f, 0, -4), sphere) ==
+                    FrustumVisibility::Intersects, "sphere crosses side plane");
+    expect_true(classify_sphere(camera, at(0, 0, 2), sphere) ==
+                    FrustumVisibility::Outside, "sphere behind camera");
+    expect_true(classify_sphere(camera, at(0, 0, -21), sphere) ==
+                    FrustumVisibility::Outside, "sphere past far plane");
+    expect_true(classify_sphere(camera, at(0, 0, -0.1f), sphere) ==
+                    FrustumVisibility::Intersects, "near-plane intersection");
+    expect_true(classify_sphere(camera, at(0, 0, 0.4f), sphere) ==
+                    FrustumVisibility::Intersects,
+                "near-plane tangency stays visible");
+    const Transform stretched{{3.0f, 0.0f, -4.0f}, {0.0f, 0.5f, 0.0f},
+                              {2.0f, 1.0f, 0.5f}};
+    expect_true(classify_sphere(camera, stretched, sphere) ==
+                    FrustumVisibility::Intersects,
+                "rotation and maximum scale preserve conservative radius");
+    camera.target = {1.0f, 0.0f, -1.0f};
+    expect_true(classify_sphere(camera, at(6, 0, -4), sphere) !=
+                    FrustumVisibility::Outside,
+                "camera turn changes visibility");
+    camera.near_plane = camera.far_plane;
+    expect_true(classify_sphere(camera, at(6, 0, -4), sphere) ==
+                    FrustumVisibility::Intersects, "invalid camera cannot cull");
+    expect_true(classify_sphere(Camera{}, {}, {{}, -1.0f}) ==
+                    FrustumVisibility::Intersects, "invalid bound cannot cull");
+    Transform invalid_rotation{};
+    invalid_rotation.rotation_radians.y =
+        std::numeric_limits<float>::quiet_NaN();
+    expect_true(classify_sphere(Camera{}, invalid_rotation, sphere) ==
+                    FrustumVisibility::Intersects,
+                "non-finite transform cannot cull");
 }
 
 void test_pixel_grid() {
@@ -1006,6 +1053,7 @@ void test_colored_primitives() {
 
 int main() {
     test_spatial_math();
+    test_frustum_culling();
     test_mesh_submission();
     test_textured_mesh_submission();
     test_pixel_grid();

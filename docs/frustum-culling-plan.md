@@ -15,6 +15,15 @@ heap allocation. Passing a bound must still use the existing per-triangle
 clipping path, because a conservative object test cannot clip a partly visible
 triangle. PVR polygon culling is a separate winding-state decision.
 
+Make the lesson self-explanatory on screen and in its source: label each object
+or region with its visibility case, show the camera/frustum boundary and object
+bounds in a simple diagram or overlay, and display submitted versus skipped
+object and triangle counts for both modes. Start the example in a fixed pose
+that demonstrates all three cases without controller input. Document the exact
+camera, bounds, and expected decisions in an example README, then explain one
+frame from bound test through mesh submission to PVR packets. A reader should
+be able to predict what changes when culling is toggled before running it.
+
 ## Completion criteria
 
 - Define a conservative object-space sphere or box, transform it correctly for
@@ -26,6 +35,9 @@ triangle. PVR polygon culling is a separate winding-state decision.
   existing mesh path, and source-derived polygon-header/vertex packet counts.
   State that these are structural counts, not elapsed-time or hardware-counter
   measurements.
+- Provide visible labels and a concise on-screen legend for the fixed cases;
+  give exact coordinates and expected outcomes in the example README, including
+  why the plane-intersecting object remains submitted.
 - Cover inside, outside, plane intersection, camera movement, and transformed
   bounds in host tests. Build Debug and Release ELFs with the pinned toolchain;
   package a CDI and check visible output plus a runtime marker in Flycast.

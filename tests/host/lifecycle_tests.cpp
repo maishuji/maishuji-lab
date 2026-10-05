@@ -118,6 +118,9 @@ void test_frustum_culling() {
                     FrustumVisibility::Outside, "sphere past far plane");
     expect_true(classify_sphere(camera, at(0, 0, -0.1f), sphere) ==
                     FrustumVisibility::Intersects, "near-plane intersection");
+    expect_true(classify_sphere(camera, at(0, 0, 0.4f), sphere) ==
+                    FrustumVisibility::Intersects,
+                "near-plane tangency stays visible");
     const Transform stretched{{3.0f, 0.0f, -4.0f}, {0.0f, 0.5f, 0.0f},
                               {2.0f, 1.0f, 0.5f}};
     expect_true(classify_sphere(camera, stretched, sphere) ==
@@ -132,6 +135,12 @@ void test_frustum_culling() {
                     FrustumVisibility::Intersects, "invalid camera cannot cull");
     expect_true(classify_sphere(Camera{}, {}, {{}, -1.0f}) ==
                     FrustumVisibility::Intersects, "invalid bound cannot cull");
+    Transform invalid_rotation{};
+    invalid_rotation.rotation_radians.y =
+        std::numeric_limits<float>::quiet_NaN();
+    expect_true(classify_sphere(Camera{}, invalid_rotation, sphere) ==
+                    FrustumVisibility::Intersects,
+                "non-finite transform cannot cull");
 }
 
 void test_pixel_grid() {

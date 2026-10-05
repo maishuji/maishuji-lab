@@ -57,6 +57,9 @@ Gouraud(pvr):
 Culling(pvr):
 	Rejects polygons based on their winding before the PVR rasterizes them.
 
+View-frustum-culling(cpu):
+	Rejects an object's submission when its conservative bound lies fully outside the camera's visible volume.
+
 Depth-compare(pvr):
 	Selects the depth comparison that decides whether a polygon passes.
 

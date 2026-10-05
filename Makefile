@@ -46,6 +46,8 @@ DC_MULTI_TEXTURE_ELF ?= $(DC_BUILD_DIR)/maishuji-multi-texture.elf
 DC_MULTI_TEXTURE_CDI ?= $(DC_BUILD_DIR)/maishuji-multi-texture.cdi
 DC_TILE_WORKLOAD_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-tile-workload.elf
 DC_TILE_WORKLOAD_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-tile-workload.cdi
+DC_FRUSTUM_CULLING_ELF ?= $(DC_BUILD_DIR)/maishuji-frustum-culling.elf
+DC_FRUSTUM_CULLING_CDI ?= $(DC_BUILD_DIR)/maishuji-frustum-culling.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 # CDI targets own their named output paths, so rebuilding a target replaces
@@ -55,7 +57,7 @@ MKDCDISC_OPTIONS ?= --allow-overwrite
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 CONTAINER_RUNTIME ?= docker
 
-.PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-lifecycle-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-multi-texture-cdi dreamcast-pvr-tile-workload-cdi dreamcast-makefile-smoke flycast-smoke flycast-lifecycle flycast-textured-quad flycast-pixel-sprites flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader flycast-multi-texture flycast-pvr-tile-workload run-dc
+.PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-lifecycle-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-multi-texture-cdi dreamcast-pvr-tile-workload-cdi dreamcast-frustum-culling-cdi dreamcast-makefile-smoke flycast-smoke flycast-lifecycle flycast-textured-quad flycast-pixel-sprites flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader flycast-multi-texture flycast-pvr-tile-workload flycast-frustum-culling run-dc
 
 # Verify the pinned Dreamcast/KOS toolchain and image versions.
 # Use this first when a Dreamcast build fails or after entering the container.
@@ -157,6 +159,9 @@ dreamcast-multi-texture-cdi: dreamcast-build
 dreamcast-pvr-tile-workload-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_TILE_WORKLOAD_ELF)" -o "$(DC_TILE_WORKLOAD_CDI)" -n "maishuji-lab PVR tile workload"
 
+dreamcast-frustum-culling-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_FRUSTUM_CULLING_ELF)" -o "$(DC_FRUSTUM_CULLING_CDI)" -n "maishuji-lab frustum culling"
+
 dreamcast-makefile-smoke: check-toolchain
 	./tools/with-kos.sh "$(MAKE)" -f tools/kos-makefile-smoke.mk BUILD_DIR="$(KOS_MAKEFILE_BUILD_DIR)"
 
@@ -225,6 +230,9 @@ flycast-multi-texture:
 
 flycast-pvr-tile-workload:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-pvr-tile-workload-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_PVR_TILE_WORKLOAD FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: tile workload passed (friendly refs=" ./tools/test-flycast-render.sh "$(DC_TILE_WORKLOAD_CDI)"
+
+flycast-frustum-culling:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-frustum-culling-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_FRUSTUM_CULLING FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: frustum culling passed (mode=on; submitted=2 objects; input=8 triangles" ./tools/test-flycast-render.sh "$(DC_FRUSTUM_CULLING_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

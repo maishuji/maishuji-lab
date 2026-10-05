@@ -60,6 +60,9 @@ Culling(pvr):
 View-frustum-culling(cpu):
 	Rejects an object's submission when its conservative bound lies fully outside the camera's visible volume.
 
+Bounding-sphere(cpu):
+	Encloses an object's geometry with a center and radius for a conservative visibility test.
+
 Depth-compare(pvr):
 	Selects the depth comparison that decides whether a polygon passes.
 

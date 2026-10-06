@@ -42,6 +42,8 @@ DC_MIPMAP_TEXTURE_ELF ?= $(DC_BUILD_DIR)/maishuji-mipmap-texture.elf
 DC_MIPMAP_TEXTURE_CDI ?= $(DC_BUILD_DIR)/maishuji-mipmap-texture.cdi
 DC_MODEL_LOADER_ELF ?= $(DC_BUILD_DIR)/maishuji-model-loader.elf
 DC_MODEL_LOADER_CDI ?= $(DC_BUILD_DIR)/maishuji-model-loader.cdi
+DC_HUMAN_MODEL_LOADER_ELF ?= $(DC_BUILD_DIR)/maishuji-human-model-loader.elf
+DC_HUMAN_MODEL_LOADER_CDI ?= $(DC_BUILD_DIR)/maishuji-human-model-loader.cdi
 DC_MULTI_TEXTURE_ELF ?= $(DC_BUILD_DIR)/maishuji-multi-texture.elf
 DC_MULTI_TEXTURE_CDI ?= $(DC_BUILD_DIR)/maishuji-multi-texture.cdi
 DC_TILE_WORKLOAD_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-tile-workload.elf
@@ -57,7 +59,7 @@ MKDCDISC_OPTIONS ?= --allow-overwrite
 KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cmake
 CONTAINER_RUNTIME ?= docker
 
-.PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-lifecycle-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-multi-texture-cdi dreamcast-pvr-tile-workload-cdi dreamcast-frustum-culling-cdi dreamcast-makefile-smoke flycast-smoke flycast-lifecycle flycast-textured-quad flycast-pixel-sprites flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader flycast-multi-texture flycast-pvr-tile-workload flycast-frustum-culling run-dc
+.PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-lifecycle-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-human-model-loader-cdi dreamcast-multi-texture-cdi dreamcast-pvr-tile-workload-cdi dreamcast-frustum-culling-cdi dreamcast-makefile-smoke flycast-smoke flycast-lifecycle flycast-textured-quad flycast-pixel-sprites flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader flycast-human-model-loader flycast-multi-texture flycast-pvr-tile-workload flycast-frustum-culling run-dc
 
 # Verify the pinned Dreamcast/KOS toolchain and image versions.
 # Use this first when a Dreamcast build fails or after entering the container.
@@ -153,6 +155,9 @@ dreamcast-mipmap-texture-cdi: dreamcast-build
 dreamcast-model-loader-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_MODEL_LOADER_ELF)" -o "$(DC_MODEL_LOADER_CDI)" -n "maishuji-lab model loader"
 
+dreamcast-human-model-loader-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_HUMAN_MODEL_LOADER_ELF)" -o "$(DC_HUMAN_MODEL_LOADER_CDI)" -n "maishuji-lab human model loader"
+
 dreamcast-multi-texture-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_MULTI_TEXTURE_ELF)" -o "$(DC_MULTI_TEXTURE_CDI)" -n "maishuji-lab multi-texture"
 
@@ -224,6 +229,9 @@ flycast-mipmap-texture:
 
 flycast-model-loader:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-model-loader-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MODEL_LOADER FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: model loader passed (DCM1;" ./tools/test-flycast-render.sh "$(DC_MODEL_LOADER_CDI)"
+
+flycast-human-model-loader:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-model-loader-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MODEL_LOADER FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: model loader passed (DCM1; 408 vertices; 204 triangles; 64x64 ARGB4444)" ./tools/test-flycast-render.sh "$(DC_HUMAN_MODEL_LOADER_CDI)"
 
 flycast-multi-texture:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-multi-texture-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MULTI_TEXTURE FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: multi-texture passed (2 textures; satellite body;" ./tools/test-flycast-render.sh "$(DC_MULTI_TEXTURE_CDI)"

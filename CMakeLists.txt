@@ -103,6 +103,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     target_compile_options(maishuji-model-loader PRIVATE
         -fno-exceptions -fno-rtti)
 
+    add_executable(maishuji-human-model-loader
+        advanced_examples/07-model-loader.cpp)
+    target_compile_definitions(maishuji-human-model-loader PRIVATE
+        MAISHUJI_HUMAN_MODEL=1)
+    target_link_libraries(maishuji-human-model-loader PRIVATE maishuji)
+    target_compile_options(maishuji-human-model-loader PRIVATE
+        -fno-exceptions -fno-rtti)
+
     add_executable(maishuji-multi-texture
         advanced_examples/08-multi-texture.cpp)
     target_link_libraries(maishuji-multi-texture PRIVATE maishuji)
@@ -144,6 +152,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-terrain-walk)
     maishuji_enable_link_map(maishuji-mipmap-texture)
     maishuji_enable_link_map(maishuji-model-loader)
+    maishuji_enable_link_map(maishuji-human-model-loader)
     maishuji_enable_link_map(maishuji-multi-texture)
     maishuji_enable_link_map(maishuji-pvr-tile-workload)
     maishuji_enable_link_map(maishuji-frustum-culling)

@@ -1,8 +1,17 @@
 #include "maishuji/mesh.hpp"
 #include "maishuji/pvr.hpp"
 
+#ifdef MAISHUJI_HUMAN_MODEL
+#include "assets/human_model_asset.hpp"
+#include "assets/human_model_texture.hpp"
+namespace lesson_asset = maishuji::human_model_asset;
+namespace lesson_texture = maishuji::human_model_texture;
+#else
 #include "assets/model_asset.hpp"
 #include "assets/model_texture.hpp"
+namespace lesson_asset = maishuji::model_asset;
+namespace lesson_texture = maishuji::model_texture;
+#endif
 
 #include <array>
 #include <cstddef>
@@ -19,8 +28,13 @@ constexpr std::uint16_t dcm_version = 1;
 constexpr std::uint16_t dcm_textured_flag = 1;
 constexpr float dcm_position_scale = 256.0f;
 constexpr float dcm_uv_scale = 65535.0f;
+#ifdef MAISHUJI_HUMAN_MODEL
+constexpr std::size_t max_model_vertices = 1280;
+constexpr std::size_t max_model_indices = 4608;
+#else
 constexpr std::size_t max_model_vertices = 96;
 constexpr std::size_t max_model_indices = 192;
+#endif
 constexpr int animation_frames = 180;
 constexpr int capture_hold_frames = 900;
 constexpr float screen_width = 640.0f;
@@ -153,11 +167,19 @@ maishuji::Transform transform_for_frame(int frame) noexcept {
 }
 
 constexpr maishuji::Transform capture_transform() noexcept {
+#ifdef MAISHUJI_HUMAN_MODEL
+    return {
+        {0.0f, -0.05f, 0.0f},
+        {0.0f, 0.30f, 0.0f},
+        {1.0f, 1.0f, 1.0f},
+    };
+#else
     return {
         {0.0f, -0.05f, 0.0f},
         {0.23f, 0.78f, -0.18f},
         {1.0f, 1.0f, 1.0f},
     };
+#endif
 }
 
 constexpr maishuji::Camera model_camera() noexcept {
@@ -200,15 +222,16 @@ maishuji::Status run_frame(
 } // namespace
 
 int main() {
+#ifndef MAISHUJI_HUMAN_MODEL
     static_assert(maishuji::model_asset::bytes.size() == 1336);
+#endif
     alignas(32) static std::array<std::uint16_t,
-                                  maishuji::model_texture::width *
-                                      maishuji::model_texture::height>
-        texture_pixels = maishuji::model_texture::pixels;
+                                  lesson_texture::width * lesson_texture::height>
+        texture_pixels = lesson_texture::pixels;
 
     LoadedModel loaded_model{};
     const std::span<const std::uint8_t> model_file{
-        maishuji::model_asset::bytes.data(), maishuji::model_asset::bytes.size()};
+        lesson_asset::bytes.data(), lesson_asset::bytes.size()};
     if(!loaded_model.load(model_file)) {
         dbglog(DBG_ERROR,
                "maishuji: DCM1 model validation or decode failed\n");
@@ -224,8 +247,8 @@ int main() {
     }
 
     maishuji::Texture texture;
-    status = texture.allocate(pvr, maishuji::model_texture::width,
-                              maishuji::model_texture::height);
+    status = texture.allocate(pvr, lesson_texture::width,
+                              lesson_texture::height);
     if(maishuji::failed(status)) {
         dbglog(DBG_ERROR, "maishuji: model texture allocation failed: %s\n",
                maishuji::status_name(status));
@@ -246,8 +269,13 @@ int main() {
     constexpr maishuji::Camera camera = model_camera();
 
     for(int frame = 0; frame < animation_frames; ++frame) {
+#ifdef MAISHUJI_HUMAN_MODEL
+        status = run_frame(pvr, texture, model, camera,
+                           capture_transform());
+#else
         status = run_frame(pvr, texture, model, camera,
                            transform_for_frame(frame));
+#endif
         if(maishuji::failed(status)) {
             dbglog(DBG_ERROR,
                    "maishuji: model loader frame %d failed: %s\n", frame,
@@ -261,7 +289,7 @@ int main() {
     dbglog(DBG_NOTICE,
            "maishuji: model loader passed (DCM1; %u vertices; %u triangles; %ux%u ARGB4444)\n",
            loaded_model.vertex_count, loaded_model.index_count / 3,
-           maishuji::model_texture::width, maishuji::model_texture::height);
+           lesson_texture::width, lesson_texture::height);
 
     for(int frame = 0; frame < capture_hold_frames; ++frame) {
         status = run_frame(pvr, texture, model, camera,

@@ -119,6 +119,49 @@ the model is
 and the conversion tool is
 [tools/obj-to-dcmodel.py](../tools/obj-to-dcmodel.py).
 
+## Larger human model lesson
+
+The second executable uses the same DCM1 decoder and submission path with a
+static, posed human made from tapered elliptical sections. It is deliberately
+more complex than the satellite while retaining one opaque mesh and one
+texture. Generate its readable OBJ, texture header, and embedded DCM1 bytes
+with:
+
+~~~sh
+python3 tools/generate-human-model.py
+python3 tools/obj-to-dcmodel.py advanced_examples/assets/human.obj \
+  advanced_examples/assets/human_model_asset.hpp \
+  --namespace maishuji::human_model_asset
+make in-container TARGET=dreamcast-human-model-loader-cdi
+make flycast-human-model-loader
+~~~
+
+The source is [human.obj](../advanced_examples/assets/human.obj). Its 1,334
+triangles become 1,006 decoded vertices, including duplicates at ring UV seams.
+The DCM1 blob is 24,124 bytes. The 128x64 ARGB4444 atlas takes 16,384
+bytes of PVR texture storage and a same-sized CPU upload array. This lesson
+sets fixed capacities of 1,280 vertices and 4,608 indices; the satellite keeps
+its 96/192 capacities. Both are compile-time storage limits, not general
+Dreamcast limits.
+
+At the unculled pose, 1,334 triangles imply 1,334 polygon headers, 4,002
+vertex packets, and 5,336 primitive calls: 170,752 nominal packet bytes at 32
+bytes per packet. This excludes clipping expansion, tile references, CPU
+projection, and
+scene/list overhead. The figure is static, with no skinning or animation;
+the lesson tests a larger asset and its costs rather than character animation.
+The generated geometry uses elliptical head, torso, and limb profiles plus
+separate hands, ears, nose, collar, and belt. Its eight-color atlas distinguishes
+those details. The figure remains one static mesh with a deliberately low-poly
+silhouette.
+
+On 2026-10-06, the pinned KOS 2.3.0 / GCC 16.2.0 container built the human
+ELF and CDI. `make flycast-human-model-loader` passed ten stable captures and
+the exact runtime marker; visual inspection of the
+[captured frame](assets/human-model-flycast.png) showed an upright, static figure
+with the intended atlas colors. This checks the tested emulator path, not
+timing or performance on physical Dreamcast hardware.
+
 ## The supported OBJ subset
 
 The converter accepts v, vt, and f records and ignores object, group,

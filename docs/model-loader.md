@@ -122,8 +122,8 @@ and the conversion tool is
 ## Larger human model lesson
 
 The second executable uses the same DCM1 decoder and submission path with a
-static, posed human made from 17 faceted parts. It is deliberately more complex
-than the satellite while retaining one opaque mesh and one texture. Generate
+static, posed human made from tapered elliptical sections. It is deliberately
+more complex than the satellite while retaining one opaque mesh and one texture. Generate
 its readable OBJ, texture header, and embedded DCM1 bytes with:
 
 ~~~sh
@@ -135,27 +135,27 @@ make in-container TARGET=dreamcast-human-model-loader-cdi
 make flycast-human-model-loader
 ~~~
 
-The source is [human.obj](../advanced_examples/assets/human.obj). Its 204
-triangles become 408 decoded vertices because each box face has its own UV
-corners. The DCM1 blob is 7,776 bytes. The 64x64 ARGB4444 atlas takes 8,192
+The source is [human.obj](../advanced_examples/assets/human.obj). Its 866
+triangles become 633 decoded vertices, including duplicates at ring UV seams.
+The DCM1 blob is 15,348 bytes. The 64x64 ARGB4444 atlas takes 8,192
 bytes of PVR texture storage and a same-sized CPU upload array. This lesson
-sets fixed capacities of 512 vertices and 768 indices; the satellite keeps
+sets fixed capacities of 768 vertices and 3,072 indices; the satellite keeps
 its 96/192 capacities. Both are compile-time storage limits, not general
 Dreamcast limits.
 
-At the unculled pose, 204 triangles imply 204 polygon headers, 612 vertex
-packets, and 816 primitive calls: 26,112 nominal packet bytes at 32 bytes per
+At the unculled pose, 866 triangles imply 866 polygon headers, 2,598 vertex
+packets, and 3,464 primitive calls: 110,848 nominal packet bytes at 32 bytes per
 packet. This excludes clipping expansion, tile references, CPU projection, and
 scene/list overhead. The figure is static, with no skinning or animation;
 the lesson tests a larger asset and its costs rather than character animation.
-The generated geometry uses cuboids and a four-color atlas, so it is a cost
-step and recognizable silhouette rather than a claim of production character
-quality.
+The generated geometry uses elliptical head, torso, and limb profiles with a
+four-color atlas. The visible silhouette is still intentionally low-poly and
+the figure remains one static mesh.
 
 On 2026-10-06, the pinned KOS 2.3.0 / GCC 16.2.0 container built the human
-ELF and CDI. `make flycast-human-model-loader` passed four stable captures and
-the exact runtime marker; visual inspection of the captured frame showed an
-upright, static figure. This checks the tested emulator path, not timing or
+ELF and CDI. `make flycast-human-model-loader` passed seven stable captures and
+the exact runtime marker; visual inspection of the [captured frame](assets/human-model-flycast.png)
+showed an upright, static figure with the intended atlas colors. This checks the tested emulator path, not timing or
 performance on physical Dreamcast hardware.
 
 ## The supported OBJ subset

@@ -35,6 +35,7 @@ See [docs/lifecycle.md](docs/lifecycle.md) for the lifecycle mapping and ownersh
 See [docs/multi-texture.md](docs/multi-texture.md) for the two-texture submission lesson and [docs/tile-workload.md](docs/tile-workload.md) for the PVR tile-coverage comparison.
 See [docs/lighting.md](docs/lighting.md) for the offset-color lighting lesson and its KOS polygon-header mapping.
 See [docs/frustum-culling.md](docs/frustum-culling.md) for the advanced object-level frustum-culling example, fixed camera diagram, and CPU/PVR cost boundary.
+See [docs/model-loader.md](docs/model-loader.md) for both the satellite and the larger static human DCM1 model lessons.
 
 For PNG-to-PVR conversion and the generated asset workflow, see [docs/pvr-assets.md](docs/pvr-assets.md).
 

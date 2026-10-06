@@ -231,7 +231,7 @@ flycast-model-loader:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-model-loader-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MODEL_LOADER FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: model loader passed (DCM1;" ./tools/test-flycast-render.sh "$(DC_MODEL_LOADER_CDI)"
 
 flycast-human-model-loader:
-	FLYCAST_FRAME_CHECKER=tools/check-flycast-model-loader-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_HUMAN_MODEL_LOADER FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: model loader passed (DCM1; 633 vertices; 866 triangles; 64x64 ARGB4444)" ./tools/test-flycast-render.sh "$(DC_HUMAN_MODEL_LOADER_CDI)"
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-model-loader-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_HUMAN_MODEL_LOADER FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: model loader passed (DCM1; 1006 vertices; 1334 triangles; 128x64 ARGB4444)" ./tools/test-flycast-render.sh "$(DC_HUMAN_MODEL_LOADER_CDI)"
 
 flycast-multi-texture:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-multi-texture-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_MULTI_TEXTURE FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: multi-texture passed (2 textures; satellite body;" ./tools/test-flycast-render.sh "$(DC_MULTI_TEXTURE_CDI)"

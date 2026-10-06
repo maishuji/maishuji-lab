@@ -29,8 +29,8 @@ constexpr std::uint16_t dcm_textured_flag = 1;
 constexpr float dcm_position_scale = 256.0f;
 constexpr float dcm_uv_scale = 65535.0f;
 #ifdef MAISHUJI_HUMAN_MODEL
-constexpr std::size_t max_model_vertices = 768;
-constexpr std::size_t max_model_indices = 3072;
+constexpr std::size_t max_model_vertices = 1280;
+constexpr std::size_t max_model_indices = 4608;
 #else
 constexpr std::size_t max_model_vertices = 96;
 constexpr std::size_t max_model_indices = 192;

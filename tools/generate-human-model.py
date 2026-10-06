@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a rounded low-poly human OBJ and its ARGB4444 color atlas."""
+"""Generate a posed low-poly human OBJ and its ARGB4444 color atlas."""
 
 from __future__ import annotations
 
@@ -8,9 +8,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1] / "advanced_examples" / "assets"
-# The OBJ converter flips V, so atlas rows are reversed relative to materials.
-# Texture quadrants are skin, hair/boots, shirt, trousers in memory order.
-COLORS = (0xFC96, 0xF432, 0xF36B, 0xF234)
+# Material order: shirt, trousers, skin, hair, shoes, facial detail,
+# collar, belt. The OBJ converter flips V, so texture rows reverse below.
+COLORS = (0xF36B, 0xF234, 0xFC96, 0xF432,
+          0xF222, 0xF111, 0xFEEE, 0xF643)
 
 
 class Obj:
@@ -31,15 +32,15 @@ class Obj:
               sides: int, material: int) -> None:
         """Connect horizontal elliptical rings (x center, y, z center, x/z radii)."""
         self.lines.append(f"o {name}")
-        tile_x, tile_y = material % 2, material // 2
-        u0, v0 = tile_x * .5 + .035, tile_y * .5 + .035
+        tile_x, tile_y = material % 4, material // 4
+        u0, v0 = tile_x * .25 + .015, tile_y * .5 + .035
         start = self.vertex_count + 1
         for row, (cx, y, cz, rx, rz) in enumerate(profile):
             for side in range(sides + 1):
                 angle = 2 * math.pi * side / sides
                 self.point(cx + rx * math.cos(angle), y,
                            cz + rz * math.sin(angle),
-                           u0 + .43 * side / sides,
+                           u0 + .22 * side / sides,
                            v0 + .43 * row / (len(profile) - 1))
         stride = sides + 1
         for row in range(len(profile) - 1):
@@ -53,8 +54,8 @@ class Obj:
               material: int) -> None:
         """Make a small flat facial feature facing positive Z."""
         self.lines.append(f"o {name}")
-        tile_x, tile_y = material % 2, material // 2
-        u, v = tile_x * .5 + .22, tile_y * .5 + .22
+        tile_x, tile_y = material % 4, material // 4
+        u, v = tile_x * .25 + .11, tile_y * .5 + .22
         start = self.vertex_count + 1
         for x, y, z in corners:
             self.point(x, y, z, u, v)
@@ -66,62 +67,80 @@ def make_model() -> Obj:
     model = Obj()
     model.rings("torso", [(0, .18, 0, .27, .14), (0, .36, 0, .29, .16),
                           (0, .68, 0, .36, .19), (0, .97, 0, .40, .19),
-                          (0, 1.09, 0, .28, .15)], 12, 0)
+                          (0, 1.09, 0, .28, .15)], 16, 0)
     model.rings("hips", [(0, -.20, 0, .29, .17), (0, .03, 0, .33, .18),
-                         (0, .25, 0, .27, .15)], 12, 1)
+                         (0, .25, 0, .27, .15)], 14, 1)
+    model.rings("belt", [(0, .19, 0, .285, .155),
+                         (0, .27, 0, .29, .16)], 14, 7)
     model.rings("neck", [(0, 1.06, 0, .105, .105),
                          (0, 1.25, 0, .11, .11)], 10, 2)
+    model.rings("collar", [(0, 1.075, 0, .15, .13),
+                           (0, 1.12, 0, .12, .115)], 12, 6)
     model.rings("head", [(0, 1.20, 0, .09, .09), (0, 1.27, 0, .17, .17),
                          (0, 1.39, 0, .225, .21), (0, 1.55, 0, .24, .225),
                          (0, 1.70, 0, .21, .19), (0, 1.78, 0, .12, .11),
-                         (0, 1.80, 0, .025, .025)], 12, 2)
+                         (0, 1.80, 0, .025, .025)], 16, 2)
     model.rings("hair", [(0, 1.65, -.025, .23, .205),
                          (0, 1.73, -.015, .22, .19),
                          (0, 1.82, 0, .13, .12),
-                         (0, 1.84, 0, .02, .02)], 12, 3)
+                         (0, 1.84, 0, .02, .02)], 16, 3)
+    model.rings("nose", [(0, 1.40, .205, .025, .025),
+                         (0, 1.45, .23, .045, .05),
+                         (0, 1.49, .205, .025, .025)], 8, 2)
 
     for direction, label in ((-1, "left"), (1, "right")):
         model.rings(f"{label}_sleeve", [
             (direction * .40, 1.02, 0, .14, .145),
             (direction * .46, .87, 0, .135, .13),
-            (direction * .50, .68, 0, .12, .12)], 10, 0)
+            (direction * .50, .68, 0, .12, .12)], 12, 0)
         model.rings(f"{label}_arm", [
             (direction * .50, .70, 0, .115, .115),
             (direction * .54, .51, 0, .10, .105),
             (direction * .55, .31, 0, .087, .09),
-            (direction * .55, .22, 0, .11, .095)], 10, 2)
+            (direction * .55, .24, 0, .09, .095)], 12, 2)
+        model.rings(f"{label}_hand", [
+            (direction * .55, .27, 0, .09, .09),
+            (direction * .56, .17, 0, .10, .08),
+            (direction * .56, .10, 0, .075, .055)], 10, 2)
+        model.rings(f"{label}_thumb", [
+            (direction * .46, .20, .015, .055, .05),
+            (direction * .43, .14, .02, .04, .04)], 8, 2)
         model.rings(f"{label}_leg", [
             (direction * .16, -.17, 0, .145, .16),
             (direction * .17, -.37, 0, .14, .15),
             (direction * .18, -.68, 0, .125, .13),
             (direction * .18, -.93, 0, .11, .115),
             (direction * .18, -1.24, 0, .10, .105),
-            (direction * .18, -1.36, 0, .115, .12)], 10, 1)
+            (direction * .18, -1.36, 0, .115, .12)], 12, 1)
         model.rings(f"{label}_shoe", [
             (direction * .18, -1.47, .075, .145, .22),
             (direction * .18, -1.38, .045, .15, .20),
-            (direction * .18, -1.32, 0, .115, .12)], 10, 3)
+            (direction * .18, -1.32, 0, .115, .12)], 12, 4)
+        model.rings(f"{label}_ear", [
+            (direction * .24, 1.39, 0, .02, .03),
+            (direction * .25, 1.48, 0, .045, .065),
+            (direction * .24, 1.56, 0, .02, .03)], 8, 2)
 
     model.patch("left_eye", ((-.135, 1.53, .222), (-.08, 1.53, .229),
-                              (-.08, 1.49, .231), (-.135, 1.49, .224)), 3)
+                              (-.08, 1.49, .231), (-.135, 1.49, .224)), 5)
     model.patch("right_eye", ((.08, 1.53, .229), (.135, 1.53, .222),
-                               (.135, 1.49, .224), (.08, 1.49, .231)), 3)
+                               (.135, 1.49, .224), (.08, 1.49, .231)), 5)
     model.patch("mouth", ((-.055, 1.34, .183), (.055, 1.34, .183),
-                           (.055, 1.325, .185), (-.055, 1.325, .185)), 3)
+                           (.055, 1.325, .185), (-.055, 1.325, .185)), 5)
     return model
 
 
 def make_texture() -> str:
     header = ["#pragma once", "#include <array>", "#include <cstdint>",
               "#include <cstddef>", "namespace maishuji::human_model_texture {",
-              "inline constexpr std::uint16_t width = 64;",
+              "inline constexpr std::uint16_t width = 128;",
               "inline constexpr std::uint16_t height = 64;",
               "constexpr std::array<std::uint16_t, width * height> make_pixels() noexcept {",
               "    std::array<std::uint16_t, width * height> result{};",
-              "    constexpr std::uint16_t colors[] = {" + ", ".join(f"0x{c:04x}" for c in COLORS) + "};",
+              "    constexpr std::uint16_t colors[] = {" + ", ".join(f"0x{c:04x}" for c in COLORS[4:] + COLORS[:4]) + "};",
               "    for(std::size_t y = 0; y < height; ++y)",
               "        for(std::size_t x = 0; x < width; ++x)",
-              "            result[y * width + x] = colors[(y / 32) * 2 + x / 32];",
+              "            result[y * width + x] = colors[(y / 32) * 4 + x / 32];",
               "    return result;", "}",
               "inline constexpr auto pixels = make_pixels();",
               "} // namespace maishuji::human_model_texture"]

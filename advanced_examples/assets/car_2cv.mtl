@@ -1,0 +1,52 @@
+# AUTHORED SOURCE palette for car_2cv.obj; never overwritten by the generator.
+# Opaque, unlit diffuse base colors; no textures, baked shading, logos, or downloads.
+# Declaration order defines the eight 16x16 atlas swatches (64x32 top-down):
+# blue cream glass rubber / metal canvas headlamp taillamp.
+# Kd values are exact ARGB4444 nibble colors to six decimal places.
+newmtl blue
+Kd 0.200000 0.533333 0.800000
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl cream
+Kd 1.000000 0.933333 0.800000
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl glass
+Kd 0.533333 0.800000 0.866667
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl rubber
+Kd 0.133333 0.133333 0.133333
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl metal
+Kd 0.733333 0.800000 0.866667
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl canvas
+Kd 0.866667 0.800000 0.600000
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl headlamp
+Kd 1.000000 1.000000 1.000000
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl taillamp
+Kd 0.933333 0.266667 0.200000
+Ks 0 0 0
+d 1
+illum 1

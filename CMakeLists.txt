@@ -7,6 +7,34 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Python is a host-side asset tool, including during cross-compilation.
+find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+set(car_asset_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(car_asset_outputs
+    "${car_asset_dir}/car_2cv_mesh.hpp"
+    "${car_asset_dir}/car_2cv_model_asset.hpp"
+    "${car_asset_dir}/car_2cv_texture.hpp"
+    "${car_asset_dir}/car_2cv_texture.ppm"
+    "${car_asset_dir}/car_2cv_preview.svg"
+)
+add_custom_command(
+    OUTPUT ${car_asset_outputs}
+    COMMAND "${Python3_EXECUTABLE}" -B
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/generate-2cv-model.py"
+        --output-dir "${car_asset_dir}"
+    DEPENDS
+        tools/generate-2cv-model.py tools/obj-to-dcmodel.py
+        advanced_examples/assets/car_2cv.obj advanced_examples/assets/car_2cv.mtl
+    COMMENT "Deriving the 2CV mesh and opaque color atlas"
+    VERBATIM
+)
+add_custom_target(maishuji-car-assets DEPENDS ${car_asset_outputs})
+
+function(maishuji_use_car_assets target)
+    add_dependencies(${target} maishuji-car-assets)
+    target_include_directories(${target} PRIVATE "${car_asset_dir}")
+endfunction()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     add_library(maishuji STATIC
         src/pvr.cpp
@@ -129,6 +157,18 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     target_compile_options(maishuji-frustum-culling PRIVATE
         -fno-exceptions -fno-rtti)
 
+    add_executable(maishuji-dynamic-lighting
+        advanced_examples/11-dynamic-lighting.cpp)
+    add_executable(maishuji-dynamic-lighting-capture
+        advanced_examples/11-dynamic-lighting.cpp)
+    target_compile_definitions(maishuji-dynamic-lighting-capture PRIVATE
+        MAISHUJI_DYNAMIC_LIGHTING_CAPTURE=1)
+    foreach(target maishuji-dynamic-lighting maishuji-dynamic-lighting-capture)
+        target_link_libraries(${target} PRIVATE maishuji)
+        target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
+        maishuji_use_car_assets(${target})
+    endforeach()
+
     function(maishuji_enable_link_map target)
         target_link_options(${target} PRIVATE
             "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${target}.map")
@@ -156,6 +196,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-multi-texture)
     maishuji_enable_link_map(maishuji-pvr-tile-workload)
     maishuji_enable_link_map(maishuji-frustum-culling)
+    maishuji_enable_link_map(maishuji-dynamic-lighting)
+    maishuji_enable_link_map(maishuji-dynamic-lighting-capture)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp
@@ -173,4 +215,19 @@ else()
         PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/host"
     )
     target_link_libraries(maishuji-host-tests PRIVATE maishuji)
+
+    add_executable(maishuji-dynamic-lighting-tests
+        tests/host/dynamic_lighting_tests.cpp)
+    target_link_libraries(maishuji-dynamic-lighting-tests PRIVATE maishuji)
+    maishuji_use_car_assets(maishuji-dynamic-lighting-tests)
+
+    enable_testing()
+    add_test(NAME lifecycle COMMAND maishuji-host-tests)
+    add_test(NAME dynamic-lighting COMMAND maishuji-dynamic-lighting-tests)
+    add_test(NAME car-assets COMMAND "${Python3_EXECUTABLE}" -B -m unittest
+        discover -s tests -p test_2cv_assets.py -v)
+    add_test(NAME dynamic-lighting-frame-checker COMMAND "${Python3_EXECUTABLE}" -B
+        -m unittest discover -s tests -p test_dynamic_lighting_frame.py -v)
+    set_tests_properties(car-assets dynamic-lighting-frame-checker PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()

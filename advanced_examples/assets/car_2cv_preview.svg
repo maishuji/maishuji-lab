@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="760" viewBox="0 0 1100 760" role="img" aria-labelledby="title desc">
+  <title id="title">Blue, cream, canvas: an original 2CV-inspired design illustration</title>
+  <desc id="desc">Hand-drawn design illustration accompanying the editable car_2cv.obj source. Tall curved cabin, canvas roof, curved bonnet, separate blue wings, four thin wheels, round lamps and cream bumpers. This is not a mesh projection, not a Dreamcast render and not proof of the authored geometry. The Python tool can derive a separate accurate triangle preview when execution is available.</desc>
+  <defs>
+    <radialGradient id="paper" cx="49%" cy="39%" r="75%">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eeeae0"/>
+    </radialGradient>
+    <radialGradient id="ground">
+      <stop stop-color="#263947" stop-opacity=".19"/>
+      <stop offset="1" stop-color="#263947" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      text { font-family: sans-serif; fill: #263947; }
+      .eyebrow { font-size: 11px; letter-spacing: 2px; }
+      .small { font-size: 12px; fill: #64757b; }
+      .line { stroke: #263947; stroke-width: 2; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect width="1100" height="760" fill="url(#paper)"/>
+  <rect x="22" y="22" width="1056" height="716" rx="20" fill="none" stroke="#d1d8d3"/>
+  <text x="55" y="66" class="eyebrow">MAISHUJI LAB / ORIGINAL EDITABLE ASSET STUDY</text>
+  <text x="52" y="118" font-size="46" font-weight="700" letter-spacing="-1.6">Blue, cream, canvas.</text>
+  <text x="56" y="150" font-size="15" fill="#64757b">A 2CV-inspired silhouette. Modest geometry, unmistakable character.</text>
+  <g transform="translate(830 61)">
+    <rect width="210" height="42" rx="21" fill="#e3eae5"/>
+    <text x="105" y="26" text-anchor="middle" class="eyebrow">DESIGN ILLUSTRATION</text>
+  </g>
+
+  <ellipse cx="554" cy="545" rx="430" ry="54" fill="url(#ground)"/>
+  <!-- Four wheels are illustrated; the OBJ, not these paths, is the usable mesh. -->
+  <g class="line">
+    <ellipse cx="345" cy="482" rx="42" ry="61" fill="#222222"/>
+    <ellipse cx="780" cy="480" rx="42" ry="61" fill="#222222"/>
+    <path d="M190 415 L225 368 L260 366 L293 277 Q310 244 350 237 Q452 213 532 251 L615 362 Q735 367 825 417 L869 461 L855 500 L198 500 Z" fill="#3388cc"/>
+    <!-- Curved tall cabin, narrower than the fenders. -->
+    <path d="M237 381 L273 294 Q297 239 350 227 Q437 204 510 233 Q536 244 554 269 L616 365 L570 386 Z" fill="#3388cc"/>
+    <path d="M273 294 Q297 239 350 227 Q437 204 510 233 L532 248 Q440 222 353 246 Q314 255 293 303 Z" fill="#77a8ce" stroke="none"/>
+    <!-- Cloth cap and two restrained seams, drawn only for the design study. -->
+    <path d="M316 253 Q394 215 484 238 L507 257 Q406 233 323 276 Z" fill="#ddcc99"/>
+    <path d="M366 239 L373 257 M439 235 L446 253" fill="none" stroke="#ffeecc" stroke-width="4"/>
+    <!-- Glazing leaves visible blue pillars and a blue belt line. -->
+    <path d="M293 307 Q306 280 330 270 L389 254 L390 358 L275 365 Z" fill="#88ccdd"/>
+    <path d="M408 253 Q465 243 505 263 L548 351 L409 358 Z" fill="#88ccdd"/>
+    <path d="M524 267 L547 275 L601 356 L564 351 Z" fill="#88ccdd"/>
+    <path d="M301 309 L317 288 L346 278 M426 273 L469 272" fill="none" stroke="#e2f2eb" stroke-width="4" opacity=".65"/>
+    <!-- Sculpted hood and front face, with no brand badge. -->
+    <path d="M570 386 L615 362 Q721 366 825 417 L793 440 Q698 400 570 409 Z" fill="#438fc5"/>
+    <path d="M615 362 Q729 371 825 417 L793 440 Q709 397 570 386 Z" fill="#559dce" stroke="none"/>
+    <path d="M825 417 L869 461 L855 500 L797 500 L793 440 Z" fill="#2674ad"/>
+    <path d="M814 438 L851 463 L841 493 L807 487 Z" fill="#ffeecc"/>
+    <path d="M817 450 L841 467 L834 482 L813 478 Z" fill="#222222"/>
+    <path d="M816 458 L839 473 M815 467 L836 480" fill="none" stroke="#bbccdd" stroke-width="3"/>
+    <!-- Rear wheel and separate arched wing. -->
+    <ellipse cx="297" cy="489" rx="51" ry="64" fill="#222222"/>
+    <ellipse cx="291" cy="489" rx="27" ry="35" fill="#ffeecc"/>
+    <path d="M218 461 Q238 396 298 401 Q359 403 379 468 L357 478 Q345 429 296 428 Q252 424 238 472 Z" fill="#3388cc"/>
+    <path d="M218 461 Q238 396 298 401 Q359 403 379 468" fill="none" stroke="#7baed1" stroke-width="3"/>
+    <!-- Front wheel and separate long wing. -->
+    <ellipse cx="712" cy="490" rx="51" ry="64" fill="#222222"/>
+    <ellipse cx="706" cy="490" rx="27" ry="35" fill="#ffeecc"/>
+    <path d="M618 469 Q648 399 714 402 Q779 407 800 478 L777 486 Q760 433 712 430 Q661 428 642 481 Z" fill="#3388cc"/>
+    <path d="M618 469 Q648 399 714 402 Q779 407 800 478" fill="none" stroke="#7baed1" stroke-width="3"/>
+    <!-- Freestanding round lamps and cream bumpers. -->
+    <path d="M750 406 L746 383 M828 431 L838 404" stroke="#ffeecc" stroke-width="7"/>
+    <ellipse cx="748" cy="376" rx="22" ry="24" fill="#ffeecc"/>
+    <ellipse cx="753" cy="376" rx="15" ry="17" fill="#ffffff"/>
+    <ellipse cx="845" cy="400" rx="18" ry="21" fill="#ffeecc"/>
+    <ellipse cx="850" cy="400" rx="12" ry="15" fill="#ffffff"/>
+    <path d="M792 501 L865 506 L879 496 L878 511 L860 521 L790 516 Z" fill="#ffeecc"/>
+    <path d="M180 493 L221 492 L219 509 L182 511 Z" fill="#ffeecc"/>
+    <path d="M200 423 L211 417 L210 438 L200 441 Z" fill="#ee4433"/>
+    <path d="M393 376 L392 474 M555 370 L570 471" fill="none" stroke="#2674ad"/>
+    <path d="M354 388 L375 387 M513 383 L533 383 M380 490 L609 490" fill="none" stroke="#ffeecc" stroke-width="4"/>
+  </g>
+
+  <path d="M56 586H1044" stroke="#cbd4cf"/>
+  <text x="56" y="615" class="eyebrow">EDITABLE OBJ + MTL</text>
+  <text x="355" y="615" class="eyebrow">+Y UP / +Z FRONT</text>
+  <text x="663" y="615" class="eyebrow">OPAQUE 64 × 32 SWATCH ATLAS</text>
+  <g transform="translate(56 643)">
+    <rect width="30" height="14" rx="3" fill="#3388cc"/>
+    <text x="42" y="12" class="small">blue</text>
+    <rect x="119" width="30" height="14" rx="3" fill="#ffeecc"/>
+    <text x="161" y="12" class="small">cream</text>
+    <rect x="238" width="30" height="14" rx="3" fill="#88ccdd"/>
+    <text x="280" y="12" class="small">glass</text>
+    <rect x="357" width="30" height="14" rx="3" fill="#222222"/>
+    <text x="399" y="12" class="small">rubber</text>
+    <rect x="476" width="30" height="14" rx="3" fill="#bbccdd"/>
+    <text x="518" y="12" class="small">metal</text>
+    <rect x="595" width="30" height="14" rx="3" fill="#ddcc99"/>
+    <text x="637" y="12" class="small">canvas</text>
+    <rect x="714" width="30" height="14" rx="3" fill="#ffffff" stroke="#cbd4cf"/>
+    <text x="756" y="12" class="small">lamp</text>
+    <rect x="833" width="30" height="14" rx="3" fill="#ee4433"/>
+    <text x="875" y="12" class="small">tail</text>
+  </g>
+  <text x="56" y="700" font-size="12" font-weight="700">DESIGN ILLUSTRATION — not a mesh projection or target render.</text>
+  <text x="56" y="720" font-size="11" fill="#64757b">Illustrative shading and details are not baked into the asset. Use the OBJ for geometry; run the Python tool for a triangle-derived preview.</text>
+</svg>

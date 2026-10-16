@@ -6,6 +6,10 @@ A small C++20 learning framework over KallistiOS for exploring Sega Dreamcast ha
 
 Open this repository in VS Code and choose **Dev Containers: Reopen in Container**. The development container and CI use the same image digest and KOS toolchain. See [`docs/toolchain.md`](docs/toolchain.md) for the pinned versions and setup checks, and [`docs/kos-backend.md`](docs/kos-backend.md) for the raw KOS/PVR boundary and lifetime rules.
 For a visual overview, see [the PVR architecture diagrams](docs/architecture-diagrams.md).
+Use the [lesson index](docs/examples.md) to follow a topic without renumbering or
+moving existing examples. `examples/` teaches individual capabilities;
+`advanced_examples/` combines them. The [input track](docs/input.md) extends the
+framework beyond PVR while keeping Maple behavior explicit.
 
 Verify the environment in the integrated terminal:
 

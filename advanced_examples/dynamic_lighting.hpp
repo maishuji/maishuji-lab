@@ -31,21 +31,6 @@ inline constexpr maishuji::Camera normal_camera{
     0.95f, 4.0f / 3.0f, 0.1f, 40.0f,
 };
 
-// One world camera, two rigid instances. Each instance's car, projected shadow
-// and model-local light marker receive the same transform before submission.
-inline constexpr maishuji::Camera capture_camera{
-    {0.0f, 6.0f, 10.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
-    0.95f, 4.0f / 3.0f, 0.1f, 40.0f,
-};
-inline constexpr std::array<maishuji::Transform, 2> capture_transforms{{
-    {{-3.0f, 0.0f, 0.0f}, {0.0f, 0.3f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-    {{3.0f, 0.0f, 0.0f}, {0.0f, 0.3f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-}};
-inline constexpr std::array<maishuji::Vec3, 2> capture_lights{{
-    {orbit_radius, light_height, 0.0f},
-    {-orbit_radius, light_height, 0.0f},
-}};
-
 inline bool finite(maishuji::Vec3 value) noexcept {
     return std::isfinite(value.x) && std::isfinite(value.y) &&
            std::isfinite(value.z);

@@ -159,11 +159,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
 
     add_executable(maishuji-dynamic-lighting
         advanced_examples/11-dynamic-lighting.cpp)
-    add_executable(maishuji-dynamic-lighting-capture
-        advanced_examples/11-dynamic-lighting.cpp)
-    target_compile_definitions(maishuji-dynamic-lighting-capture PRIVATE
-        MAISHUJI_DYNAMIC_LIGHTING_CAPTURE=1)
-    foreach(target maishuji-dynamic-lighting maishuji-dynamic-lighting-capture)
+    foreach(target maishuji-dynamic-lighting)
         target_link_libraries(${target} PRIVATE maishuji)
         target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
         maishuji_use_car_assets(${target})
@@ -197,7 +193,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-pvr-tile-workload)
     maishuji_enable_link_map(maishuji-frustum-culling)
     maishuji_enable_link_map(maishuji-dynamic-lighting)
-    maishuji_enable_link_map(maishuji-dynamic-lighting-capture)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

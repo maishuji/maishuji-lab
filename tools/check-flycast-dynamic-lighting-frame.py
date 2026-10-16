@@ -1,22 +1,16 @@
-
-"""Check advanced11's fixed opposite-light comparison, not its animation.
+"""Check advanced11's animated single-car lighting frame.
 
 Usage: python3 tools/check-flycast-dynamic-lighting-frame.py capture.png
 
 ImageMagick 6/7 reads real captures; check_frame accepts packed RGB8 directly.
 Capture dimensions follow the existing harness: >=320x240, aspect 1.30..1.36.
-All regions/counts use 640x480 coordinates. Initial thresholds are UNCALIBRATED:
+All regions/counts use 640x480 coordinates. Thresholds are initial/uncalibrated:
 synthetic tests exercise the checker, not Flycast or real Dreamcast rendering.
 
-The independent pinhole projection assumes camera (0,6,10)->(0,1,0), vertical
-FOV .95, aspect 4/3, yaw .3 and translations +/-3. Car hulls come from authored
-OBJ positions, not from the capture or the runtime's rendering implementation.
-Their convex silhouettes conservatively exclude body pixels from shadow counts
-(with a 2px guard). No shadow rasterizer or per-pixel depth reference is needed.
-Shadow search windows are x=70..310 / 330..590, y=225..350; each centroid must
-lie >=20px outward from the projected wheel-contact center. Each search needs
->=24 shadow pixels outside BOTH cars. Markers are sought within 16px of their
-projected centers (~356,80 and ~275,98), not next to their owning car.
+The independent projection mirrors the runtime's normal camera:
+camera (5,5,8) -> (0,1.4,0), vertical FOV .95, aspect 4/3. The car is static;
+the light and marker orbit, so marker/shadow checks use broad regions and only
+require a shadow centroid displaced from the projected wheel-contact center.
 """
 
 from __future__ import annotations
@@ -34,14 +28,30 @@ from typing import NamedTuple
 
 WIDTH, HEIGHT = 640, 480
 ASSET = Path(__file__).resolve().parents[1] / "advanced_examples" / "assets" / "car_2cv.obj"
+
 GROUND = (229, 217, 190)
 SHADOW = (66, 79, 99)
 GOLD = ((255, 236, 161), (231, 165, 64))
-MIN_BLUE, MIN_SHADOW, MIN_MARKER, MIN_FLOOR = 150, 24, 12, 2000
-MIN_DISPLACEMENT = 20
+
+MIN_BLUE, MIN_SHADOW, MIN_MARKER = 150, 24, 8
+MIN_DISPLACEMENT = 12.0
+MIN_FLOOR = 2000
+
 RGB = tuple[int, int, int]
 Point = tuple[float, float]
+Vec3 = tuple[float, float, float]
 Region = tuple[int, int, int, int]  # left, top, right, bottom; exclusive maxima
+
+CAMERA_POSITION: Vec3 = (5.0, 5.0, 8.0)
+CAMERA_TARGET: Vec3 = (0.0, 1.4, 0.0)
+CAMERA_UP: Vec3 = (0.0, 1.0, 0.0)
+CAMERA_FOV = 0.95
+
+BLUE_REGION = (170, 180, 470, 360)
+MARKER_REGION = (120, 20, 520, 220)
+SHADOW_REGION = (80, 220, 560, 390)
+LEFT_FLOOR_REGION = (40, 350, 300, 425)
+RIGHT_FLOOR_REGION = (340, 350, 600, 425)
 
 
 @dataclass(frozen=True)
@@ -65,22 +75,51 @@ class CheckResult(NamedTuple):
 
 
 def validate_dimensions(width: int, height: int) -> None:
-    """Use the same minimum dimensions/aspect tolerance as existing checkers."""
     if width < 320 or height < 240 or not 1.30 <= width / height <= 1.36:
         raise ValueError(f"unexpected capture dimensions: {width}x{height}; "
                          "expected a 4:3 game window of at least 320x240")
 
 
-def project(point: tuple[float, float, float], translation: float) -> Point:
-    """Project a model-local point into the fixed capture camera."""
-    x, y, z = point
-    c, s = math.cos(.3), math.sin(.3)
-    x, z = c * x + s * z + translation, -s * x + c * z
-    # Camera forward=(0,-1,-2)/sqrt(5); right=+X; up=(0,2,-1)/sqrt(5).
-    depth = (-(y - 6) - 2 * (z - 10)) / math.sqrt(5)
-    up = (2 * (y - 6) - (z - 10)) / math.sqrt(5)
-    focal = HEIGHT / (2 * math.tan(.95 / 2))
-    return WIDTH / 2 + focal * x / depth, HEIGHT / 2 - focal * up / depth
+def sub(a: Vec3, b: Vec3) -> Vec3:
+    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+
+def dot(a: Vec3, b: Vec3) -> float:
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def cross(a: Vec3, b: Vec3) -> Vec3:
+    return (a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0])
+
+
+def normalize(v: Vec3) -> Vec3:
+    length_sq = dot(v, v)
+    if not math.isfinite(length_sq) or length_sq <= 1.0e-12:
+        raise ValueError("invalid camera basis")
+    inv = 1.0 / math.sqrt(length_sq)
+    return (v[0] * inv, v[1] * inv, v[2] * inv)
+
+
+@lru_cache(maxsize=1)
+def camera_basis() -> tuple[Vec3, Vec3, Vec3]:
+    forward = normalize(sub(CAMERA_TARGET, CAMERA_POSITION))
+    right = normalize(cross(forward, CAMERA_UP))
+    up = cross(right, forward)
+    return right, up, forward
+
+
+def project(point: Vec3) -> Point:
+    right, up, forward = camera_basis()
+    view = sub(point, CAMERA_POSITION)
+    depth = dot(view, forward)
+    if not math.isfinite(depth) or depth <= 1.0e-5:
+        raise ValueError("projected point is behind the camera")
+    focal = HEIGHT / (2 * math.tan(CAMERA_FOV / 2))
+    x = WIDTH / 2 + focal * dot(view, right) / depth
+    y = HEIGHT / 2 - focal * dot(view, up) / depth
+    return x, y
 
 
 def turn(a: Point, b: Point, p: Point) -> float:
@@ -101,13 +140,12 @@ def convex_hull(points: list[Point]) -> tuple[Point, ...]:
 
 
 def inside_car(x: float, y: float, hull: tuple[Point, ...]) -> bool:
-    # Cross products are scaled by edge length so the guard is in screen pixels.
     return all(turn(a, b, (x, y)) >= -2 * math.hypot(b[0] - a[0], b[1] - a[1])
                for a, b in zip(hull, hull[1:] + hull[:1]))
 
 
 @lru_cache(maxsize=1)
-def car_hulls() -> tuple[tuple[Point, ...], ...]:
+def car_hull() -> tuple[Point, ...]:
     positions = []
     for line in ASSET.read_text(encoding="utf-8").splitlines():
         fields = line.split("#", 1)[0].split()
@@ -115,11 +153,10 @@ def car_hulls() -> tuple[tuple[Point, ...], ...]:
             positions.append(tuple(map(float, fields[1:])))
     if not positions or any(len(p) != 3 for p in positions):
         raise ValueError(f"expected XYZ positions in {ASSET}")
-    hulls = tuple(convex_hull([project(p, offset) for p in positions])
-                  for offset in (-3, 3))
-    if any(len(hull) < 3 for hull in hulls):
+    hull = convex_hull([project(position) for position in positions])
+    if len(hull) < 3:
         raise ValueError("car projection has no conservative silhouette")
-    return hulls
+    return hull
 
 
 def near(color: RGB, target: RGB, tolerance: int) -> bool:
@@ -128,13 +165,11 @@ def near(color: RGB, target: RGB, tolerance: int) -> bool:
 
 def is_blue(color: RGB) -> bool:
     r, g, b = color
-    # Includes ambient-only paint (15,41,61), excludes sky, shadow, glass/metal.
     return b >= 45 and g >= 22 and b >= 1.28 * g and b >= 2.7 * r
 
 
 def is_shadow(color: RGB) -> bool:
     r, g, b = color
-    # Channel gaps reject scalar-lit blue/glass/metal and gray rubber surfaces.
     return near(color, SHADOW, 10) and b - g >= 12 and g - r >= 5
 
 
@@ -148,7 +183,7 @@ def measure(width: int, height: int, pixels: bytes, region: Region,
         for x in range(left, right):
             offset = (row + x * width // WIDTH) * 3
             color = (pixels[offset], pixels[offset + 1], pixels[offset + 2])
-            if predicate(color) and location(x + .5, y + .5):
+            if predicate(color) and location(x + 0.5, y + 0.5):
                 count += 1
                 sx += x
                 sy += y
@@ -156,53 +191,48 @@ def measure(width: int, height: int, pixels: bytes, region: Region,
 
 
 def check_frame(width: int, height: int, pixels: bytes) -> CheckResult:
-    """Inspect RGB8 without subprocesses; non-640 captures use nearest sampling.
-
-    The CLI instead uses ImageMagick resizing, like the existing shell checkers.
-    This is a static composition heuristic, not proof of animation or lighting
-    correctness. A synthetic drawing can satisfy it; it is not a reference render.
-    """
     validate_dimensions(width, height)
     if len(pixels) != width * height * 3:
         raise ValueError(f"expected {width * height * 3} packed RGB8 bytes, got {len(pixels)}")
-    hulls = car_hulls()
+    hull = car_hull()
     failures, measurements = [], []
 
-    def outside_cars(x: float, y: float) -> bool:
-        return not any(inside_car(x, y, hull) for hull in hulls)
+    blue = measure(width, height, pixels, BLUE_REGION, is_blue,
+                   lambda x, y: inside_car(x, y, hull))
+    shadow = measure(width, height, pixels, SHADOW_REGION, is_shadow,
+                     lambda x, y: not inside_car(x, y, hull))
+    marker = measure(width, height, pixels, MARKER_REGION,
+                     lambda rgb: any(near(rgb, gold, 18) for gold in GOLD))
+    floor_left = measure(width, height, pixels, LEFT_FLOOR_REGION, lambda rgb: near(rgb, GROUND, 16))
+    floor_right = measure(width, height, pixels, RIGHT_FLOOR_REGION, lambda rgb: near(rgb, GROUND, 16))
 
-    for i, (name, offset, direction) in enumerate((("left", -3, -1), ("right", 3, 1))):
-        blue_region = (120, 180, 290, 335) if i == 0 else (350, 180, 550, 335)
-        blue = measure(width, height, pixels, blue_region, is_blue,
-                       lambda x, y, hull=hulls[i]: inside_car(x, y, hull))
-        shadow_region = (70, 225, 310, 350) if i == 0 else (330, 225, 590, 350)
-        shadow = measure(width, height, pixels, shadow_region, is_shadow, outside_cars)
-        contact_x, _ = project((0, 0, 0), offset)
-        displacement = None if shadow.x is None else direction * (shadow.x - contact_x)
-        marker_x, marker_y = project((4 if i == 0 else -4, 4.5, 0), offset)
-        marker_region = (math.floor(marker_x - 16), math.floor(marker_y - 16),
-                         math.ceil(marker_x + 16), math.ceil(marker_y + 16))
-        marker = measure(width, height, pixels, marker_region,
-                         lambda rgb: any(near(rgb, gold, 18) for gold in GOLD))
-        dx_text = "none" if displacement is None else f"{displacement:.1f}px"
-        measurements.append(f"{name}: blue {blue.describe()}; exterior shadow {shadow.describe()}; "
-                            f"outward displacement={dx_text} (need >=20px, contact x={contact_x:.1f}); "
-                            f"marker {marker.describe()} near ({marker_x:.1f},{marker_y:.1f})")
-        if blue.count < MIN_BLUE:
-            failures.append(f"{name}: expected >= {MIN_BLUE} blue car pixels inside its projected silhouette")
-        if shadow.count < MIN_SHADOW:
-            failures.append(f"{name}: expected >= {MIN_SHADOW} shadow pixels outside projected car silhouettes")
-        if displacement is None or displacement < MIN_DISPLACEMENT:
-            failures.append(f"{name}: shadow centroid must be >=20px "
-                            f"{'left' if direction < 0 else 'right'} of wheel-contact center")
-        if marker.count < MIN_MARKER:
-            failures.append(f"{name}: expected >= {MIN_MARKER} gold light-marker pixels in {marker_region}")
+    contact_x, contact_y = project((0.0, 0.0, 0.0))
+    displacement = None
+    if shadow.x is not None and shadow.y is not None:
+        displacement = math.hypot(shadow.x - contact_x, shadow.y - contact_y)
 
-    for name, region in (("left", (40, 350, 300, 425)), ("right", (340, 350, 600, 425))):
-        floor = measure(width, height, pixels, region, lambda rgb: near(rgb, GROUND, 16))
-        measurements.append(f"{name} warm floor: {floor.describe()} in {region}")
-        if floor.count < MIN_FLOOR:
-            failures.append(f"{name}: expected >= {MIN_FLOOR} warm-floor pixels in {region}")
+    measurements.append(f"car blue: {blue.describe()} in {BLUE_REGION}")
+    measurements.append(f"exterior shadow: {shadow.describe()} in {SHADOW_REGION}")
+    measurements.append(f"light marker: {marker.describe()} in {MARKER_REGION}")
+    measurements.append(f"shadow displacement from contact ({contact_x:.1f},{contact_y:.1f}): "
+                        f"{'none' if displacement is None else f'{displacement:.1f}px'}")
+    measurements.append(f"left warm floor: {floor_left.describe()} in {LEFT_FLOOR_REGION}")
+    measurements.append(f"right warm floor: {floor_right.describe()} in {RIGHT_FLOOR_REGION}")
+
+    if blue.count < MIN_BLUE:
+        failures.append(f"car: expected >= {MIN_BLUE} blue car pixels in {BLUE_REGION}")
+    if shadow.count < MIN_SHADOW:
+        failures.append(
+            f"shadow: expected >= {MIN_SHADOW} shadow pixels outside projected car silhouette in {SHADOW_REGION}"
+        )
+    if displacement is None or displacement < MIN_DISPLACEMENT:
+        failures.append(f"shadow: centroid must be >= {MIN_DISPLACEMENT:.0f}px from projected wheel-contact center")
+    if marker.count < MIN_MARKER:
+        failures.append(f"marker: expected >= {MIN_MARKER} gold light-marker pixels in {MARKER_REGION}")
+    if floor_left.count < MIN_FLOOR:
+        failures.append(f"floor-left: expected >= {MIN_FLOOR} warm-floor pixels in {LEFT_FLOOR_REGION}")
+    if floor_right.count < MIN_FLOOR:
+        failures.append(f"floor-right: expected >= {MIN_FLOOR} warm-floor pixels in {RIGHT_FLOOR_REGION}")
     return CheckResult(tuple(failures), tuple(measurements))
 
 
@@ -216,16 +246,23 @@ def imagemagick_commands() -> tuple[list[str], list[str]]:
 
 def read_capture(path: Path) -> bytes:
     identify, convert = imagemagick_commands()
-    # Absolute paths cannot become command options. Only the first frame is read.
     image = str(path.resolve()) + "[0]"
-    dimensions = subprocess.run(identify + ["-format", "%w %h", image],
-                                check=True, capture_output=True, timeout=30).stdout.split()
+    dimensions = subprocess.run(
+        identify + ["-format", "%w %h", image],
+        check=True,
+        capture_output=True,
+        timeout=30,
+    ).stdout.split()
     if len(dimensions) != 2:
         raise ValueError("could not read one capture's dimensions")
     validate_dimensions(int(dimensions[0]), int(dimensions[1]))
-    result = subprocess.run(convert + [image, "-resize", "640x480!", "-alpha", "off",
-                                      "-colorspace", "sRGB", "-depth", "8", "RGB:-"],
-                            check=True, capture_output=True, timeout=30)
+    result = subprocess.run(
+        convert + [image, "-resize", "640x480!", "-alpha", "off",
+                   "-colorspace", "sRGB", "-depth", "8", "RGB:-"],
+        check=True,
+        capture_output=True,
+        timeout=30,
+    )
     if len(result.stdout) != WIDTH * HEIGHT * 3:
         raise ValueError(f"ImageMagick returned {len(result.stdout)} bytes; expected 640x480 RGB8")
     return result.stdout
@@ -249,14 +286,13 @@ def main(argv: list[str] | None = None) -> int:
             detail += ": " + (error.stderr or b"").decode("utf-8", errors="replace")[:1000]
         print(f"FAIL: dynamic-lighting capture could not be checked: {detail}", file=sys.stderr)
         return 1
-    print("Thresholds: initial/uncalibrated; static visibility comparison only, not animation proof.")
+    print("Thresholds: initial/uncalibrated; static visibility check only, not animation proof.")
     for measurement in result.measurements:
         print("  " + measurement)
     for failure in result.failures:
         print("FAIL: " + failure)
     if result.passed:
-        print("PASS: static comparison shows two blue cars, warm floor, two light markers "
-              "and oppositely displaced exterior shadows.")
+        print("PASS: static check shows one blue car, warm floor, one light marker and an exterior shadow.")
     return 0 if result.passed else 1
 
 

@@ -257,65 +257,6 @@ void test_authored_asset() {
            bound_z + (bound_z + lighting::orbit_radius) * projection_scale < lighting::ground_half_extent,
            "floor contains the shadow at every angle, not only sampled frames");
 
-    // Exercise the actual capture poses with the same local lighting helpers
-    // and framework transforms used by public mesh submission. No renderer or
-    // clipping implementation is duplicated here.
-    expect(lighting::capture_camera.valid(), "shared capture camera is valid");
-    static_assert(lighting::capture_transforms.size() == lighting::capture_lights.size());
-    for(std::size_t instance = 0; instance < lighting::capture_transforms.size(); ++instance) {
-        const auto model = maishuji::transform_matrix(lighting::capture_transforms[instance]);
-        const auto mvp = maishuji::view_projection_matrix(lighting::capture_camera) * model;
-        const auto light = lighting::capture_lights[instance];
-        const auto world_light = maishuji::to_vec3(model * maishuji::to_vec4(light));
-        expect(car.update(light), "capture local light updates expanded geometry");
-        bool capture_inside_floor = true;
-        bool projection_equivalent = true;
-        bool framed = true;
-        float min_x = 1, max_x = -1, min_y = 1, max_y = -1;
-        for(std::size_t i = 0; i < index_count; ++i) {
-            const auto world_point = maishuji::to_vec3(model * maishuji::to_vec4(car.base[i].position));
-            auto world_shadow = maishuji::to_vec3(model * maishuji::to_vec4(car.shadow[i].position));
-            capture_inside_floor = capture_inside_floor && near(world_shadow.y, lighting::shadow_height) &&
-                std::fabs(world_shadow.x) < lighting::ground_half_extent &&
-                std::fabs(world_shadow.z) < lighting::ground_half_extent;
-            Vec3 expected{};
-            world_shadow.y = 0;
-            projection_equivalent = projection_equivalent &&
-                lighting::project_to_ground(world_point, world_light, expected) &&
-                same(expected, world_shadow, 2.0e-5f);
-            for(const auto local : {car.base[i].position, car.shadow[i].position}) {
-                const auto projected = maishuji::project_point(mvp, local);
-                const auto p = projected.normalized_device;
-                framed = framed && projected.valid && lighting::finite(p) &&
-                    std::fabs(p.x) < 1 && p.y > -5.0f / 6.0f && p.y < 11.0f / 15.0f &&
-                    p.z >= -1 && p.z <= 1;
-            }
-            const auto p = maishuji::project_point(mvp, car.base[i].position).normalized_device;
-            min_x = std::min(min_x, p.x);
-            max_x = std::max(max_x, p.x);
-            min_y = std::min(min_y, p.y);
-            max_y = std::max(max_y, p.y);
-        }
-        expect(capture_inside_floor, "translated, yawed capture shadows fit the one world ground");
-        expect(projection_equivalent, "transforming local shadow matches projecting from transformed light");
-        expect(framed, "both capture cars and shadows fit between the title/footer bars");
-        expect(std::max((max_x - min_x) * 320, (max_y - min_y) * 240) >= 100,
-               "each capture car spans at least 100 pixels in one dimension");
-        // A box enclosing the octahedron also checks marker/header separation.
-        bool marker_framed = true;
-        for(float x : {-0.2f, 0.2f}) {
-            for(float y : {-0.2f, 0.2f}) {
-                for(float z : {-0.2f, 0.2f}) {
-                    const auto projected = maishuji::project_point(mvp, light + Vec3{x, y, z});
-                    const auto p = projected.normalized_device;
-                    marker_framed = marker_framed && projected.valid && lighting::finite(p) &&
-                        std::fabs(p.x) < 1 && p.y > -5.0f / 6.0f && p.y < 11.0f / 15.0f &&
-                        p.z >= -1 && p.z <= 1;
-                }
-            }
-        }
-        expect(marker_framed, "transformed capture light marker stays clear of labels");
-    }
 }
 
 void test_normal_camera_marker_orbit() {

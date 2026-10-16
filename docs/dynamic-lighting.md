@@ -35,14 +35,10 @@ the existing hardware loader with an actual console address:
 make run-dc DC_ELF=build-dreamcast/maishuji-dynamic-lighting.elf DC_IP=YOUR_DREAMCAST_IP
 ```
 
-The animation runs without a controller. With a Maple controller:
-
-| Button | Action |
-| --- | --- |
-| A | Pause/resume the light |
-| B | Reverse its direction |
-| X | Toggle the ground shadow |
-| Start | Exit and release resources |
+The animation runs without controller input. In normal mode it auto-orbits the
+light and exits after 600 successfully submitted frames (10 seconds at 60 Hz).
+Capture mode remains deterministic and exits after 120 successful frames once
+the frame-ready marker is emitted.
 
 Animation advances one revolution per 720 successfully submitted frames: 12
 seconds **if** the program sustains 60 Hz, 14.4 seconds at 50 Hz. This is an
@@ -85,7 +81,7 @@ Punch-through list: preuploaded title and control labels
 | Author the car | OBJ, MTL, atlas; named parts, grounded wheels, mirrored surfaces | Python geometry, UV, quantization, symmetry, and determinism tests |
 | Compute lighting and projection | Example-local [dynamic_lighting.hpp](../advanced_examples/dynamic_lighting.hpp) | Host normal, light, ray, ground-contact, bounds, and full-orbit checks |
 | Submit the lesson | Example 11, CMake/Make targets, static texture staging | Debug/Release target builds; resource/status review |
-| Check the image | Fixed opposite-light capture target and pixel checker | Three stable Flycast captures plus guest readiness marker |
+| Check the image | Animated-scene Flycast frame checker | Stable Flycast captures plus guest readiness marker |
 | Confirm hardware behavior | Same ELF on a physical Dreamcast | Visual depth/bias checks and measured timing, still open |
 
 These steps are implemented in source; the execution gates remain open. No new
@@ -195,45 +191,38 @@ This works because the receiver is a **uniformly colored plane**. It is not a
 multiplicative shadow over arbitrary textures, slopes, or other objects. It
 provides hard ground shadows only: no penumbra, terrain following, transparency,
 or shadows cast onto the car itself. The 14x14 receiver conservatively contains
-the rotating projection in the normal scene and both fixed capture instances.
+the rotating projection across the full orbit.
 
-## Validation and comparison capture
+## Validation and Flycast frame check
 
 The host tests exercise the actual helper and generated asset, including a
 720-frame orbit, unchanged UV/base colors, ground contact, mirrored triangle
-surfaces, invalid input, rigid-transform projection equivalence, receiver
-containment, and marker framing. They are also included in `make host-test`.
+surfaces, invalid input, receiver containment, and marker framing. They are
+also included in `make host-test`.
 
-For a stable visual comparison:
+For a Flycast visual check:
 
 ```sh
-make in-container TARGET=dreamcast-dynamic-lighting-capture-cdi
+make in-container TARGET=dreamcast-dynamic-lighting-cdi
 make flycast-dynamic-lighting
 ```
 
-This uses `maishuji-dynamic-lighting-capture`, compiled with
-`MAISHUJI_DYNAMIC_LIGHTING_CAPTURE=1`. One camera at `(0,6,10)` looks at `(0,1,0)`
-with vertical FOV `0.95`. The cars are translated to `X=-3` and `X=+3`, both
-with yaw `0.3` radians. Their model-local lights are `(4,4.5,0)` and
-`(-4,4.5,0)`. Each instance transforms its car, shadow, and marker together, so
-both use the **same public mesh path as the animation**. There is one shared
-ground and no overlapping orbit rings. The fixed lights are independent
-comparison fixtures, not a physical two-light solution for both cars.
-
-After 120 successful frames and a render-completion wait, the target emits:
+After 120 successful frames and a render-completion wait, the runtime emits:
 
 ```text
-maishuji: dynamic lighting capture ready (opposite lights; planar shadows)
+maishuji: dynamic lighting ready (498 triangles; flat Lambert; planar shadows)
 ```
 
-The [frame checker](../tools/check-flycast-dynamic-lighting-frame.py) looks for
-both blue cars, warm ground, gold light markers, and shadow-colored pixels
-**outside both conservative car silhouettes** with oppositely displaced
-centroids. Missing shadows cannot pass merely because cars are visible.
+The [frame checker](../tools/check-flycast-dynamic-lighting-frame.py) now checks
+the animated lesson frame directly: one blue car, warm floor coverage in both
+halves, one gold light marker in the sky band, and shadow-colored pixels
+**outside the projected car silhouette** with a minimum centroid displacement
+from the wheel-contact center. Missing shadows cannot pass merely because the
+car body is visible.
 The [synthetic checker tests](../tests/test_dynamic_lighting_frame.py) cover
 negative cases, but do not establish target rendering. The checker is an
 initial uncalibrated visibility heuristic, not a reference renderer or proof of
-animation. Manually observe a full orbit and the controls separately.
+animation. Manually observe a full orbit and confirm the automatic shutdown.
 
 Flycast prerequisites and guest-log limitations are the same as the existing
 [render checks](flycast-serial-logs.md). The harness invokes Python checkers via
@@ -249,12 +238,6 @@ triangles: 498 car, 498 shadow, 192 orbit guide, eight marker, and two ground.
 At the current one-header/three-vertex submission shape, that is 153,344 nominal
 packet bytes before overlays. The three screen quads and two text quads add
 800 bytes, for **154,144 nominal bytes**.
-
-The fixed comparison submits 2,010 input triangles and seven quads, giving
-**258,400 nominal bytes**. These figures exclude clipping expansion, scene/list
-control, tile references, OPB storage, and actual PVR buffer high-water use.
-They are neither throughput nor frame-time measurements. The configuration
-retains the project's 512 KiB vertex buffer.
 
 The atlas costs 4,096 bytes of PVR texture storage. Four 512x32 ARGB4444 label
 textures add 131,072 bytes; one shared 32,768-byte CPU staging array is reused

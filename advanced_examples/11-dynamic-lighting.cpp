@@ -9,24 +9,16 @@
 #include <span>
 
 #include <dc/biosfont.h>
-#include <dc/maple.h>
-#include <dc/maple/controller.h>
 #include <kos.h>
-
-#ifndef MAISHUJI_DYNAMIC_LIGHTING_CAPTURE
-#define MAISHUJI_DYNAMIC_LIGHTING_CAPTURE 0
-#endif
 
 namespace {
 
 namespace lighting = dynamic_lighting;
-constexpr bool capture_mode = MAISHUJI_DYNAMIC_LIGHTING_CAPTURE == 1;
 constexpr std::size_t car_index_count = maishuji::car_2cv_mesh::indices.size();
 static_assert(car_index_count == 498 * 3, "Expected the authored 498-triangle 2CV");
 lighting::FlatCar<car_index_count> car;
 
-constexpr maishuji::Camera camera = capture_mode ? lighting::capture_camera
-                                                : lighting::normal_camera;
+constexpr maishuji::Camera camera = lighting::normal_camera;
 constexpr maishuji::Color sky_color{27, 40, 59, 255};
 constexpr maishuji::PrimitiveConfiguration overlay_configuration{
     maishuji::Culling::None, maishuji::DepthCompare::Always, false, false,
@@ -97,7 +89,9 @@ constexpr maishuji::Quad rectangle(float left, float top, float right,
 
 constexpr std::uint16_t label_width = 512;
 constexpr std::uint16_t label_height = 32;
-enum Label : std::size_t { Title, Footer, CaptureLeft, CaptureRight, LabelCount };
+enum Label : std::size_t { Title, Footer, LabelCount };
+constexpr unsigned ready_log_frame = 120;
+constexpr unsigned orbit_exit_frames = 600;
 
 maishuji::Status upload_label(maishuji::Pvr &pvr, maishuji::Texture &texture,
                               const char *message) noexcept {
@@ -162,20 +156,12 @@ maishuji::Status run_frame(maishuji::Pvr &pvr, const maishuji::Texture &texture,
     if(maishuji::failed(status)) return status;
     status = opaque.submit(floor_mesh, camera, {}, {640, 480});
     if(maishuji::failed(status)) return status;
-    if constexpr(capture_mode) {
-        for(std::size_t instance = 0; instance < lighting::capture_transforms.size(); ++instance) {
-            status = draw_scene(opaque, texture, lighting::capture_lights[instance],
-                                 true, lighting::capture_transforms[instance]);
-            if(maishuji::failed(status)) return status;
-        }
-    } else {
-        const maishuji::Mesh ring{ring_vertices, ring_indices};
-        status = opaque.submit(ring, camera, {}, {640, 480});
-        if(maishuji::failed(status)) return status;
-        status = draw_scene(opaque, texture, lighting::orbit_light(angle), shadows);
-        if(maishuji::failed(status)) return status;
-    }
-    status = opaque.submit(rectangle(0, 0, 640, capture_mode ? 64 : 40,
+    const maishuji::Mesh ring{ring_vertices, ring_indices};
+    status = opaque.submit(ring, camera, {}, {640, 480});
+    if(maishuji::failed(status)) return status;
+    status = draw_scene(opaque, texture, lighting::orbit_light(angle), shadows);
+    if(maishuji::failed(status)) return status;
+    status = opaque.submit(rectangle(0, 0, 640, 40,
                                       sky_color, 1), overlay_configuration);
     if(maishuji::failed(status)) return status;
     status = opaque.submit(rectangle(0, 440, 640, 480, sky_color, 1),
@@ -191,12 +177,6 @@ maishuji::Status run_frame(maishuji::Pvr &pvr, const maishuji::Texture &texture,
     if(maishuji::failed(status)) return status;
     status = draw_label(text, labels[Footer], 16, 448);
     if(maishuji::failed(status)) return status;
-    if constexpr(capture_mode) {
-        status = draw_label(text, labels[CaptureLeft], 16, 42, 0.75f);
-        if(maishuji::failed(status)) return status;
-        status = draw_label(text, labels[CaptureRight], 336, 42, 0.75f);
-        if(maishuji::failed(status)) return status;
-    }
     status = text.finish();
     if(maishuji::failed(status)) return status;
     return frame.finish();
@@ -243,53 +223,28 @@ int main() {
         status = texture.upload(std::span<const std::uint16_t>{texture_pixels});
     constexpr const char *messages[] = {
         "11 / DYNAMIC LIGHTING / BLUE + CREAM 2CV",
-        capture_mode ? "OPPOSITE LIGHTS / OPAQUE PLANAR SHADOWS"
-                     : "A PAUSE  B REVERSE  X SHADOW  START EXIT",
-        "0 RAD / LIGHT +X", "PI RAD / LIGHT -X",
+        "AUTO ORBIT / AUTO EXIT AFTER 10 SECONDS",
     };
     for(std::size_t i = 0; i < LabelCount && maishuji::succeeded(status); ++i)
         status = upload_label(pvr, labels[i], messages[i]);
 
-    bool paused = false;
-    bool shadows = true;
-    int direction = 1;
     int phase = 0;
-    unsigned previous_buttons = 0;
     unsigned successful_frames = 0;
-    while(maishuji::succeeded(status)) {
-        unsigned buttons = 0;
-        auto *device = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
-        if(device != nullptr) {
-            const auto *state =
-                static_cast<const cont_state_t *>(maple_dev_status(device));
-            if(state != nullptr) buttons = state->buttons;
-        }
-        const unsigned pressed = buttons & ~previous_buttons;
-        previous_buttons = buttons;
-        if((pressed & CONT_START) != 0) break;
-        if constexpr(!capture_mode) {
-            if((pressed & CONT_A) != 0) paused = !paused;
-            if((pressed & CONT_B) != 0) direction = -direction;
-            if((pressed & CONT_X) != 0) shadows = !shadows;
-        }
+    constexpr unsigned exit_frames = orbit_exit_frames;
+    while(maishuji::succeeded(status) && successful_frames < exit_frames) {
         const float angle = 2.0f * lighting::pi * static_cast<float>(phase) / 720.0f;
-        status = run_frame(pvr, texture, labels, angle, shadows);
+        status = run_frame(pvr, texture, labels, angle, true);
         if(maishuji::failed(status)) break;
         ++successful_frames;
-        if(successful_frames == 120) {
+        if(successful_frames == ready_log_frame) {
             status = pvr.wait_render_done();
             if(maishuji::failed(status)) break;
-            if constexpr(capture_mode) {
-                dbglog(DBG_NOTICE,
-                    "maishuji: dynamic lighting capture ready (opposite lights; planar shadows)\n");
-            } else {
-                dbglog(DBG_NOTICE,
-                    "maishuji: dynamic lighting ready (498 triangles; flat Lambert; planar shadows)\n");
-            }
+            dbglog(DBG_NOTICE,
+                "maishuji: dynamic lighting ready (498 triangles; flat Lambert; planar shadows)\n");
         }
         // Deterministic fallback: no timer API was verified in this repository.
         // One revolution per 720 successful frames (12 seconds only at 60 Hz).
-        if(!capture_mode && !paused) phase = (phase + direction + 720) % 720;
+        phase = (phase + 1) % 720;
     }
     const auto cleanup_status = cleanup(pvr, texture, labels);
     if(maishuji::succeeded(status)) status = cleanup_status;

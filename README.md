@@ -40,18 +40,17 @@ See [docs/dynamic-lighting.md](docs/dynamic-lighting.md) for advanced example 11
 
 For PNG-to-PVR conversion and the generated asset workflow, see [docs/pvr-assets.md](docs/pvr-assets.md).
 
-Build the animated 2CV lighting lesson, or package its separate fixed
-opposite-light comparison for the Flycast checker:
+Build and validate the animated 2CV lighting lesson:
 
 ```sh
 make host-test-dynamic-lighting
 make in-container TARGET=dreamcast-dynamic-lighting-cdi
-make in-container TARGET=dreamcast-dynamic-lighting-capture-cdi
 make flycast-dynamic-lighting
 ```
 
 The animated CDI is `build-dreamcast/maishuji-dynamic-lighting.cdi`.
-A pauses the light, B reverses it, X toggles the shadow, and Start exits.
+The animated lesson auto-rotates the light and exits after about 10 seconds
+(600 successful frames at 60 Hz).
 Python 3.10+ generates the mesh and atlas into the build directory automatically;
 no Python or OBJ parser runs on the Dreamcast. See the lesson guide for the
 unverified build/runtime boundary and asset preview instructions.

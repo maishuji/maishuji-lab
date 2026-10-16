@@ -36,8 +36,25 @@ See [docs/multi-texture.md](docs/multi-texture.md) for the two-texture submissio
 See [docs/lighting.md](docs/lighting.md) for the offset-color lighting lesson and its KOS polygon-header mapping.
 See [docs/frustum-culling.md](docs/frustum-culling.md) for the advanced object-level frustum-culling example, fixed camera diagram, and CPU/PVR cost boundary.
 See [docs/model-loader.md](docs/model-loader.md) for both the satellite and the larger static human DCM1 model lessons.
+See [docs/dynamic-lighting.md](docs/dynamic-lighting.md) for advanced example 11: an original 2CV-inspired car, CPU-computed dynamic lighting, and a rotating planar ground shadow. Its build and visual validation are pending.
 
 For PNG-to-PVR conversion and the generated asset workflow, see [docs/pvr-assets.md](docs/pvr-assets.md).
+
+Build the animated 2CV lighting lesson, or package its separate fixed
+opposite-light comparison for the Flycast checker:
+
+```sh
+make host-test-dynamic-lighting
+make in-container TARGET=dreamcast-dynamic-lighting-cdi
+make in-container TARGET=dreamcast-dynamic-lighting-capture-cdi
+make flycast-dynamic-lighting
+```
+
+The animated CDI is `build-dreamcast/maishuji-dynamic-lighting.cdi`.
+A pauses the light, B reverses it, X toggles the shadow, and Start exits.
+Python 3.10+ generates the mesh and atlas into the build directory automatically;
+no Python or OBJ parser runs on the Dreamcast. See the lesson guide for the
+unverified build/runtime boundary and asset preview instructions.
 
 Build the PVR smoke example for Dreamcast:
 

@@ -32,6 +32,11 @@ this offset word, while the generic textured vertex packet does. The base quad
 also enables the offset-color header with zero offsets, making the comparison
 use the same packet form on both sides.
 
+For an actual moving point light and projected ground shadow on a car, see
+[advanced example 11: dynamic lighting](dynamic-lighting.md). That lesson
+computes face normals and diffuse colors on the CPU; it does not extend this
+offset-color mode into a general hardware lighting engine.
+
 This is deliberately not a general lighting model: there are no normals,
 light positions, attenuation values, materials, or scene objects. Those would
 hide the PVR boundary and belong to a later, separately justified layer.

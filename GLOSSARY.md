@@ -201,3 +201,18 @@ UV-seam(mesh):
 
 glTF(asset):
 	Means "GL Transmission Format" and describes scenes, buffers, materials, and resources in a richer interchange format that this lesson converts offline.
+
+Flat-shading(mesh):
+	Assigns one lighting intensity to every corner of a triangle so its facet remains visibly distinct.
+
+Lambert-lighting(cpu):
+	Scales diffuse surface color by the nonnegative dot product of the surface normal and direction toward a light before PVR submission.
+
+Point-light(cpu):
+	Defines a finite light position used by the SH-4 to compute surface illumination and shadow rays.
+
+Planar-shadow(cpu):
+	Projects caster geometry along light rays onto a flat receiver before submitting the resulting PVR triangles.
+
+Shadow-bias(rendering):
+	Separates projected shadow geometry slightly from its receiver to reduce coplanar depth conflicts.

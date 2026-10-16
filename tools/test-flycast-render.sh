@@ -39,10 +39,19 @@ frame_checker=${FLYCAST_FRAME_CHECKER:-"$script_dir/check-flycast-frame.sh"}
 if [[ "$frame_checker" != /* ]]; then
     frame_checker=$(realpath "$frame_checker")
 fi
-[[ -x "$frame_checker" ]] || {
+# Python checkers do not need an executable bit; shell checkers keep the
+# existing executable contract. Use an argument array, never eval a command.
+frame_checker_command=("$frame_checker")
+if [[ "$frame_checker" == *.py && -f "$frame_checker" && -r "$frame_checker" ]]; then
+    command -v python3 >/dev/null 2>&1 || {
+        echo "Python 3 is required by frame checker: $frame_checker" >&2
+        exit 2
+    }
+    frame_checker_command=(python3 -B "$frame_checker")
+elif [[ ! -f "$frame_checker" || ! -x "$frame_checker" ]]; then
     echo "Frame checker is missing or not executable: $frame_checker" >&2
     exit 2
-}
+fi
 
 [[ -n "${DISPLAY:-}" ]] || {
     echo "An X11 or XWayland display is required (DISPLAY is empty)." >&2
@@ -245,7 +254,7 @@ while (( SECONDS < render_deadline )); do
     # The test window must remain visible and unobscured during capture.
     if ! timeout "$capture_timeout" "${image_import[@]}" -screen -window "$window_id" +repage "$capture_path"; then
         if [[ -f "$capture_path" ]] &&
-           last_check_output=$("$frame_checker" "$capture_path" 2>&1); then
+           last_check_output=$("${frame_checker_command[@]}" "$capture_path" 2>&1); then
             ((stable_count += 1))
             if (( stable_count >= stable_samples )) && runtime_gate_passed; then
                 complete_success
@@ -256,7 +265,7 @@ while (( SECONDS < render_deadline )); do
         fi
         die "Could not capture the Flycast window."
     fi
-    if last_check_output=$("$frame_checker" "$capture_path" 2>&1); then
+    if last_check_output=$("${frame_checker_command[@]}" "$capture_path" 2>&1); then
         ((stable_count += 1))
     else
         stable_count=0

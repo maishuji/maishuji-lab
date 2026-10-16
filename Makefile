@@ -50,6 +50,10 @@ DC_TILE_WORKLOAD_ELF ?= $(DC_BUILD_DIR)/maishuji-pvr-tile-workload.elf
 DC_TILE_WORKLOAD_CDI ?= $(DC_BUILD_DIR)/maishuji-pvr-tile-workload.cdi
 DC_FRUSTUM_CULLING_ELF ?= $(DC_BUILD_DIR)/maishuji-frustum-culling.elf
 DC_FRUSTUM_CULLING_CDI ?= $(DC_BUILD_DIR)/maishuji-frustum-culling.cdi
+DC_DYNAMIC_LIGHTING_ELF ?= $(DC_BUILD_DIR)/maishuji-dynamic-lighting.elf
+DC_DYNAMIC_LIGHTING_CDI ?= $(DC_BUILD_DIR)/maishuji-dynamic-lighting.cdi
+DC_DYNAMIC_LIGHTING_CAPTURE_ELF ?= $(DC_BUILD_DIR)/maishuji-dynamic-lighting-capture.elf
+DC_DYNAMIC_LIGHTING_CAPTURE_CDI ?= $(DC_BUILD_DIR)/maishuji-dynamic-lighting-capture.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 # CDI targets own their named output paths, so rebuilding a target replaces
@@ -60,6 +64,12 @@ KOS_TOOLCHAIN_FILE ?= /opt/toolchains/dc/kos/utils/cmake/kallistios.toolchain.cm
 CONTAINER_RUNTIME ?= docker
 
 .PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-lifecycle-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-human-model-loader-cdi dreamcast-multi-texture-cdi dreamcast-pvr-tile-workload-cdi dreamcast-frustum-culling-cdi dreamcast-makefile-smoke flycast-smoke flycast-lifecycle flycast-textured-quad flycast-pixel-sprites flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader flycast-human-model-loader flycast-multi-texture flycast-pvr-tile-workload flycast-frustum-culling run-dc
+
+.PHONY: car-assets host-test-dynamic-lighting dreamcast-dynamic-lighting-cdi dreamcast-dynamic-lighting-capture-cdi flycast-dynamic-lighting
+
+# Derive assets into the ignored build tree, never over the authored source SVG.
+car-assets:
+	python3 -B tools/generate-2cv-model.py --output-dir $(HOST_BUILD_DIR)/generated
 
 # Verify the pinned Dreamcast/KOS toolchain and image versions.
 # Use this first when a Dreamcast build fails or after entering the container.
@@ -90,6 +100,15 @@ host-run: host-build
 # Use this after changing framework code or before committing.
 host-test: host-build
 	./$(HOST_BUILD_DIR)/$(HOST_TEST_EXE)
+	./$(HOST_BUILD_DIR)/maishuji-dynamic-lighting-tests
+	python3 -B -m unittest discover -s tests -p test_2cv_assets.py -v
+	python3 -B -m unittest discover -s tests -p test_dynamic_lighting_frame.py -v
+
+host-test-dynamic-lighting: host-configure
+	cmake --build $(HOST_BUILD_DIR) --target maishuji-dynamic-lighting-tests --verbose
+	./$(HOST_BUILD_DIR)/maishuji-dynamic-lighting-tests
+	python3 -B -m unittest discover -s tests -p test_2cv_assets.py -v
+	python3 -B -m unittest discover -s tests -p test_dynamic_lighting_frame.py -v
 
 # Configure the Dreamcast cross-build with the pinned KOS toolchain.
 # Use this when changing CMake/toolchain settings; dreamcast-build calls it automatically.
@@ -167,6 +186,12 @@ dreamcast-pvr-tile-workload-cdi: dreamcast-build
 dreamcast-frustum-culling-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_FRUSTUM_CULLING_ELF)" -o "$(DC_FRUSTUM_CULLING_CDI)" -n "maishuji-lab frustum culling"
 
+dreamcast-dynamic-lighting-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_DYNAMIC_LIGHTING_ELF)" -o "$(DC_DYNAMIC_LIGHTING_CDI)" -n "maishuji-lab dynamic lighting"
+
+dreamcast-dynamic-lighting-capture-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_DYNAMIC_LIGHTING_CAPTURE_ELF)" -o "$(DC_DYNAMIC_LIGHTING_CAPTURE_CDI)" -n "maishuji-lab lighting comparison"
+
 dreamcast-makefile-smoke: check-toolchain
 	./tools/with-kos.sh "$(MAKE)" -f tools/kos-makefile-smoke.mk BUILD_DIR="$(KOS_MAKEFILE_BUILD_DIR)"
 
@@ -241,6 +266,9 @@ flycast-pvr-tile-workload:
 
 flycast-frustum-culling:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-frustum-culling-frame.sh FLYCAST_WINDOW_TITLE=MAISHUJI_FRUSTUM_CULLING FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: frustum culling passed (mode=on; submitted=2 objects; input=8 triangles" ./tools/test-flycast-render.sh "$(DC_FRUSTUM_CULLING_CDI)"
+
+flycast-dynamic-lighting:
+	FLYCAST_FRAME_CHECKER=tools/check-flycast-dynamic-lighting-frame.py FLYCAST_WINDOW_TITLE=MAISHUJI_DYNAMIC_LIGHTING FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: dynamic lighting capture ready (opposite lights; planar shadows)" ./tools/test-flycast-render.sh "$(DC_DYNAMIC_LIGHTING_CAPTURE_CDI)"
 
 run-dc: dreamcast-build
 	@test -n "$(DC_IP)" || (echo "Set DC_IP to the Dreamcast BBA address, for example: make run-dc DC_IP=YOUR_DREAMCAST_IP" >&2; exit 2)

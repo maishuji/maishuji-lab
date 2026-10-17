@@ -69,6 +69,18 @@ class ControllerFrameTests(unittest.TestCase):
         self.assertEqual(checker.check_pixels(self.pixels, "ports"), [])
         self.assertTrue(checker.check_pixels(bytes(len(self.pixels)), "ports"))
 
+    def test_camera_requires_bright_label_and_floor(self):
+        self.assertTrue(checker.check_pixels(self.pixels, "camera"))
+        for y in range(15, 145, 4):
+            for x in range(18, 515, 4):
+                offset = (y * checker.WIDTH + x) * 3
+                self.pixels[offset:offset + 3] = bytes((220, 220, 220))
+        for y in range(260, 465, 4):
+            for x in range(120, 520, 4):
+                offset = (y * checker.WIDTH + x) * 3
+                self.pixels[offset:offset + 3] = bytes((48, 92, 104))
+        self.assertEqual(checker.check_pixels(self.pixels, "camera"), [])
+
     def test_rejects_wrong_dimensions(self):
         self.assertTrue(checker.check_pixels(b""))
 

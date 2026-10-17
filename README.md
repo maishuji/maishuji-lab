@@ -60,6 +60,8 @@ inspector. A separate scripted CDI supports display checks without a controller.
 to distinguish held, pressed, and released buttons. [Analog input](docs/analog-input.md)
 compares raw values with explicit normalization and radial dead zones. The
 [physical-port dashboard](docs/controller-ports.md) distinguishes A–D slots.
+The [input-driven camera](docs/input-driven-camera.md) combines these foundations
+in an advanced 3D lesson.
 
 The animated CDI is `build-dreamcast/maishuji-dynamic-lighting.cdi`.
 The animated lesson auto-rotates the light and exits after about 10 seconds

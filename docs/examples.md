@@ -14,8 +14,8 @@ The raw reference remains [pvr_smoke.cpp](../examples/pvr_smoke.cpp).
 
 ## Input learning path
 
-The input track is being implemented in the order below. Planned filenames
-are identifiers, not available build targets until their lesson is added.
+Read these input lessons in order. Each foundation example teaches one input
+concept; the advanced camera lesson combines them with 3D rendering.
 
 | Lesson | Level | Teaches | Prerequisite | Status |
 | --- | --- | --- | --- | --- |

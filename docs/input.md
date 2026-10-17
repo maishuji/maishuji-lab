@@ -70,16 +70,23 @@ It uses fixed storage, no PVR ownership, and no invented bus initialization API.
 - No callback ownership, device registry, action-binding engine, or generic keyboard/
   mouse abstraction is required for these lessons.
 
-## Validation plan
+## Validation and open gates (2026-10-17)
 
-Each implementation step must add and execute focused host tests and build with
-the locked KOS toolchain. Tests cover edges, first sample, held buttons, simultaneous
-buttons, loss/recovery, endpoints, dead-zone boundaries, diagonals, and port isolation.
-A separately labeled scripted mode may exercise the display and deterministic
-checks. Never replace an absent live controller with hidden scripted input.
+The input lessons have host coverage for owned snapshots, first sample,
+simultaneous button edges, loss/recovery, invalid ports, normalized endpoints,
+radial dead zones, and bounded camera movement. `make host-test` and CTest
+exercise these portable paths; they cannot verify live Maple behavior. The
+pinned KOS Debug and Release builds check API and link compatibility. Separate
+labeled scripted CDIs and Flycast captures verify their fixtures and rendered
+frames with guest markers, not physical controller discovery or real hotplug.
+The migrated terrain and frustum fixed captures also passed after their input
+changes. Individual lesson guides link their reproduction commands and precise
+limits from the [lesson index](examples.md).
 
-Interactive lessons stay open for inspection; bounded scripted tests are separate.
-A screenshot or synthetic sample test is not evidence for physical Maple input.
-Verify live Flycast mappings and real-console reconnect behavior separately.
-Hardware latency, physical axis direction, freshness, and hotplug timing remain
-unverified until explicitly measured on a named configuration.
+Interactive lessons stay open for inspection; bounded scripted tests are
+separate. Do not replace an absent live controller with hidden scripted input.
+Live Flycast mappings, physical stick/trigger direction, cached-state latency,
+button-toggle behavior, and real-console reconnect/replacement still need
+manual verification on a named configuration. No hardware checks were run.
+An unplug/replacement between polls cannot be detected by the current copied
+snapshot contract without an observed invalid interval or generation source.

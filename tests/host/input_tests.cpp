@@ -144,6 +144,15 @@ void test_port_isolation() {
           "physical C has its own owned sample");
     check(sample_controller(ControllerPort::B).availability == InputAvailability::Disconnected,
           "an empty B is not remapped to the first controller C");
+    ControllerSnapshot unsupported{};
+    unsupported.availability = InputAvailability::Unsupported;
+    host::set_controller_fixture(ControllerPort::A, unsupported);
+    ControllerSnapshot unavailable_slot{};
+    unavailable_slot.availability = InputAvailability::Unavailable;
+    host::set_controller_fixture(ControllerPort::D, unavailable_slot);
+    check(sample_controller(ControllerPort::A).availability == InputAvailability::Unsupported &&
+          sample_controller(ControllerPort::D).availability == InputAvailability::Unavailable,
+          "independent physical slots report distinct availability");
     first.buttons = 0;
     check(copied.held(Button::B), "copied state never aliases the fixture");
     ControllerSnapshot unavailable{};

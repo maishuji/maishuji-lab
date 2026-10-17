@@ -54,7 +54,7 @@ No claim is made that every physical replacement is observable between samples.
 
 The library now separates a copied controller snapshot and KOS adapter from
 application input mapping. Button transitions and analog processing are
-implemented; physical-port dashboard is planned next.
+implemented; the physical-port dashboard is also implemented.
 It uses fixed storage, no PVR ownership, and no invented bus initialization API.
 
 - The implemented snapshot API distinguishes disconnected, unsupported, unavailable, valid, and invalid port.

@@ -286,6 +286,9 @@ else()
         discover -s tests -p test_2cv_assets.py -v)
     add_test(NAME dynamic-lighting-frame-checker COMMAND "${Python3_EXECUTABLE}" -B
         -m unittest discover -s tests -p test_dynamic_lighting_frame.py -v)
-    set_tests_properties(car-assets dynamic-lighting-frame-checker PROPERTIES
+    add_test(NAME controller-frame-checker COMMAND "${Python3_EXECUTABLE}" -B
+        -m unittest discover -s tests -p test_controller_state_frame.py -v)
+    set_tests_properties(car-assets dynamic-lighting-frame-checker
+        controller-frame-checker PROPERTIES
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()

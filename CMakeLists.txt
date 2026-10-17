@@ -168,6 +168,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
         target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
     endforeach()
 
+    add_executable(maishuji-controller-transitions examples/12-controller-transitions.cpp)
+    add_executable(maishuji-controller-transitions-scripted examples/12-controller-transitions.cpp)
+    target_compile_definitions(maishuji-controller-transitions-scripted PRIVATE
+        MAISHUJI_INPUT_SCRIPTED=1)
+    foreach(target maishuji-controller-transitions maishuji-controller-transitions-scripted)
+        target_link_libraries(${target} PRIVATE maishuji)
+        target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
+    endforeach()
+
     add_executable(maishuji-dynamic-lighting
         advanced_examples/11-dynamic-lighting.cpp)
     foreach(target maishuji-dynamic-lighting)
@@ -206,6 +215,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-dynamic-lighting)
     maishuji_enable_link_map(maishuji-controller-state)
     maishuji_enable_link_map(maishuji-controller-state-scripted)
+    maishuji_enable_link_map(maishuji-controller-transitions)
+    maishuji_enable_link_map(maishuji-controller-transitions-scripted)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

@@ -56,6 +56,10 @@ DC_CONTROLLER_STATE_ELF ?= $(DC_BUILD_DIR)/maishuji-controller-state.elf
 DC_CONTROLLER_STATE_CDI ?= $(DC_BUILD_DIR)/maishuji-controller-state.cdi
 DC_CONTROLLER_SCRIPTED_ELF ?= $(DC_BUILD_DIR)/maishuji-controller-state-scripted.elf
 DC_CONTROLLER_SCRIPTED_CDI ?= $(DC_BUILD_DIR)/maishuji-controller-state-scripted.cdi
+DC_TRANSITIONS_ELF ?= $(DC_BUILD_DIR)/maishuji-controller-transitions.elf
+DC_TRANSITIONS_CDI ?= $(DC_BUILD_DIR)/maishuji-controller-transitions.cdi
+DC_TRANSITIONS_SCRIPTED_ELF ?= $(DC_BUILD_DIR)/maishuji-controller-transitions-scripted.elf
+DC_TRANSITIONS_SCRIPTED_CDI ?= $(DC_BUILD_DIR)/maishuji-controller-transitions-scripted.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 # CDI targets own their named output paths, so rebuilding a target replaces
@@ -67,7 +71,7 @@ CONTAINER_RUNTIME ?= docker
 
 .PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-lifecycle-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-human-model-loader-cdi dreamcast-multi-texture-cdi dreamcast-pvr-tile-workload-cdi dreamcast-frustum-culling-cdi dreamcast-makefile-smoke flycast-smoke flycast-lifecycle flycast-textured-quad flycast-pixel-sprites flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader flycast-human-model-loader flycast-multi-texture flycast-pvr-tile-workload flycast-frustum-culling run-dc
 
-.PHONY: car-assets host-test-dynamic-lighting dreamcast-dynamic-lighting-cdi flycast-dynamic-lighting host-test-input dreamcast-controller-state-cdi dreamcast-controller-state-scripted-cdi flycast-controller-state-scripted
+.PHONY: car-assets host-test-dynamic-lighting dreamcast-dynamic-lighting-cdi flycast-dynamic-lighting host-test-input dreamcast-controller-state-cdi dreamcast-controller-state-scripted-cdi flycast-controller-state-scripted dreamcast-controller-transitions-cdi dreamcast-controller-transitions-scripted-cdi flycast-controller-transitions-scripted
 
 # Derive assets into the ignored build tree, never over the authored source SVG.
 car-assets:
@@ -201,6 +205,12 @@ dreamcast-controller-state-cdi: dreamcast-build
 dreamcast-controller-state-scripted-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_CONTROLLER_SCRIPTED_ELF)" -o "$(DC_CONTROLLER_SCRIPTED_CDI)" -n "maishuji scripted input"
 
+dreamcast-controller-transitions-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_TRANSITIONS_ELF)" -o "$(DC_TRANSITIONS_CDI)" -n "maishuji transitions"
+
+dreamcast-controller-transitions-scripted-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_TRANSITIONS_SCRIPTED_ELF)" -o "$(DC_TRANSITIONS_SCRIPTED_CDI)" -n "maishuji scripted edges"
+
 dreamcast-dynamic-lighting-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_DYNAMIC_LIGHTING_ELF)" -o "$(DC_DYNAMIC_LIGHTING_CDI)" -n "maishuji-lab dynamic lighting"
 
@@ -281,6 +291,9 @@ flycast-frustum-culling:
 
 flycast-controller-state-scripted:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-controller-state-frame.py FLYCAST_WINDOW_TITLE=MAISHUJI_CONTROLLER_STATE FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: controller state scripted passed" ./tools/test-flycast-render.sh "$(DC_CONTROLLER_SCRIPTED_CDI)"
+
+flycast-controller-transitions-scripted:
+	MAISHUJI_FRAME_SCENE=transitions FLYCAST_FRAME_CHECKER=tools/check-flycast-controller-state-frame.py FLYCAST_WINDOW_TITLE=MAISHUJI_CONTROLLER_TRANSITIONS FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: controller transitions scripted passed" ./tools/test-flycast-render.sh "$(DC_TRANSITIONS_SCRIPTED_CDI)"
 
 flycast-dynamic-lighting:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-dynamic-lighting-frame.py FLYCAST_WINDOW_TITLE=MAISHUJI_DYNAMIC_LIGHTING FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: dynamic lighting ready (498 triangles; flat Lambert; planar shadows)" ./tools/test-flycast-render.sh "$(DC_DYNAMIC_LIGHTING_CDI)"

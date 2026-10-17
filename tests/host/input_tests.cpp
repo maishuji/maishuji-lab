@@ -37,6 +37,55 @@ void test_mapping() {
     check(limits.buttons == 0xffffu, "only low sixteen cooked buttons survive");
 }
 
+void test_transitions() {
+    using namespace maishuji;
+    ButtonTracker tracker;
+    ControllerSnapshot sample{};
+    sample.availability = InputAvailability::Valid;
+    sample.capabilities.buttons = button_mask(Button::A) | button_mask(Button::B);
+    sample.buttons = sample.capabilities.buttons;
+    auto edges = tracker.update(sample);
+    check(edges.held(Button::A) && edges.held(Button::B) &&
+          !edges.pressed(Button::A) && !edges.released(Button::B),
+          "first valid sample seeds both held buttons without edges");
+    edges = tracker.update(sample);
+    check(edges.held(Button::A) && !edges.pressed(Button::A),
+          "held button does not retrigger");
+    sample.buttons = 0;
+    edges = tracker.update(sample);
+    check(edges.released(Button::A) && edges.released(Button::B) &&
+          !edges.held(Button::A), "simultaneous releases appear once");
+    edges = tracker.update(sample);
+    check(!edges.released(Button::A), "release does not repeat");
+    sample.buttons = button_mask(Button::A) | button_mask(Button::B);
+    edges = tracker.update(sample);
+    check(edges.pressed(Button::A) && edges.pressed(Button::B),
+          "simultaneous presses appear once");
+    sample.availability = InputAvailability::Disconnected;
+    edges = tracker.update(sample);
+    check(!edges.held(Button::A) && !edges.released(Button::A),
+          "disconnect neutralizes without fabricated releases");
+    sample.availability = InputAvailability::Valid;
+    edges = tracker.update(sample);
+    check(edges.held(Button::A) && !edges.pressed(Button::A),
+          "reconnect seeds history without a fabricated press");
+    sample.availability = InputAvailability::Unavailable;
+    tracker.update(sample);
+    sample.availability = InputAvailability::Valid;
+    edges = tracker.update(sample);
+    check(!edges.pressed(Button::B), "unavailable invalidates history");
+    sample.availability = InputAvailability::Unsupported;
+    tracker.update(sample);
+    sample.availability = InputAvailability::Valid;
+    check(!tracker.update(sample).pressed(Button::A), "unsupported invalidates history");
+    tracker.reset();
+    check(!tracker.update(sample).pressed(Button::A), "explicit reset reseeds history");
+    sample.port = ControllerPort::B;
+    sample.buttons = 0;
+    check(!tracker.update(sample).released(Button::A),
+          "switching physical ports seeds without cross-port releases");
+}
+
 void test_port_isolation() {
     using namespace maishuji;
     host::clear_controller_fixtures();
@@ -73,6 +122,7 @@ void test_port_isolation() {
 
 int main() {
     test_mapping();
+    test_transitions();
     test_port_isolation();
     if(failures != 0) return 1;
     std::puts("input snapshots: host tests passed");

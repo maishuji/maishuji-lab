@@ -35,6 +35,16 @@ class ControllerFrameTests(unittest.TestCase):
         self.pixels[offset:offset + 3] = bytes((82, 108, 124))
         self.assertTrue(any("A held" in failure for failure in checker.check_pixels(self.pixels)))
 
+    def test_transition_fixture(self):
+        a = (302 * checker.WIDTH + 508) * 3
+        b = (267 * checker.WIDTH + 473) * 3
+        trigger = (205 * checker.WIDTH + 553) * 3
+        self.pixels[a:a + 3] = bytes((82, 108, 124))
+        self.pixels[b:b + 3] = bytes((101, 230, 159))
+        self.pixels[trigger:trigger + 3] = bytes((82, 108, 124))
+        self.assertEqual(checker.check_pixels(self.pixels, "transitions"), [])
+        self.assertTrue(checker.check_pixels(self.pixels, "state"))
+
     def test_rejects_wrong_dimensions(self):
         self.assertTrue(checker.check_pixels(b""))
 

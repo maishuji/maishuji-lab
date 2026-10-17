@@ -27,8 +27,8 @@ are identifiers, not available build targets until their lesson is added.
 
 Read the [input contract](input.md) before implementing or interpreting input
 behavior. The existing [terrain walk](terrain-walk.md) and
-[frustum-culling example](frustum-culling.md) currently demonstrate small amounts
-of direct KOS input; they are not substitutes for the foundation lessons.
+[frustum-culling example](frustum-culling.md) now reuse the copied-state input
+helpers for movement and toggle behavior.
 
 ## Advanced rendering
 

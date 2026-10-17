@@ -1,3 +1,4 @@
+#include "maishuji/input.hpp"
 #include "maishuji/frustum.hpp"
 #include "maishuji/mesh.hpp"
 #include "maishuji/pvr.hpp"
@@ -8,8 +9,6 @@
 #include <span>
 
 #include <dc/biosfont.h>
-#include <dc/maple.h>
-#include <dc/maple/controller.h>
 #include <kos.h>
 
 namespace {
@@ -216,18 +215,11 @@ int main() {
     if(maishuji::failed(status)) return fail(pvr, on, off, status);
 
     bool culling = true;
-    bool previous_a = false;
+    maishuji::ButtonTracker buttons;
     for(int frame_index = 0;
         frame_index < warmup_frames + capture_hold_frames; ++frame_index) {
-        bool a = false;
-        maple_device_t *device = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
-        if(device != nullptr) {
-            const auto *state =
-                static_cast<const cont_state_t *>(maple_dev_status(device));
-            a = state != nullptr && (state->buttons & CONT_A) != 0;
-        }
-        if(a && !previous_a) culling = !culling;
-        previous_a = a;
+        const auto input = maishuji::sample_controller(maishuji::ControllerPort::A);
+        if(buttons.update(input).pressed(maishuji::Button::A)) culling = !culling;
 
         Counts counts{};
         status = run_frame(pvr, mesh, culling ? on : off, culling, counts);

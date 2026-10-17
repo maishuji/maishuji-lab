@@ -14,12 +14,16 @@ bilinearly interpolates the four surrounding samples. `clamp_player` keeps the
 player inside the map margin and applies that sampled height, so the marker
 does not fall below or leave the generated surface.
 
-The controller is read through KOS's Maple controller API. D-pad input gives
-digital movement and the analog stick contributes continuous movement after a
-small dead zone. A scripted walk is used while no input is active, which keeps
-the example and its emulator capture deterministic; the first real movement
-input switches to live controller movement. The magenta triangle marks the
-player position and makes the camera-follow behavior visible.
+The controller is sampled from fixed physical port A through the owned
+`ControllerSnapshot` API, without retaining a Maple pointer. D-pad input gives
+digital movement and the normalized stick contributes continuous movement after
+an explicit radial dead zone (`20/128`). Their sum is clamped to unit magnitude
+so simultaneous D-pad and stick input cannot exceed the movement speed.
+A scripted walk is used until movement input is active, which keeps
+the example and its emulator capture deterministic; the first movement
+input switches to live controller movement. Subsequent loss produces neutral
+movement instead of switching back to the scripted walk. The magenta triangle
+marks the player position and makes the camera-follow behavior visible.
 
 ## Stable emulator validation
 
@@ -52,3 +56,8 @@ produced a passing Debug CDI and Flycast capture with the terrain and marker
 assertions enabled. This validates the fixed fixture in the tested emulator
 setup, not physical Dreamcast input, every controller model, or hardware
 timing.
+
+After the port-A snapshot migration, `make host-test`, pinned KOS Debug and
+Release builds, Release CDI packaging, and the fixed Flycast terrain capture
+with the guest marker passed on 2026-10-17. The visual fixture does not test
+live movement or controller disconnect handling.

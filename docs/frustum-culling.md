@@ -5,8 +5,10 @@ view shows the geometry submitted through the existing indexed-mesh API. The
 lower map looks down on the camera and its two side planes. Green marks an
 inside bound, yellow a bound crossing the right side plane, and red two fully
 outside bounds. Press **A** to turn the CPU culling decision off or on; the
-scene starts with culling on. The label states both modes' input counts, so
-the result can be understood without controller input.
+scene starts with culling on. A fixed-port-A `ControllerSnapshot` and
+`ButtonTracker` produce the A edge; a first valid sample seeds history without
+a fabricated toggle, and loss clears history. The label states both modes'
+input counts, so the result can be understood without controller input.
 
 ![Flycast capture of the labeled meshes and frustum map](assets/frustum-culling-flycast.png)
 
@@ -83,6 +85,11 @@ capture above records that observed frame. These results match the fixed-pose
 expectation. The A-button toggle was compiled but not exercised in the
 automated emulator check. Physical Dreamcast behavior and CPU timing remain
 unverified.
+
+After migrating the A-button edge to `ButtonTracker`, `make host-test`, pinned
+KOS Debug and Release builds, Release CDI packaging, and the fixed Flycast
+capture with the guest marker passed on 2026-10-17. This still does not
+exercise a physical button press.
 
 The source baseline is the current `maishuji::Mesh` six-plane clipping path
 documented in [meshes.md](meshes.md), plus the view/projection conventions in

@@ -1,7 +1,7 @@
 """Check explicitly scripted controller dashboards, never physical input.
 
 Usage: python3 tools/check-flycast-controller-state-frame.py CAPTURE.png
-Set MAISHUJI_FRAME_SCENE=transitions or analog (default: state).
+Set MAISHUJI_FRAME_SCENE=transitions, analog, or ports (default: state).
 """
 import os
 import shutil
@@ -38,6 +38,14 @@ def check_pixels(data: bytes, scene: str = "state") -> list[str]:
             "A not held": (508, 302, lambda r, g, b: 55 < r < 130 and b > r),
             "no trigger": (553, 205, lambda r, g, b: 55 < r < 130),
         })
+    elif scene == "ports":
+        samples = {
+            "A valid": (30, 60, lambda r, g, b: g > r * 1.6 and g > b),
+            "B disconnected": (30, 162, lambda r, g, b: 55 < r < 130 and b > r),
+            "C unsupported": (30, 264, lambda r, g, b: r > 180 and r > g > b),
+            "D unavailable": (30, 366, lambda r, g, b: r > 180 and r > g > b),
+            "bottom background": (620, 460, lambda r, g, b: b > r and b < 80),
+        }
     elif scene == "analog":
         samples.update({
             "raw diagonal": (270, 390, lambda r, g, b: r > 180 and r > g > b),

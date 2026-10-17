@@ -56,6 +56,19 @@ class ControllerFrameTests(unittest.TestCase):
         self.assertEqual(checker.check_pixels(self.pixels, "analog"), [])
         self.assertTrue(checker.check_pixels(self.pixels, "unknown"))
 
+    def test_port_fixture(self):
+        for x, y, color in (
+            (30, 60, (101, 230, 159)),
+            (30, 162, (82, 108, 124)),
+            (30, 264, (255, 196, 94)),
+            (30, 366, (255, 196, 94)),
+            (620, 460, (12, 25, 40)),
+        ):
+            offset = (y * checker.WIDTH + x) * 3
+            self.pixels[offset:offset + 3] = bytes(color)
+        self.assertEqual(checker.check_pixels(self.pixels, "ports"), [])
+        self.assertTrue(checker.check_pixels(bytes(len(self.pixels)), "ports"))
+
     def test_rejects_wrong_dimensions(self):
         self.assertTrue(checker.check_pixels(b""))
 

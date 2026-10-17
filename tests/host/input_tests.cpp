@@ -3,6 +3,7 @@
 #include "detail/controller_mapping.hpp"
 
 #include <cstdio>
+#include <limits>
 
 namespace {
 int failures = 0;
@@ -86,6 +87,48 @@ void test_transitions() {
           "switching physical ports seeds without cross-port releases");
 }
 
+void test_analog() {
+    using namespace maishuji;
+    ControllerSnapshot sample{};
+    sample.availability = InputAvailability::Valid;
+    sample.capabilities = {0, true, true, true, true};
+    sample.stick_x = -128;
+    sample.stick_y = 127;
+    sample.left_trigger = 255;
+    const auto unit = normalized_stick(sample);
+    check(unit.x == -1.0f && unit.y == 1.0f, "signed endpoints reach unit bounds");
+    check(normalized_trigger(sample, true) == 1.0f &&
+          normalized_trigger(sample, false) == 0.0f, "triggers scale from byte range");
+    sample.stick_x = 127;
+    sample.stick_y = -128;
+    check(normalized_stick(sample).x == 1.0f && normalized_stick(sample).y == -1.0f,
+          "opposite signed endpoints retain orientation");
+    AnalogStick output{1.0f, 1.0f};
+    check(apply_radial_dead_zone({0, 0}, 0.2f, output) &&
+          output.x == 0 && output.y == 0, "center remains neutral");
+    check(apply_radial_dead_zone({0.2f, 0}, 0.2f, output) &&
+          output.x == 0, "boundary remains neutral");
+    check(apply_radial_dead_zone({0.6f, 0}, 0.2f, output) &&
+          output.x > 0.49f && output.x < 0.51f, "radial rescaling removes dead zone");
+    check(apply_radial_dead_zone({1, 1}, 0.2f, output) &&
+          output.x > 0.70f && output.x < 0.72f && output.y == output.x,
+          "diagonals clamp magnitude to unit circle");
+    check(!apply_radial_dead_zone({1, 0}, -0.1f, output) && output.x == 0 &&
+          !apply_radial_dead_zone({1, 0}, 1.0f, output) && output.x == 0,
+          "invalid dead zones fail closed");
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    check(!apply_radial_dead_zone({nan, 0}, 0.2f, output) && output.x == 0 &&
+          !apply_radial_dead_zone({0, 0}, nan, output) && output.y == 0,
+          "non-finite analog values and thresholds fail closed");
+    sample.availability = InputAvailability::Unavailable;
+    check(normalized_stick(sample).x == 0 && normalized_trigger(sample, true) == 0,
+          "unavailable input remains neutral");
+    sample.availability = InputAvailability::Valid;
+    sample.capabilities = {};
+    check(normalized_stick(sample).x == 0 && normalized_trigger(sample, true) == 0,
+          "unsupported channels remain neutral");
+}
+
 void test_port_isolation() {
     using namespace maishuji;
     host::clear_controller_fixtures();
@@ -123,6 +166,7 @@ void test_port_isolation() {
 int main() {
     test_mapping();
     test_transitions();
+    test_analog();
     test_port_isolation();
     if(failures != 0) return 1;
     std::puts("input snapshots: host tests passed");

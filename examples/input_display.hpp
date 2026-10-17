@@ -29,11 +29,23 @@ inline maishuji::Status label(maishuji::Pvr &pvr, maishuji::Texture &texture,
                               const maishuji::ControllerSnapshot &state,
                               const char *lesson, bool scripted,
                                                             const maishuji::ButtonTransitions *edges = nullptr,
-                                                            unsigned count_a = 0, unsigned count_b = 0) noexcept {
+                                                            unsigned count_a = 0, unsigned count_b = 0,
+                                                                                          const maishuji::AnalogStick *processed = nullptr) noexcept {
     alignas(32) static std::array<std::uint16_t, text_width * text_height> pixels{};
     pixels.fill(0);
     char lines[256]{};
-    if(edges) {
+    if(processed) {
+        const auto raw = maishuji::normalized_stick(state);
+        ::snprintf(lines, sizeof(lines),
+            "%s / %s\nPORT A: %s\nRAW X:%+4d Y:%+4d LT:%3u RT:%3u\nUNIT X:%+.2f Y:%+.2f\nRADIAL 0.20 X:%+.2f Y:%+.2f",
+            lesson, scripted ? "SCRIPTED / NOT LIVE" : "LIVE",
+            maishuji::input_availability_name(state.availability),
+            state.stick_x, state.stick_y,
+            static_cast<unsigned>(state.left_trigger),
+            static_cast<unsigned>(state.right_trigger),
+            static_cast<double>(raw.x), static_cast<double>(raw.y),
+            static_cast<double>(processed->x), static_cast<double>(processed->y));
+    } else if(edges) {
         ::snprintf(lines, sizeof(lines),
             "%s / %s\nPORT A: %s\nHELD A:%d B:%d  PRESS A:%d B:%d\nRELEASE A:%d B:%d   COUNT A:%u B:%u\n%s",
             lesson, scripted ? "SCRIPTED / NOT LIVE" : "LIVE",
@@ -65,7 +77,8 @@ inline maishuji::Status label(maishuji::Pvr &pvr, maishuji::Texture &texture,
 
 inline maishuji::Status dashboard(maishuji::Pvr &pvr,
                                    const maishuji::Texture &text,
-                                   const maishuji::ControllerSnapshot &state) noexcept {
+                                   const maishuji::ControllerSnapshot &state,
+                                                                      const maishuji::AnalogStick *processed = nullptr) noexcept {
     maishuji::Frame frame;
     auto status = pvr.begin_frame(frame);
     if(maishuji::failed(status)) return status;
@@ -102,6 +115,11 @@ inline maishuji::Status dashboard(maishuji::Pvr &pvr,
     if(maishuji::failed(status)) return status;
     status = put(box(x - 7, y - 7, 14, 14, state.valid() ? accent : panel, 0.7f));
     if(maishuji::failed(status)) return status;
+    if(processed && state.valid()) {
+        status = put(box(240 + processed->x * 28 - 4,
+                         362 + processed->y * 28 - 4, 8, 8, active, 0.8f));
+        if(maishuji::failed(status)) return status;
+    }
     constexpr struct Bar { float x; bool left; } bars[] = {{68, true}, {542, false}};
     for(const auto &bar : bars) {
         status = put(box(bar.x, 188, 22, 115, inactive));

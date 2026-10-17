@@ -57,7 +57,8 @@ For the independent input lesson, see [controller state](docs/controller-state.m
 `make in-container TARGET=dreamcast-controller-state-cdi` packages the live
 inspector. A separate scripted CDI supports display checks without a controller.
 [Button transitions](docs/controller-transitions.md) builds on that copied sample
-to distinguish held, pressed, and released buttons.
+to distinguish held, pressed, and released buttons. [Analog input](docs/analog-input.md)
+compares raw values with explicit normalization and radial dead zones.
 
 The animated CDI is `build-dreamcast/maishuji-dynamic-lighting.cdi`.
 The animated lesson auto-rotates the light and exits after about 10 seconds

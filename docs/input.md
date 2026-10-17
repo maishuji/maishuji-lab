@@ -53,8 +53,8 @@ No claim is made that every physical replacement is observable between samples.
 ## Portable API policy
 
 The library now separates a copied controller snapshot and KOS adapter from
-application input mapping. Button transitions are implemented; analog processing
-is planned next.
+application input mapping. Button transitions and analog processing are
+implemented; physical-port dashboard is planned next.
 It uses fixed storage, no PVR ownership, and no invented bus initialization API.
 
 - The implemented snapshot API distinguishes disconnected, unsupported, unavailable, valid, and invalid port.
@@ -63,7 +63,7 @@ It uses fixed storage, no PVR ownership, and no invented bus initialization API.
 - `ButtonTracker` seeds history on first valid input without synthesizing presses.
 - A lost/unavailable sample resets history; it does not synthesize button releases.
 - Recovery seeds history again. Connection changes and button edges are distinct.
-- Planned normalization divides negative stick endpoints by 128 and positive endpoints by 127;
+- `normalized_stick` divides negative stick endpoints by 128 and positive endpoints by 127;
   triggers divide by 255. Raw values remain visible in the introductory lesson.
 - Radial dead-zone processing is explicit, with no automatic smoothing.
 - Keep numeric stick Y sign; inversion for a camera or screen is application policy.

@@ -1,7 +1,7 @@
 """Check explicitly scripted controller dashboards, never physical input.
 
 Usage: python3 tools/check-flycast-controller-state-frame.py CAPTURE.png
-Set MAISHUJI_FRAME_SCENE=transitions for lesson 12 (default: state).
+Set MAISHUJI_FRAME_SCENE=transitions or analog (default: state).
 """
 import os
 import shutil
@@ -37,6 +37,13 @@ def check_pixels(data: bytes, scene: str = "state") -> list[str]:
             "B held": (473, 267, lambda r, g, b: g > r * 1.6 and g > b),
             "A not held": (508, 302, lambda r, g, b: 55 < r < 130 and b > r),
             "no trigger": (553, 205, lambda r, g, b: 55 < r < 130),
+        })
+    elif scene == "analog":
+        samples.update({
+            "raw diagonal": (270, 390, lambda r, g, b: r > 180 and r > g > b),
+            "processed diagonal": (258, 380, lambda r, g, b: g > r * 1.6 and g > b),
+            "right trigger": (553, 205, lambda r, g, b: r > 180 and r > g > b),
+            "left trigger mid": (79, 280, lambda r, g, b: r > 180 and r > g > b),
         })
     else:
         return [f"unknown scripted scene: {scene}"]

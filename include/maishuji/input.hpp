@@ -108,6 +108,23 @@ private:
     bool has_previous_ = false;
 };
 
+/// Unit-scale stick direction with the cooked Y sign preserved.
+struct AnalogStick {
+    float x = 0;
+    float y = 0;
+};
+
+/// Normalizes cooked axes: negative /128, positive /127; no implicit dead zone.
+AnalogStick normalized_stick(const ControllerSnapshot &sample) noexcept;
+
+/// Normalizes one supported trigger from [0,255] to [0,1].
+float normalized_trigger(const ControllerSnapshot &sample, bool left) noexcept;
+
+/// Radially rescales a unit stick outside a dead zone in [0,1).
+/// On invalid parameters returns false and clears output; clamps magnitude to one.
+bool apply_radial_dead_zone(AnalogStick input, float dead_zone,
+                            AnalogStick &output) noexcept;
+
 /// Copies the latest cached state for one physical port; never owns a device.
 /// Valid is not a freshness, hotplug generation, or real-hardware guarantee.
 ControllerSnapshot sample_controller(ControllerPort port = ControllerPort::A) noexcept;

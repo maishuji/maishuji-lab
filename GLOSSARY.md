@@ -54,6 +54,9 @@ Cooked-controller-state(input):
 Button-edge(input):
 	Marks a pressed or released transition between consecutive valid controller samples without implying a new Maple packet.
 
+Radial-dead-zone(input):
+	Suppresses stick movement near center and rescales the remaining vector radius without changing its direction.
+
 Flycast(emulator):
 	Emulates Dreamcast hardware for development checks when a physical console is unavailable.
 

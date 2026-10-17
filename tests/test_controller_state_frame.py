@@ -45,6 +45,17 @@ class ControllerFrameTests(unittest.TestCase):
         self.assertEqual(checker.check_pixels(self.pixels, "transitions"), [])
         self.assertTrue(checker.check_pixels(self.pixels, "state"))
 
+    def test_analog_fixture(self):
+        for x, y, color in (
+            (270, 390, (255, 196, 94)),
+            (258, 380, (101, 230, 159)),
+            (79, 280, (255, 196, 94)),
+        ):
+            offset = (y * checker.WIDTH + x) * 3
+            self.pixels[offset:offset + 3] = bytes(color)
+        self.assertEqual(checker.check_pixels(self.pixels, "analog"), [])
+        self.assertTrue(checker.check_pixels(self.pixels, "unknown"))
+
     def test_rejects_wrong_dimensions(self):
         self.assertTrue(checker.check_pixels(b""))
 

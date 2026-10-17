@@ -19,7 +19,7 @@ are identifiers, not available build targets until their lesson is added.
 
 | Lesson | Level | Teaches | Prerequisite | Status |
 | --- | --- | --- | --- | --- |
-| 11 controller state | Foundation | Owned raw samples and a controller dashboard | Lifecycle, primitives, text | Planned |
+| [11 controller state](controller-state.md) | Foundation | Owned raw samples and a controller dashboard | Lifecycle, primitives, text | Implemented |
 | 12 button transitions | Foundation | Held, pressed, released, connection history | Controller state | Planned |
 | 13 analog input | Foundation | Endpoint normalization and radial dead zones | Controller state | Planned |
 | 14 controller ports | Foundation | Physical A-D slots and availability | Controller state | Planned |

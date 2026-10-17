@@ -52,17 +52,17 @@ No claim is made that every physical replacement is observable between samples.
 
 ## Portable API policy
 
-The planned library boundary separates a copied controller snapshot, the KOS
-adapter, portable processing, and each application's button-to-action mapping.
+The library now separates a copied controller snapshot and KOS adapter from
+application input mapping; transition and analog processing are planned next.
 It uses fixed storage, no PVR ownership, and no invented bus initialization API.
 
-- Availability distinguishes disconnected, unsupported, unavailable, and valid.
-- Invalid/unavailable samples contribute neutral gameplay input.
-- Sample once per application update, then reuse the value.
-- On first valid connection, seed transition history without synthesizing presses.
+- The implemented snapshot API distinguishes disconnected, unsupported, unavailable, valid, and invalid port.
+- Invalid/unavailable snapshots have neutral values; applications must avoid using stale prior samples.
+- The inspector samples once per frame, then reuses the value.
+- Planned transition policy: on first valid connection, seed history without synthesizing presses.
 - A lost/unavailable sample resets history; it does not synthesize button releases.
 - Recovery seeds history again. Connection changes and button edges are distinct.
-- Normalize negative stick endpoints by 128 and positive endpoints by 127;
+- Planned normalization divides negative stick endpoints by 128 and positive endpoints by 127;
   triggers divide by 255. Raw values remain visible in the introductory lesson.
 - Radial dead-zone processing is explicit, with no automatic smoothing.
 - Keep numeric stick Y sign; inversion for a camera or screen is application policy.

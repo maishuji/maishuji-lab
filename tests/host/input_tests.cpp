@@ -1,6 +1,7 @@
 #include "maishuji/input.hpp"
 #include "input_backend.hpp"
 #include "detail/controller_mapping.hpp"
+#include "../../advanced_examples/camera_controls.hpp"
 
 #include <cstdio>
 #include <limits>
@@ -129,6 +130,42 @@ void test_analog() {
           "unsupported channels remain neutral");
 }
 
+void test_camera_controls() {
+    using namespace maishuji;
+    ControllerSnapshot sample{};
+    sample.availability = InputAvailability::Valid;
+    sample.capabilities = {button_mask(Button::Up) | button_mask(Button::Right),
+                           true, true, false, false};
+    sample.buttons = button_mask(Button::Up) | button_mask(Button::Right);
+    sample.stick_y = -128;
+    CameraPose pose{};
+    update_camera_pose(pose, sample, 0.1f);
+    check(pose.z < -0.1f && pose.x > 0 && pose.yaw == 0,
+          "D-pad and stick movement combine and clamp elapsed time");
+    const auto moved = pose;
+    update_camera_pose(pose, sample, -1.0f);
+    check(pose.x == moved.x && pose.z == moved.z, "invalid elapsed time does not move");
+    sample.stick_y = 0;
+    sample.buttons = 0;
+    sample.stick_x = 127;
+    update_camera_pose(pose, sample, 0.05f);
+    check(pose.yaw > 0 && pose.yaw < 0.11f, "right stick X turns camera right");
+    const auto turned = pose;
+    update_camera_pose(pose, sample, std::numeric_limits<float>::infinity());
+    check(pose.yaw == turned.yaw, "non-finite time does not rotate");
+    sample.availability = InputAvailability::Unavailable;
+    update_camera_pose(pose, sample, 0.05f);
+    check(pose.x == turned.x && pose.z == turned.z && pose.yaw == turned.yaw,
+          "unavailable snapshot never moves camera");
+    CameraPose boundary{7.99f, -7.99f, 0};
+    sample.availability = InputAvailability::Valid;
+    sample.buttons = button_mask(Button::Right) | button_mask(Button::Up);
+    sample.stick_x = 0;
+    update_camera_pose(boundary, sample, 10.0f);
+    check(boundary.x <= 8.0f && boundary.z >= -8.0f,
+          "movement stays within lesson floor and single-step time bound");
+}
+
 void test_port_isolation() {
     using namespace maishuji;
     host::clear_controller_fixtures();
@@ -176,6 +213,7 @@ int main() {
     test_mapping();
     test_transitions();
     test_analog();
+    test_camera_controls();
     test_port_isolation();
     if(failures != 0) return 1;
     std::puts("input snapshots: host tests passed");

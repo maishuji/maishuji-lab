@@ -23,7 +23,7 @@ are identifiers, not available build targets until their lesson is added.
 | [12 button transitions](controller-transitions.md) | Foundation | Held, pressed, released, connection history | Controller state | Implemented |
 | [13 analog input](analog-input.md) | Foundation | Endpoint normalization and radial dead zones | Controller state | Implemented |
 | [14 controller ports](controller-ports.md) | Foundation | Physical A-D slots and availability | Controller state | Implemented |
-| 12 input-driven camera (advanced) | Advanced | Input, elapsed time, and camera movement | Analog input, spatial math | Planned |
+| [12 input-driven camera (advanced)](input-driven-camera.md) | Advanced | Input, elapsed time, and camera movement | Analog input, spatial math | Implemented |
 
 Read the [input contract](input.md) before implementing or interpreting input
 behavior. The existing [terrain walk](terrain-walk.md) and

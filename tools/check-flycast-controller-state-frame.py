@@ -1,7 +1,7 @@
 """Check explicitly scripted controller dashboards, never physical input.
 
 Usage: python3 tools/check-flycast-controller-state-frame.py CAPTURE.png
-Set MAISHUJI_FRAME_SCENE=transitions, analog, or ports (default: state).
+Set MAISHUJI_FRAME_SCENE=transitions, analog, ports, or camera (default: state).
 """
 import os
 import shutil
@@ -20,6 +20,17 @@ def rgb_at(data: bytes, x: int, y: int) -> tuple[int, int, int]:
 def check_pixels(data: bytes, scene: str = "state") -> list[str]:
     if len(data) != WIDTH * HEIGHT * 3:
         return ["expected packed 640x480 RGB pixels"]
+    if scene == "camera":
+        def count(bounds, predicate):
+            x0, y0, x1, y1 = bounds
+            return sum(predicate(*rgb_at(data, x, y))
+                       for y in range(y0, y1, 4) for x in range(x0, x1, 4))
+        title = count((18, 15, 515, 145),
+                      lambda r, g, b: r > 175 and g > 175 and b > 175)
+        floor = count((120, 260, 520, 465),
+                      lambda r, g, b: 30 < r < 120 and g > r and b > r)
+        return ([] if title > 35 else [f"missing bright camera label: {title}"]) + (
+            [] if floor > 80 else [f"missing tiled camera floor: {floor}"])
     samples = {
         "background": (620, 100, lambda r, g, b: b > r and b < 80),
         "panel": (382, 403, lambda r, g, b: b > g > r and 30 < r < 70),

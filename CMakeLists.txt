@@ -193,6 +193,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
         target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
     endforeach()
 
+    add_executable(maishuji-input-camera advanced_examples/12-input-driven-camera.cpp)
+    add_executable(maishuji-input-camera-scripted advanced_examples/12-input-driven-camera.cpp)
+    target_compile_definitions(maishuji-input-camera-scripted PRIVATE MAISHUJI_INPUT_SCRIPTED=1)
+    foreach(target maishuji-input-camera maishuji-input-camera-scripted)
+        target_link_libraries(${target} PRIVATE maishuji)
+        target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
+    endforeach()
+
     add_executable(maishuji-dynamic-lighting
         advanced_examples/11-dynamic-lighting.cpp)
     foreach(target maishuji-dynamic-lighting)
@@ -237,6 +245,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-analog-input-scripted)
     maishuji_enable_link_map(maishuji-controller-ports)
     maishuji_enable_link_map(maishuji-controller-ports-scripted)
+    maishuji_enable_link_map(maishuji-input-camera)
+    maishuji_enable_link_map(maishuji-input-camera-scripted)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

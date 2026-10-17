@@ -38,6 +38,8 @@ endfunction()
 if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     add_library(maishuji STATIC
         src/pvr.cpp
+        src/input.cpp
+        src/kos/input_backend.cpp
         src/kos/pvr_backend.cpp
     )
     target_include_directories(maishuji
@@ -157,6 +159,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     target_compile_options(maishuji-frustum-culling PRIVATE
         -fno-exceptions -fno-rtti)
 
+    add_executable(maishuji-controller-state examples/11-controller-state.cpp)
+    add_executable(maishuji-controller-state-scripted examples/11-controller-state.cpp)
+    target_compile_definitions(maishuji-controller-state-scripted PRIVATE
+        MAISHUJI_INPUT_SCRIPTED=1)
+    foreach(target maishuji-controller-state maishuji-controller-state-scripted)
+        target_link_libraries(${target} PRIVATE maishuji)
+        target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
+    endforeach()
+
     add_executable(maishuji-dynamic-lighting
         advanced_examples/11-dynamic-lighting.cpp)
     foreach(target maishuji-dynamic-lighting)
@@ -193,9 +204,13 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-pvr-tile-workload)
     maishuji_enable_link_map(maishuji-frustum-culling)
     maishuji_enable_link_map(maishuji-dynamic-lighting)
+    maishuji_enable_link_map(maishuji-controller-state)
+    maishuji_enable_link_map(maishuji-controller-state-scripted)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp
+        src/input.cpp
+        src/host/input_backend.cpp
         src/host/recording_backend.cpp
     )
     target_include_directories(maishuji
@@ -211,6 +226,12 @@ else()
     )
     target_link_libraries(maishuji-host-tests PRIVATE maishuji)
 
+    add_executable(maishuji-input-tests tests/host/input_tests.cpp)
+    target_include_directories(maishuji-input-tests PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/host")
+    target_link_libraries(maishuji-input-tests PRIVATE maishuji)
+
     add_executable(maishuji-dynamic-lighting-tests
         tests/host/dynamic_lighting_tests.cpp)
     target_link_libraries(maishuji-dynamic-lighting-tests PRIVATE maishuji)
@@ -218,6 +239,7 @@ else()
 
     enable_testing()
     add_test(NAME lifecycle COMMAND maishuji-host-tests)
+    add_test(NAME input COMMAND maishuji-input-tests)
     add_test(NAME dynamic-lighting COMMAND maishuji-dynamic-lighting-tests)
     add_test(NAME car-assets COMMAND "${Python3_EXECUTABLE}" -B -m unittest
         discover -s tests -p test_2cv_assets.py -v)

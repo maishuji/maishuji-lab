@@ -52,6 +52,11 @@ make in-container TARGET=dreamcast-dynamic-lighting-cdi
 make flycast-dynamic-lighting
 ```
 
+For the independent input lesson, see [controller state](docs/controller-state.md):
+`make host-test-input` tests copied state and mappings, and
+`make in-container TARGET=dreamcast-controller-state-cdi` packages the live
+inspector. A separate scripted CDI supports display checks without a controller.
+
 The animated CDI is `build-dreamcast/maishuji-dynamic-lighting.cdi`.
 The animated lesson auto-rotates the light and exits after about 10 seconds
 (600 successful frames at 60 Hz).

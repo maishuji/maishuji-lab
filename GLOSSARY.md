@@ -45,6 +45,12 @@ Frame(api):
 ROMDISK(asset):
 	Means "ROM disk" and embeds application data into the executable image for predictable Dreamcast access.
 
+Maple(input):
+	Connects Dreamcast controller ports and other peripherals to the console through the Maple bus.
+
+Cooked-controller-state(input):
+	Represents KOS-decoded, pressed-high buttons and signed stick values copied from cached Maple status.
+
 Flycast(emulator):
 	Emulates Dreamcast hardware for development checks when a physical console is unavailable.
 

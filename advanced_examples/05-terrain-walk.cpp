@@ -1,3 +1,4 @@
+#include "maishuji/input.hpp"
 #include "maishuji/mesh.hpp"
 #include "maishuji/pvr.hpp"
 
@@ -9,9 +10,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
-
-#include <dc/maple.h>
-#include <dc/maple/controller.h>
 
 #include <kos.h>
 
@@ -263,37 +261,22 @@ void clamp_player(Player &player) noexcept {
         sample_height(player.position.x, player.position.z);
 }
 
-MovementInput read_controller(maple_device_t *device) noexcept {
-    if(device == nullptr)
-        return {};
+MovementInput read_controller(const maishuji::ControllerSnapshot &state) noexcept {
+    if(!state.valid()) return {};
 
-    const auto *state =
-        static_cast<const cont_state_t *>(maple_dev_status(device));
-    if(state == nullptr)
-        return {};
-
-    float x = 0.0f;
-    float z = 0.0f;
-    if((state->buttons & CONT_DPAD_LEFT) != 0)
-        x -= 1.0f;
-    if((state->buttons & CONT_DPAD_RIGHT) != 0)
-        x += 1.0f;
-    if((state->buttons & CONT_DPAD_UP) != 0)
-        z -= 1.0f;
-    if((state->buttons & CONT_DPAD_DOWN) != 0)
-        z += 1.0f;
-
-    constexpr float joystick_dead_zone = 20.0f;
-    if(std::fabs(static_cast<float>(state->joyx)) >
-       joystick_dead_zone)
-        x += static_cast<float>(state->joyx) / 127.0f;
-    if(std::fabs(static_cast<float>(state->joyy)) >
-       joystick_dead_zone)
-        z += static_cast<float>(state->joyy) / 127.0f;
-
+    float x = static_cast<float>(state.held(maishuji::Button::Right)) -
+              static_cast<float>(state.held(maishuji::Button::Left));
+    float z = static_cast<float>(state.held(maishuji::Button::Down)) -
+              static_cast<float>(state.held(maishuji::Button::Up));
+    maishuji::AnalogStick stick{};
+    constexpr float dead_zone = 20.0f / 128.0f;
+    if(!maishuji::apply_radial_dead_zone(maishuji::normalized_stick(state),
+                                          dead_zone, stick)) return {};
+    x += stick.x;
+    z += stick.y;
     const float length = std::sqrt(x * x + z * z);
-    if(length <= 0.05f)
-        return {};
+    if(length <= 0.05f) return {};
+    // The D-pad and stick may both be active: cap combined movement speed.
     if(length > 1.0f) {
         x /= length;
         z /= length;
@@ -440,13 +423,12 @@ int main() {
 
     constexpr maishuji::Quad background = make_background();
 
-    maple_device_t *controller =
-        maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
     Player player = scripted_player(0);
     bool scripted_mode = true;
 
     for(int frame = 0; frame < animation_frames; ++frame) {
-        const MovementInput input = read_controller(controller);
+        const auto sample = maishuji::sample_controller(maishuji::ControllerPort::A);
+        const MovementInput input = read_controller(sample);
         if(input.active)
             scripted_mode = false;
         if(scripted_mode)

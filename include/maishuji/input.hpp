@@ -56,6 +56,58 @@ struct ControllerSnapshot {
     }
 };
 
+/// Button bits for one update. Edges require two consecutive valid samples.
+struct ButtonTransitions {
+    std::uint16_t held_buttons = 0;
+    std::uint16_t pressed_buttons = 0;
+    std::uint16_t released_buttons = 0;
+
+    constexpr bool held(Button button) const noexcept {
+        return (held_buttons & button_mask(button)) != 0;
+    }
+    constexpr bool pressed(Button button) const noexcept {
+        return (pressed_buttons & button_mask(button)) != 0;
+    }
+    constexpr bool released(Button button) const noexcept {
+        return (released_buttons & button_mask(button)) != 0;
+    }
+};
+
+/// Tracks edges for one physical controller port across application updates.
+/// A lost sample clears history; a valid sample after loss seeds it without edges.
+class ButtonTracker {
+public:
+    /// Consumes one owned sample; never fabricates presses or releases on loss.
+    ButtonTransitions update(const ControllerSnapshot &sample) noexcept {
+        if(!sample.valid()) {
+            reset();
+            return {};
+        }
+        if(has_previous_ && sample.port != port_) reset();
+        const auto held = static_cast<std::uint16_t>(sample.buttons & sample.capabilities.buttons);
+        ButtonTransitions result{held, 0, 0};
+        if(has_previous_) {
+            result.pressed_buttons = static_cast<std::uint16_t>(held & ~previous_);
+            result.released_buttons = static_cast<std::uint16_t>(previous_ & ~held);
+        }
+        previous_ = held;
+        port_ = sample.port;
+        has_previous_ = true;
+        return result;
+    }
+
+    /// Discards previous history before changing port or replay source.
+    void reset() noexcept {
+        previous_ = 0;
+        has_previous_ = false;
+    }
+
+private:
+    std::uint16_t previous_ = 0;
+    ControllerPort port_ = ControllerPort::A;
+    bool has_previous_ = false;
+};
+
 /// Copies the latest cached state for one physical port; never owns a device.
 /// Valid is not a freshness, hotplug generation, or real-hardware guarantee.
 ControllerSnapshot sample_controller(ControllerPort port = ControllerPort::A) noexcept;

@@ -20,7 +20,7 @@ are identifiers, not available build targets until their lesson is added.
 | Lesson | Level | Teaches | Prerequisite | Status |
 | --- | --- | --- | --- | --- |
 | [11 controller state](controller-state.md) | Foundation | Owned raw samples and a controller dashboard | Lifecycle, primitives, text | Implemented |
-| 12 button transitions | Foundation | Held, pressed, released, connection history | Controller state | Planned |
+| [12 button transitions](controller-transitions.md) | Foundation | Held, pressed, released, connection history | Controller state | Implemented |
 | 13 analog input | Foundation | Endpoint normalization and radial dead zones | Controller state | Planned |
 | 14 controller ports | Foundation | Physical A-D slots and availability | Controller state | Planned |
 | 12 input-driven camera (advanced) | Advanced | Input, elapsed time, and camera movement | Analog input, spatial math | Planned |

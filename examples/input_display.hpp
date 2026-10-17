@@ -27,20 +27,34 @@ constexpr maishuji::Quad box(float x, float y, float w, float h,
 
 inline maishuji::Status label(maishuji::Pvr &pvr, maishuji::Texture &texture,
                               const maishuji::ControllerSnapshot &state,
-                              const char *lesson, bool scripted) noexcept {
+                              const char *lesson, bool scripted,
+                                                            const maishuji::ButtonTransitions *edges = nullptr,
+                                                            unsigned count_a = 0, unsigned count_b = 0) noexcept {
     alignas(32) static std::array<std::uint16_t, text_width * text_height> pixels{};
     pixels.fill(0);
     char lines[256]{};
-    ::snprintf(lines, sizeof(lines),
-        "%s / CONTROLLER  %s\nPORT A: %s\nA:%d B:%d X:%d START:%d\nX:%+4d Y:%+4d   LT:%3u RT:%3u\n%s",
-        lesson, scripted ? "SCRIPTED / NOT LIVE" : "LIVE",
-        maishuji::input_availability_name(state.availability),
-        state.held(maishuji::Button::A), state.held(maishuji::Button::B),
-        state.held(maishuji::Button::X), state.held(maishuji::Button::Start),
-        state.stick_x, state.stick_y,
-        static_cast<unsigned>(state.left_trigger),
-        static_cast<unsigned>(state.right_trigger),
-                scripted ? "FIXTURE / NO MAPLE INPUT" : "START: EXIT / CACHED STATE");
+    if(edges) {
+        ::snprintf(lines, sizeof(lines),
+            "%s / %s\nPORT A: %s\nHELD A:%d B:%d  PRESS A:%d B:%d\nRELEASE A:%d B:%d   COUNT A:%u B:%u\n%s",
+            lesson, scripted ? "SCRIPTED / NOT LIVE" : "LIVE",
+            maishuji::input_availability_name(state.availability),
+            edges->held(maishuji::Button::A), edges->held(maishuji::Button::B),
+            edges->pressed(maishuji::Button::A), edges->pressed(maishuji::Button::B),
+            edges->released(maishuji::Button::A), edges->released(maishuji::Button::B),
+            count_a, count_b,
+            scripted ? "FIXTURE / NO MAPLE INPUT" : "START: EXIT / EDGES NEED HISTORY");
+    } else {
+        ::snprintf(lines, sizeof(lines),
+            "%s / CONTROLLER  %s\nPORT A: %s\nA:%d B:%d X:%d START:%d\nX:%+4d Y:%+4d   LT:%3u RT:%3u\n%s",
+            lesson, scripted ? "SCRIPTED / NOT LIVE" : "LIVE",
+            maishuji::input_availability_name(state.availability),
+            state.held(maishuji::Button::A), state.held(maishuji::Button::B),
+            state.held(maishuji::Button::X), state.held(maishuji::Button::Start),
+            state.stick_x, state.stick_y,
+            static_cast<unsigned>(state.left_trigger),
+            static_cast<unsigned>(state.right_trigger),
+            scripted ? "FIXTURE / NO MAPLE INPUT" : "START: EXIT / CACHED STATE");
+    }
     bfont_set_encoding(BFONT_CODE_ISO8859_1);
     bfont_draw_str_ex(pixels.data(), text_width, 0xffff, 0, 16, false, lines);
     // The preceding submitted frame may still reference this PVR allocation.

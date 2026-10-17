@@ -51,6 +51,9 @@ Maple(input):
 Cooked-controller-state(input):
 	Represents KOS-decoded, pressed-high buttons and signed stick values copied from cached Maple status.
 
+Button-edge(input):
+	Marks a pressed or released transition between consecutive valid controller samples without implying a new Maple packet.
+
 Flycast(emulator):
 	Emulates Dreamcast hardware for development checks when a physical console is unavailable.
 

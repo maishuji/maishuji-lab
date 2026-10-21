@@ -33,6 +33,21 @@ OPB(pvr):
 G2(bus):
 	Connects the SH-4 system bus to Dreamcast peripherals such as the PVR and AICA.
 
+AICA(audio):
+	Executes the Dreamcast sound program and plays samples from its dedicated sound memory.
+
+Fixed-step(timing):
+	Advances simulation in constant-duration updates independently of variable rendering intervals.
+
+Catch-up(timing):
+	Runs bounded fixed updates after elapsed time accumulates, discarding and counting excess whole steps.
+
+PCM(audio):
+	Stores sampled audio values that an AICA sound effect can play after loading.
+
+VMU(maple):
+	Attaches a memory card, monochrome LCD and other features to a Dreamcast controller subslot.
+
 SH-4(cpu):
 	Means "SuperH-4" and executes the game and rendering code on the Dreamcast's 32-bit RISC processor.
 

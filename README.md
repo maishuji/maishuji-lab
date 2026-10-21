@@ -61,7 +61,11 @@ to distinguish held, pressed, and released buttons. [Analog input](docs/analog-i
 compares raw values with explicit normalization and radial dead zones. The
 [physical-port dashboard](docs/controller-ports.md) distinguishes A–D slots.
 The [input-driven camera](docs/input-driven-camera.md) combines these foundations
-in an advanced 3D lesson.
+in an advanced 3D lesson. The [fixed-step timing lesson](docs/fixed-step.md)
+separates elapsed time, bounded simulation updates and rendering. For the
+peripheral roadmap, see the [staged lesson plan](docs/next-lessons.md), the
+standalone [AICA sound lesson](docs/aica-sound.md), and the
+[VMU LCD testing assessment](docs/vmu-lcd-testability.md).
 
 The animated CDI is `build-dreamcast/maishuji-dynamic-lighting.cdi`.
 The animated lesson auto-rotates the light and exits after about 10 seconds

@@ -20,11 +20,21 @@ def rgb_at(data: bytes, x: int, y: int) -> tuple[int, int, int]:
 def check_pixels(data: bytes, scene: str = "state") -> list[str]:
     if len(data) != WIDTH * HEIGHT * 3:
         return ["expected packed 640x480 RGB pixels"]
-    if scene == "camera":
+    if scene in ("camera", "fixed-step"):
         def count(bounds, predicate):
             x0, y0, x1, y1 = bounds
             return sum(predicate(*rgb_at(data, x, y))
                        for y in range(y0, y1, 4) for x in range(x0, x1, 4))
+        if scene == "fixed-step":
+            title = count((18, 15, 540, 150),
+                          lambda r, g, b: r > 175 and g > 175 and b > 175)
+            yellow = count((45, 225, 595, 280),
+                           lambda r, g, b: r > 180 and g > 120 and b < 130)
+            green = count((45, 335, 595, 390),
+                          lambda r, g, b: g > 150 and g > r * 1.5 and g > b)
+            return ([] if title > 35 else [f"missing fixed-step label: {title}"]) + (
+                [] if yellow > 20 else [f"missing elapsed-time marker: {yellow}"]) + (
+                [] if green > 20 else [f"missing fixed-update marker: {green}"])
         title = count((18, 15, 515, 145),
                       lambda r, g, b: r > 175 and g > 175 and b > 175)
         floor = count((120, 260, 520, 465),
@@ -101,7 +111,8 @@ def main() -> int:
         print("FAIL:", failure)
     if failures:
         return 1
-    print(f"PASS: scripted {scene} dashboard pixels; not real input")
+    qualifier = "timing not measured" if scene == "fixed-step" else "not real input"
+    print(f"PASS: scripted {scene} dashboard pixels; {qualifier}")
     return 0
 
 

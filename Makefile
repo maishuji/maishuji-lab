@@ -78,6 +78,10 @@ DC_FIXED_STEP_SCRIPTED_ELF ?= $(DC_BUILD_DIR)/maishuji-fixed-step-scripted.elf
 DC_FIXED_STEP_SCRIPTED_CDI ?= $(DC_BUILD_DIR)/maishuji-fixed-step-scripted.cdi
 DC_AICA_SOUND_ELF ?= $(DC_BUILD_DIR)/maishuji-aica-sound.elf
 DC_AICA_SOUND_CDI ?= $(DC_BUILD_DIR)/maishuji-aica-sound.cdi
+DC_STREAMING_AUDIO_ELF ?= $(DC_BUILD_DIR)/maishuji-streaming-audio.elf
+DC_STREAMING_AUDIO_CDI ?= $(DC_BUILD_DIR)/maishuji-streaming-audio.cdi
+DC_STREAMING_AUDIO_SCRIPTED_ELF ?= $(DC_BUILD_DIR)/maishuji-streaming-audio-scripted.elf
+DC_STREAMING_AUDIO_SCRIPTED_CDI ?= $(DC_BUILD_DIR)/maishuji-streaming-audio-scripted.cdi
 KOS_MAKEFILE_BUILD_DIR ?= build-kos-makefile-smoke
 MKDCDISC ?= mkdcdisc
 # CDI targets own their named output paths, so rebuilding a target replaces
@@ -89,7 +93,7 @@ CONTAINER_RUNTIME ?= docker
 
 .PHONY: check-toolchain in-container host-configure host-build host-run host-test dreamcast-configure dreamcast-build dreamcast-smoke-cdi dreamcast-lifecycle-cdi dreamcast-textured-cdi dreamcast-pixel-sprites-cdi dreamcast-basic-3d-cdi dreamcast-fogged-3d-cdi dreamcast-lighting-cdi dreamcast-text-cdi dreamcast-particles-cdi dreamcast-budget-cdi dreamcast-advanced-text-cdi dreamcast-pvr-asset-cdi dreamcast-textured-3d-cdi dreamcast-heightmapped-terrain-cdi dreamcast-terrain-walk-cdi dreamcast-mipmap-texture-cdi dreamcast-model-loader-cdi dreamcast-human-model-loader-cdi dreamcast-multi-texture-cdi dreamcast-pvr-tile-workload-cdi dreamcast-frustum-culling-cdi dreamcast-makefile-smoke flycast-smoke flycast-lifecycle flycast-textured-quad flycast-pixel-sprites flycast-basic-3d flycast-fogged-3d flycast-lighting flycast-text flycast-particles flycast-budget flycast-advanced-text flycast-pvr-asset flycast-textured-3d flycast-heightmapped-terrain flycast-terrain-walk flycast-mipmap-texture flycast-model-loader flycast-human-model-loader flycast-multi-texture flycast-pvr-tile-workload flycast-frustum-culling run-dc
 
-.PHONY: car-assets host-test-dynamic-lighting dreamcast-dynamic-lighting-cdi flycast-dynamic-lighting host-test-input dreamcast-controller-state-cdi dreamcast-controller-state-scripted-cdi flycast-controller-state-scripted dreamcast-controller-transitions-cdi dreamcast-controller-transitions-scripted-cdi flycast-controller-transitions-scripted dreamcast-analog-input-cdi dreamcast-analog-input-scripted-cdi flycast-analog-input-scripted dreamcast-controller-ports-cdi dreamcast-controller-ports-scripted-cdi flycast-controller-ports-scripted dreamcast-input-camera-cdi dreamcast-input-camera-scripted-cdi flycast-input-camera-scripted host-test-fixed-step dreamcast-fixed-step-cdi dreamcast-fixed-step-scripted-cdi flycast-fixed-step-scripted host-test-aica-tone host-test-streaming-audio dreamcast-aica-sound-cdi
+.PHONY: car-assets host-test-dynamic-lighting dreamcast-dynamic-lighting-cdi flycast-dynamic-lighting host-test-input dreamcast-controller-state-cdi dreamcast-controller-state-scripted-cdi flycast-controller-state-scripted dreamcast-controller-transitions-cdi dreamcast-controller-transitions-scripted-cdi flycast-controller-transitions-scripted dreamcast-analog-input-cdi dreamcast-analog-input-scripted-cdi flycast-analog-input-scripted dreamcast-controller-ports-cdi dreamcast-controller-ports-scripted-cdi flycast-controller-ports-scripted dreamcast-input-camera-cdi dreamcast-input-camera-scripted-cdi flycast-input-camera-scripted host-test-fixed-step dreamcast-fixed-step-cdi dreamcast-fixed-step-scripted-cdi flycast-fixed-step-scripted host-test-aica-tone host-test-streaming-audio dreamcast-aica-sound-cdi dreamcast-streaming-audio-cdi dreamcast-streaming-audio-scripted-cdi flycast-streaming-audio-scripted
 
 # Derive assets into the ignored build tree, never over the authored source SVG.
 car-assets:
@@ -273,6 +277,12 @@ dreamcast-fixed-step-scripted-cdi: dreamcast-build
 dreamcast-aica-sound-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_AICA_SOUND_ELF)" -o "$(DC_AICA_SOUND_CDI)" -n "maishuji AICA sound"
 
+dreamcast-streaming-audio-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_STREAMING_AUDIO_ELF)" -o "$(DC_STREAMING_AUDIO_CDI)" -n "maishuji streaming audio"
+
+dreamcast-streaming-audio-scripted-cdi: dreamcast-build
+	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_STREAMING_AUDIO_SCRIPTED_ELF)" -o "$(DC_STREAMING_AUDIO_SCRIPTED_CDI)" -n "maishuji scripted audio"
+
 dreamcast-dynamic-lighting-cdi: dreamcast-build
 	./tools/with-kos.sh "$(MKDCDISC)" $(MKDCDISC_OPTIONS) -e "$(DC_DYNAMIC_LIGHTING_ELF)" -o "$(DC_DYNAMIC_LIGHTING_CDI)" -n "maishuji-lab dynamic lighting"
 
@@ -368,6 +378,9 @@ flycast-input-camera-scripted:
 
 flycast-fixed-step-scripted:
 	MAISHUJI_FRAME_SCENE=fixed-step FLYCAST_FRAME_CHECKER=tools/check-flycast-controller-state-frame.py FLYCAST_WINDOW_TITLE=MAISHUJI_FIXED_STEP FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: fixed-step scripted fixture passed (bounded catch-up; timing not measured)" ./tools/test-flycast-render.sh "$(DC_FIXED_STEP_SCRIPTED_CDI)"
+
+flycast-streaming-audio-scripted:
+	MAISHUJI_FRAME_SCENE=streaming-audio FLYCAST_FRAME_CHECKER=tools/check-flycast-controller-state-frame.py FLYCAST_WINDOW_TITLE=MAISHUJI_STREAMING_AUDIO FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: streaming audio fixture passed (Vorbis requests; audibility unverified)" ./tools/test-flycast-render.sh "$(DC_STREAMING_AUDIO_SCRIPTED_CDI)"
 
 flycast-dynamic-lighting:
 	FLYCAST_FRAME_CHECKER=tools/check-flycast-dynamic-lighting-frame.py FLYCAST_WINDOW_TITLE=MAISHUJI_DYNAMIC_LIGHTING FLYCAST_STABLE_SAMPLES=3 FLYCAST_REQUIRED_RUNTIME_MARKER="maishuji: dynamic lighting ready (498 triangles; flat Lambert; planar shadows)" ./tools/test-flycast-render.sh "$(DC_DYNAMIC_LIGHTING_CDI)"

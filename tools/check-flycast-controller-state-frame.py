@@ -20,7 +20,7 @@ def rgb_at(data: bytes, x: int, y: int) -> tuple[int, int, int]:
 def check_pixels(data: bytes, scene: str = "state") -> list[str]:
     if len(data) != WIDTH * HEIGHT * 3:
         return ["expected packed 640x480 RGB pixels"]
-    if scene in ("camera", "fixed-step"):
+    if scene in ("camera", "fixed-step", "streaming-audio"):
         def count(bounds, predicate):
             x0, y0, x1, y1 = bounds
             return sum(predicate(*rgb_at(data, x, y))
@@ -35,6 +35,16 @@ def check_pixels(data: bytes, scene: str = "state") -> list[str]:
             return ([] if title > 35 else [f"missing fixed-step label: {title}"]) + (
                 [] if yellow > 20 else [f"missing elapsed-time marker: {yellow}"]) + (
                 [] if green > 20 else [f"missing fixed-update marker: {green}"])
+        if scene == "streaming-audio":
+            title = count((18, 15, 540, 150),
+                          lambda r, g, b: r > 175 and g > 175 and b > 175)
+            pulse = count((280, 245, 360, 345),
+                          lambda r, g, b: g > 150 and g > r * 1.5 and g > b)
+            volume = count((100, 345, 540, 385),
+                           lambda r, g, b: r > 180 and g > 120 and b < 130)
+            return ([] if title > 35 else [f"missing streaming label: {title}"]) + (
+                [] if pulse > 20 else [f"missing playing pulse: {pulse}"]) + (
+                [] if volume > 40 else [f"missing volume meter: {volume}"])
         title = count((18, 15, 515, 145),
                       lambda r, g, b: r > 175 and g > 175 and b > 175)
         floor = count((120, 260, 520, 465),
@@ -111,7 +121,11 @@ def main() -> int:
         print("FAIL:", failure)
     if failures:
         return 1
-    qualifier = "timing not measured" if scene == "fixed-step" else "not real input"
+    qualifiers = {
+        "fixed-step": "timing not measured",
+        "streaming-audio": "audibility not verified",
+    }
+    qualifier = qualifiers.get(scene, "not real input")
     print(f"PASS: scripted {scene} dashboard pixels; {qualifier}")
     return 0
 

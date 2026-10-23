@@ -97,6 +97,23 @@ class ControllerFrameTests(unittest.TestCase):
                     self.pixels[offset:offset + 3] = bytes(color)
         self.assertEqual(checker.check_pixels(self.pixels, "fixed-step"), [])
 
+    def test_streaming_audio_fixture_requires_playing_and_volume(self):
+        self.assertTrue(checker.check_pixels(self.pixels, "streaming-audio"))
+        for y in range(15, 145, 4):
+            for x in range(18, 540, 4):
+                offset = (y * checker.WIDTH + x) * 3
+                self.pixels[offset:offset + 3] = bytes((220, 220, 220))
+        for bounds, color in (
+            ((280, 245, 344, 321), (91, 225, 164)),
+            ((100, 345, 400, 381), (255, 188, 76)),
+        ):
+            x0, y0, x1, y1 = bounds
+            for y in range(y0, y1, 4):
+                for x in range(x0, x1, 4):
+                    offset = (y * checker.WIDTH + x) * 3
+                    self.pixels[offset:offset + 3] = bytes(color)
+        self.assertEqual(checker.check_pixels(self.pixels, "streaming-audio"), [])
+
     def test_rejects_wrong_dimensions(self):
         self.assertTrue(checker.check_pixels(b""))
 

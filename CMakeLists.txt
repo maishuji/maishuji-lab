@@ -36,6 +36,8 @@ function(maishuji_use_car_assets target)
 endfunction()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
+    include("${KOS_BASE}/utils/cmake/kallistios.cmake")
+
     add_library(maishuji STATIC
         src/pvr.cpp
         src/input.cpp
@@ -212,6 +214,24 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     add_executable(maishuji-aica-sound examples/16-aica-sound.cpp)
     target_compile_options(maishuji-aica-sound PRIVATE -fno-exceptions -fno-rtti)
 
+    add_executable(maishuji-streaming-audio
+        advanced_examples/13-streaming-audio.cpp)
+    add_executable(maishuji-streaming-audio-scripted
+        advanced_examples/13-streaming-audio.cpp)
+    target_compile_definitions(maishuji-streaming-audio-scripted PRIVATE
+        MAISHUJI_AUDIO_SCRIPTED=1)
+    foreach(target maishuji-streaming-audio maishuji-streaming-audio-scripted)
+        target_link_libraries(${target} PRIVATE maishuji
+            oggvorbisplay vorbis ogg)
+        target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
+    endforeach()
+    kos_add_romdisk(maishuji-streaming-audio
+        "${CMAKE_CURRENT_SOURCE_DIR}/advanced_examples/assets/audio"
+        streaming_audio_live_romdisk)
+    kos_add_romdisk(maishuji-streaming-audio-scripted
+        "${CMAKE_CURRENT_SOURCE_DIR}/advanced_examples/assets/audio"
+        streaming_audio_scripted_romdisk)
+
     add_executable(maishuji-dynamic-lighting
         advanced_examples/11-dynamic-lighting.cpp)
     foreach(target maishuji-dynamic-lighting)
@@ -261,6 +281,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-fixed-step)
     maishuji_enable_link_map(maishuji-fixed-step-scripted)
     maishuji_enable_link_map(maishuji-aica-sound)
+    maishuji_enable_link_map(maishuji-streaming-audio)
+    maishuji_enable_link_map(maishuji-streaming-audio-scripted)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp

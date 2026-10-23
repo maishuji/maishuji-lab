@@ -30,6 +30,15 @@ behavior. The existing [terrain walk](terrain-walk.md) and
 [frustum-culling example](frustum-culling.md) now reuse the copied-state input
 helpers for movement and toggle behavior.
 
+## Timing and peripheral lessons
+
+[Fixed-step timing](fixed-step.md) is implemented as the `examples/15`
+foundation, with separate live-clock and scripted-fixture builds. [AICA sound](aica-sound.md) is implemented
+as `examples/16-aica-sound.cpp` with host waveform tests and a pinned KOS
+cross-build; audible playback still needs a listening test. The
+[VMU LCD testability assessment](vmu-lcd-testability.md) identifies the missing
+LCD-specific visual oracle before an `examples/17` lesson can claim validation.
+
 ## Advanced rendering
 
 Explore [textured meshes](textured-3d.md), [terrain](heightmapped-terrain.md),

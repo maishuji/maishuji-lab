@@ -81,6 +81,22 @@ class ControllerFrameTests(unittest.TestCase):
                 self.pixels[offset:offset + 3] = bytes((48, 92, 104))
         self.assertEqual(checker.check_pixels(self.pixels, "camera"), [])
 
+    def test_fixed_step_fixture_requires_both_motion_markers(self):
+        self.assertTrue(checker.check_pixels(self.pixels, "fixed-step"))
+        for y in range(15, 145, 4):
+            for x in range(18, 540, 4):
+                offset = (y * checker.WIDTH + x) * 3
+                self.pixels[offset:offset + 3] = bytes((220, 220, 220))
+        for x, y, color in (
+            (101, 241, (255, 190, 78)),
+            (101, 351, (89, 224, 166)),
+        ):
+            for sample_y in range(y, y + 32, 4):
+                for sample_x in range(x, x + 32, 4):
+                    offset = (sample_y * checker.WIDTH + sample_x) * 3
+                    self.pixels[offset:offset + 3] = bytes(color)
+        self.assertEqual(checker.check_pixels(self.pixels, "fixed-step"), [])
+
     def test_rejects_wrong_dimensions(self):
         self.assertTrue(checker.check_pixels(b""))
 

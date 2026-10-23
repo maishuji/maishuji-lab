@@ -201,6 +201,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
         target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
     endforeach()
 
+    add_executable(maishuji-fixed-step examples/15-fixed-step.cpp)
+    add_executable(maishuji-fixed-step-scripted examples/15-fixed-step.cpp)
+    target_compile_definitions(maishuji-fixed-step-scripted PRIVATE MAISHUJI_TIME_SCRIPTED=1)
+    foreach(target maishuji-fixed-step maishuji-fixed-step-scripted)
+        target_link_libraries(${target} PRIVATE maishuji)
+        target_compile_options(${target} PRIVATE -fno-exceptions -fno-rtti)
+    endforeach()
+
+    add_executable(maishuji-aica-sound examples/16-aica-sound.cpp)
+    target_compile_options(maishuji-aica-sound PRIVATE -fno-exceptions -fno-rtti)
+
     add_executable(maishuji-dynamic-lighting
         advanced_examples/11-dynamic-lighting.cpp)
     foreach(target maishuji-dynamic-lighting)
@@ -247,6 +258,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-controller-ports-scripted)
     maishuji_enable_link_map(maishuji-input-camera)
     maishuji_enable_link_map(maishuji-input-camera-scripted)
+    maishuji_enable_link_map(maishuji-fixed-step)
+    maishuji_enable_link_map(maishuji-fixed-step-scripted)
+    maishuji_enable_link_map(maishuji-aica-sound)
 else()
     add_library(maishuji STATIC
         src/pvr.cpp
@@ -273,6 +287,14 @@ else()
         "${CMAKE_CURRENT_SOURCE_DIR}/src/host")
     target_link_libraries(maishuji-input-tests PRIVATE maishuji)
 
+    add_executable(maishuji-fixed-step-tests tests/host/fixed_step_tests.cpp)
+    target_include_directories(maishuji-fixed-step-tests PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/examples")
+
+    add_executable(maishuji-aica-tone-tests tests/host/aica_tone_tests.cpp)
+    target_include_directories(maishuji-aica-tone-tests PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/examples")
+
     add_executable(maishuji-dynamic-lighting-tests
         tests/host/dynamic_lighting_tests.cpp)
     target_link_libraries(maishuji-dynamic-lighting-tests PRIVATE maishuji)
@@ -281,6 +303,8 @@ else()
     enable_testing()
     add_test(NAME lifecycle COMMAND maishuji-host-tests)
     add_test(NAME input COMMAND maishuji-input-tests)
+    add_test(NAME fixed-step COMMAND maishuji-fixed-step-tests)
+    add_test(NAME aica-tone COMMAND maishuji-aica-tone-tests)
     add_test(NAME dynamic-lighting COMMAND maishuji-dynamic-lighting-tests)
     add_test(NAME car-assets COMMAND "${Python3_EXECUTABLE}" -B -m unittest
         discover -s tests -p test_2cv_assets.py -v)

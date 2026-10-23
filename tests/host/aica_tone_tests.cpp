@@ -1,6 +1,7 @@
 #include "aica_tone.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
 
 int main() {
@@ -14,6 +15,19 @@ int main() {
         std::fputs("FAIL: tone bounds, fades or non-silent PCM\n", stderr);
         return 1;
     }
+    std::size_t sign_changes = 0;
+    for(std::size_t i = 2; i < samples.size(); ++i) {
+        if((samples[i - 1] < 0 && samples[i] >= 0) ||
+           (samples[i - 1] > 0 && samples[i] <= 0)) {
+            ++sign_changes;
+        }
+    }
+    if(sign_changes < 320 || sign_changes > 330) {
+        std::fprintf(stderr, "FAIL: expected a 440 Hz-scale tone, got %zu sign changes\n",
+                     sign_changes);
+        return 1;
+    }
+
     const auto original = samples;
     aica_tone::generate(samples);
     if(samples != original) {

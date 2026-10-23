@@ -1,6 +1,7 @@
 #include "fixed_step.hpp"
 
 #include <cstdio>
+#include <limits>
 
 namespace {
 
@@ -58,6 +59,21 @@ int main() {
     const auto final_tick = rounding.tick(3 * fixed_step::step_us);
     passed &= expect(final_tick.updates == 1 && final_tick.remainder_us == 0,
                      "accumulated rounding eventually completes the expected step");
+
+    fixed_step::Accumulator extreme;
+    (void)extreme.tick(0);
+    (void)extreme.tick(1);
+    const auto extreme_tick = extreme.tick(std::numeric_limits<std::uint64_t>::max());
+    const std::uint64_t extreme_steps =
+        std::numeric_limits<std::uint64_t>::max() / fixed_step::step_us;
+    const std::uint64_t extreme_remainder =
+        std::numeric_limits<std::uint64_t>::max() % fixed_step::step_us;
+    passed &= expect(
+        extreme_tick.updates == fixed_step::max_updates_per_frame &&
+            extreme_tick.dropped_updates ==
+                extreme_steps - fixed_step::max_updates_per_frame &&
+            extreme_tick.remainder_us == extreme_remainder,
+        "an extreme timestamp jump does not overflow the accumulator");
 
     if(!passed) return 1;
     std::puts("Fixed-step accumulator: host tests passed");

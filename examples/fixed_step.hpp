@@ -33,16 +33,22 @@ public:
 
         const std::uint64_t elapsed_us = now_us - previous_us_;
         previous_us_ = now_us;
-        accumulator_us_ += elapsed_us;
 
-        const std::uint64_t available = accumulator_us_ / step_us;
+        // Split the elapsed interval before combining it with the remainder.
+        // This preserves an extreme valid uint64_t timestamp jump without
+        // overflowing an intermediate microsecond sum.
+        const std::uint64_t elapsed_steps = elapsed_us / step_us;
+        const std::uint64_t combined_remainder =
+            accumulator_us_ + elapsed_us % step_us;
+        const std::uint64_t available =
+            elapsed_steps + combined_remainder / step_us;
         const auto updates = static_cast<std::uint32_t>(
             available < max_updates_per_frame ? available : max_updates_per_frame);
         const std::uint64_t dropped = available - updates;
 
         // Keep only the fractional remainder. Whole steps beyond the catch-up
         // limit are deliberately discarded instead of creating a spiral.
-        accumulator_us_ %= step_us;
+        accumulator_us_ = combined_remainder % step_us;
         total_updates_ += updates;
         total_dropped_updates_ += dropped;
 

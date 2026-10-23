@@ -131,6 +131,7 @@ host-test: host-build
 	python3 -B -m unittest discover -s tests -p test_2cv_assets.py -v
 	python3 -B -m unittest discover -s tests -p test_dynamic_lighting_frame.py -v
 	python3 -B -m unittest discover -s tests -p test_controller_state_frame.py -v
+	python3 -B -m unittest discover -s tests -p test_streaming_audio_asset.py -v
 
 host-test-fixed-step: host-configure
 	cmake --build $(HOST_BUILD_DIR) --target maishuji-fixed-step-tests --verbose

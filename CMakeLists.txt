@@ -295,6 +295,11 @@ else()
     target_include_directories(maishuji-aica-tone-tests PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/examples")
 
+    add_executable(maishuji-streaming-audio-state-tests
+        tests/host/streaming_audio_state_tests.cpp)
+    target_include_directories(maishuji-streaming-audio-state-tests PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/advanced_examples")
+
     add_executable(maishuji-dynamic-lighting-tests
         tests/host/dynamic_lighting_tests.cpp)
     target_link_libraries(maishuji-dynamic-lighting-tests PRIVATE maishuji)
@@ -305,6 +310,7 @@ else()
     add_test(NAME input COMMAND maishuji-input-tests)
     add_test(NAME fixed-step COMMAND maishuji-fixed-step-tests)
     add_test(NAME aica-tone COMMAND maishuji-aica-tone-tests)
+    add_test(NAME streaming-audio-state COMMAND maishuji-streaming-audio-state-tests)
     add_test(NAME dynamic-lighting COMMAND maishuji-dynamic-lighting-tests)
     add_test(NAME car-assets COMMAND "${Python3_EXECUTABLE}" -B -m unittest
         discover -s tests -p test_2cv_assets.py -v)

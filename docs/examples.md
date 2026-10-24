@@ -35,7 +35,9 @@ helpers for movement and toggle behavior.
 [Fixed-step timing](fixed-step.md) is implemented as the `examples/15`
 foundation, with separate live-clock and scripted-fixture builds. [AICA sound](aica-sound.md) is implemented
 as `examples/16-aica-sound.cpp` with host waveform tests and a pinned KOS
-cross-build; audible playback still needs a listening test. The
+cross-build. [Advanced streaming audio](streaming-audio.md) then decodes a mono
+Ogg Vorbis loop on the SH-4 and feeds PCM blocks to KOS `snd_stream`; both audio
+lessons still need a listening test. The
 [VMU LCD testability assessment](vmu-lcd-testability.md) identifies the missing
 LCD-specific visual oracle before an `examples/17` lesson can claim validation.
 
@@ -45,12 +47,13 @@ Explore [textured meshes](textured-3d.md), [terrain](heightmapped-terrain.md),
 [terrain walking](terrain-walk.md), [mipmaps](mipmap-texture.md),
 [model loading](model-loader.md), [multiple textures](multi-texture.md),
 [tile workload](tile-workload.md), [frustum culling](frustum-culling.md),
-[dynamic lighting](dynamic-lighting.md), and [multilingual text](advanced-text.md).
+[dynamic lighting](dynamic-lighting.md), [streaming audio](streaming-audio.md),
+and [multilingual text](advanced-text.md).
 
 ## Evidence levels
 
 Host tests verify portable logic; cross-builds verify API/link compatibility;
 scripted captures verify rendering of supplied fixtures. None alone proves
-physical controller input. Live emulator mapping and real-console tests are
-separate evidence. Autonomous graphics lessons remain autonomous unless their
+physical controller input or audible output. Live emulator mapping, listening,
+and real-console tests are separate evidence. Autonomous graphics lessons remain autonomous unless their
 teaching purpose explicitly includes input.

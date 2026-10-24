@@ -64,8 +64,14 @@ The [input-driven camera](docs/input-driven-camera.md) combines these foundation
 in an advanced 3D lesson. The [fixed-step timing lesson](docs/fixed-step.md)
 separates elapsed time, bounded simulation updates and rendering. For the
 peripheral roadmap, see the [staged lesson plan](docs/next-lessons.md), the
-standalone [AICA sound lesson](docs/aica-sound.md), and the
+standalone [AICA sound lesson](docs/aica-sound.md), the advanced
+[Ogg Vorbis streaming lesson](docs/streaming-audio.md), and the
 [VMU LCD testing assessment](docs/vmu-lcd-testability.md).
+
+Build the advanced compressed-audio lesson with
+`make in-container TARGET=dreamcast-streaming-audio-cdi`; its guide explains
+why Ogg Vorbis is decoded on the SH-4 before PCM reaches the AICA and why an
+automated Flycast dashboard cannot prove audibility.
 
 The animated CDI is `build-dreamcast/maishuji-dynamic-lighting.cdi`.
 The animated lesson auto-rotates the light and exits after about 10 seconds

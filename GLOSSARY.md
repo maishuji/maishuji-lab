@@ -45,6 +45,15 @@ Catch-up(timing):
 PCM(audio):
 	Stores sampled audio values that an AICA sound effect can play after loading.
 
+Vorbis(audio):
+	Compresses audio inside an Ogg container for SH-4 decoding before PCM playback.
+
+Audio-streaming(audio):
+	Feeds decoded PCM blocks over time instead of loading the complete waveform as one sound effect.
+
+Underrun(audio):
+	Occurs when decoded PCM does not reach the playback buffer before the AICA needs it.
+
 VMU(maple):
 	Attaches a memory card, monochrome LCD and other features to a Dreamcast controller subslot.
 

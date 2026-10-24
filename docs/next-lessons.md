@@ -1,10 +1,9 @@
 # Next lessons: fixed-step time, AICA sound, VMU LCD
 
-This is a staged plan, not a claim that all three lessons are implemented.
-Follow the [lesson index](examples.md) for existing examples. The repository
-currently has an unrelated local `.gitignore` edit: preserve it. Keep the new
-lessons independent of the existing PVR/input implementation and avoid broad
-framework or toolchain changes while the working tree is in flux.
+This staged roadmap records implemented work and remaining gates. Follow the
+[lesson index](examples.md) for existing examples. Keep the lessons independent
+of the existing PVR/input implementation and avoid broad framework or toolchain
+changes.
 
 ## 1. Fixed-step time (`examples/15-fixed-step.cpp`) — implemented
 
@@ -63,6 +62,21 @@ actual console/audio test. Keep the implementation separate from Step 1 and
 preserve unrelated changes. The [sound lesson](aica-sound.md) now has host
 waveform tests, pinned Debug/Release cross-builds and a packaged Release CDI;
 audible output and panning remain unverified.
+
+## 2b. Compressed streaming (`advanced_examples/13-streaming-audio.cpp`) — implemented, listening gate open
+
+The [advanced streaming lesson](streaming-audio.md) packages an original mono
+Ogg Vorbis loop in a ROM disk, decodes it on the SH-4 through the pinned
+kos-ports `liboggvorbisplay` stack, and feeds PCM blocks to KOS `snd_stream` for
+AICA playback. It adds live stop, play, restart, and volume controls plus a
+separately labeled scripted state fixture.
+
+Host tests verify state transitions and the reproducible asset contract. Pinned
+Debug/Release builds, CDI packaging, and the Flycast fixture verify API/link,
+request-path, and dashboard behavior. They do not prove audible or uninterrupted
+output; a named emulator/audio-backend listening test or physical Dreamcast
+capture remains the open acceptance gate. Mono avoids claiming PCM16 stereo
+behavior from KallistiOS work newer than the pinned revision.
 
 ## 3. VMU LCD (`examples/17-vmu-lcd.cpp`) — research gate before code
 

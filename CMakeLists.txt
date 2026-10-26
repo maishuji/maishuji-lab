@@ -232,6 +232,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
         "${CMAKE_CURRENT_SOURCE_DIR}/advanced_examples/assets/audio"
         streaming_audio_scripted_romdisk)
 
+    add_executable(maishuji-sh4zam-compatibility
+        advanced_examples/sh4zam-compatibility.cpp)
+    target_link_libraries(maishuji-sh4zam-compatibility PRIVATE maishuji sh4zam)
+    target_compile_options(maishuji-sh4zam-compatibility PRIVATE
+        -fno-exceptions -fno-rtti)
+
     add_executable(maishuji-dynamic-lighting
         advanced_examples/11-dynamic-lighting.cpp)
     foreach(target maishuji-dynamic-lighting)
@@ -267,6 +273,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "dreamcast")
     maishuji_enable_link_map(maishuji-multi-texture)
     maishuji_enable_link_map(maishuji-pvr-tile-workload)
     maishuji_enable_link_map(maishuji-frustum-culling)
+    maishuji_enable_link_map(maishuji-sh4zam-compatibility)
     maishuji_enable_link_map(maishuji-dynamic-lighting)
     maishuji_enable_link_map(maishuji-controller-state)
     maishuji_enable_link_map(maishuji-controller-state-scripted)
